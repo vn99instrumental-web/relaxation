@@ -62,22 +62,27 @@ export default function App() {
     })
   }, [yt])
 
-  const onAdd = useCallback((parsed) => {
+  const onAddMany = useCallback((parsedList) => {
+    const list = Array.isArray(parsedList) ? parsedList : [parsedList]
     setQueue((q) => {
-      const t = trackFromParsed(parsed)
-      const nq = [...q, t]
-      if (q.length === 0) {
+      const newTracks = list.map((p) => trackFromParsed(p))
+      const nq = [...q, ...newTracks]
+      if (q.length === 0 && newTracks.length) {
         setIndex(0)
-        // phát sau khi player sẵn sàng
-        setTimeout(() => yt.playTrack(t), 0)
+        setTimeout(() => yt.playTrack(newTracks[0]), 0)
       }
       return nq
     })
   }, [yt])
 
   const onLoadPreset = useCallback((p) => {
-    onAdd({ type: 'video', videoId: p.videoId })
-  }, [onAdd])
+    onAddMany([{ type: 'video', videoId: p.videoId }])
+  }, [onAddMany])
+
+  const onClear = useCallback(() => {
+    setQueue([])
+    setIndex(0)
+  }, [])
 
   const onRemove = useCallback((i) => {
     setQueue((q) => q.filter((_, idx) => idx !== i))
@@ -166,9 +171,10 @@ export default function App() {
               yt={yt}
               queue={queue}
               index={index}
-              onAdd={onAdd}
+              onAddMany={onAddMany}
               onSelect={playAt}
               onRemove={onRemove}
+              onClear={onClear}
               onNext={onNext}
               onPrev={onPrev}
               ytVolume={ytVolume}

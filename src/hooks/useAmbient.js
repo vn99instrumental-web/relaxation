@@ -51,18 +51,26 @@ export function useAmbient() {
     rainSrc.loop = true
     const rainLP = ctx.createBiquadFilter()
     rainLP.type = 'lowpass'
-    rainLP.frequency.value = 4200
-    rainLP.Q.value = 0.3
+    rainLP.frequency.value = 2600
+    rainLP.Q.value = 0.6
     const rainHP = ctx.createBiquadFilter()
     rainHP.type = 'highpass'
-    rainHP.frequency.value = 500
+    rainHP.frequency.value = 420
     const rainGain = ctx.createGain()
     rainGain.gain.value = 0
+    // quét nhẹ tần số cắt để mưa nghe "dày - mỏng" tự nhiên
+    const rainCutLFO = ctx.createOscillator()
+    rainCutLFO.frequency.value = 0.13
+    const rainCutGain = ctx.createGain()
+    rainCutGain.gain.value = 600
+    rainCutLFO.connect(rainCutGain)
+    rainCutGain.connect(rainLP.frequency)
+    rainCutLFO.start()
     // rung biên độ để nghe như mưa "thở"
     const rainLFO = ctx.createOscillator()
-    rainLFO.frequency.value = 0.4
+    rainLFO.frequency.value = 0.24
     const rainLFOGain = ctx.createGain()
-    rainLFOGain.gain.value = 0.06
+    rainLFOGain.gain.value = 0.05
     rainLFO.connect(rainLFOGain)
     rainLFOGain.connect(rainGain.gain)
     rainSrc.connect(rainHP)
@@ -185,8 +193,8 @@ function chirp(ctx, dest, amp) {
     osc.frequency.exponentialRampToValueAtTime(base * (1.3 + Math.random() * 0.5), start + 0.05)
     osc.frequency.exponentialRampToValueAtTime(base * 0.9, start + 0.11)
     g.gain.setValueAtTime(0.0001, start)
-    g.gain.exponentialRampToValueAtTime(0.18 * amp, start + 0.015)
-    g.gain.exponentialRampToValueAtTime(0.0001, start + 0.13)
+    g.gain.exponentialRampToValueAtTime(0.12 * amp, start + 0.02)
+    g.gain.exponentialRampToValueAtTime(0.0001, start + 0.14)
     osc.connect(g)
     g.connect(dest)
     osc.start(start)
