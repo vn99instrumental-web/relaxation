@@ -11,7 +11,7 @@ export default function SettingsModal({
   backgrounds, bgId, setBgId, onAddImage, onRemoveImage, hiddenCount, onRestoreBg,
   shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
-  admin, setAdmin,
+  admin, setAdmin, keepAwake, setKeepAwake,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -83,12 +83,6 @@ export default function SettingsModal({
 
           <section className="settings-block">
             <h3>🖼️ Ảnh nền ({backgrounds.length}){shared ? ' · chung 2 người' : ''}</h3>
-            <p className="settings-note">
-              Bấm để chọn (hoặc nút <b>🖼</b> trên thanh trên cùng để đổi nhanh).
-              {shared
-                ? ' Ảnh lưu chung trên Supabase — thêm/xóa thì cả 2 người thấy.'
-                : ' Ảnh lưu trên máy này. Ảnh lỗi sẽ tự quay về tranh vẽ.'}
-            </p>
             {galleryError && <p className="form-note">{galleryError}</p>}
             <div className="bg-grid">
               {backgrounds.map((b) => (
@@ -121,22 +115,24 @@ export default function SettingsModal({
           </section>
 
           <section className="settings-block">
+            <h3>🎵 Nghe nhạc</h3>
+            <label className="admin-row">
+              <input type="checkbox" checked={!!keepAwake} onChange={(e) => setKeepAwake(e.target.checked)} />
+              <span>Giữ màn hình sáng khi đang phát để nhạc không bị ngắt (điện thoại).</span>
+            </label>
+          </section>
+
+          <section className="settings-block">
             <h3>🔑 Quyền admin</h3>
             <label className="admin-row">
               <input type="checkbox" checked={!!admin} onChange={(e) => setAdmin(e.target.checked)} />
-              <span>Bật quyền admin — hiện nút <b>xóa từng tin</b> và <b>xóa toàn bộ nhật ký</b>. (Chỉ bật trên máy của bạn.)</span>
+              <span>Hiện nút xóa tin & xóa toàn bộ nhật ký (chỉ trên máy bạn).</span>
             </label>
           </section>
 
           <section className="settings-block">
             <h3>⚡ Supabase — chat & playlist realtime</h3>
-            <p className="settings-note">
-              2 người nhắn tin/lưu playlist thấy nhau <b>ngay lập tức</b>. Tạo project ở
-              supabase.com, chạy <code>supabase/schema.sql</code>, rồi dán <b>Project URL</b> +
-              <b> anon key</b> và một <b>mã phòng</b> chung (khó đoán). Điền đủ 3 ô này thì
-              app dùng Supabase thay cho Gist. Trạng thái: <b>{supaStatusText}</b>
-              {supaError ? ` — ${supaError}` : ''}
-            </p>
+            <p className="settings-note">Trạng thái: <b>{supaStatusText}</b>{supaError ? ` — ${supaError}` : ''}</p>
             <label className="field">
               <span>Project URL</span>
               <input type="text" placeholder="https://xxxx.supabase.co" value={sbUrl} onChange={(e) => setSbUrl(e.target.value)} />
@@ -155,17 +151,8 @@ export default function SettingsModal({
           </section>
 
           <section className="settings-block">
-            <h3>👥 Nhật ký 2 người qua GitHub Gist (thay thế)</h3>
-            <p className="settings-note">
-              Để 2 người ở 2 máy thấy nhật ký của nhau, cả hai dùng chung <b>1 Gist</b> và <b>1 token</b> có
-              quyền <code>gist</code>. Token chỉ lưu trong trình duyệt của bạn và chỉ gửi tới GitHub.
-              Bỏ trống hai ô này thì app chạy <b>offline</b> (chỉ lưu trên máy).
-            </p>
-            <ol className="settings-steps">
-              <li>Vào GitHub → Settings → Developer settings → <b>Tokens</b>. Tạo token có quyền <code>gist</code>.</li>
-              <li>Dán token vào ô dưới, đặt tên phòng, bấm <b>Tạo Gist mới</b>.</li>
-              <li>Gửi <b>Gist ID</b> vừa tạo + token cho người kia để họ điền y hệt.</li>
-            </ol>
+            <h3>👥 Nhật ký qua GitHub Gist (thay thế)</h3>
+            <p className="settings-note">Bỏ trống = chạy offline (chỉ lưu trên máy này).</p>
             <label className="field">
               <span>GitHub Token (quyền gist)</span>
               <input type="password" placeholder="ghp_… hoặc github_pat_…" value={token} onChange={(e) => setToken(e.target.value)} />

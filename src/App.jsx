@@ -8,6 +8,7 @@ import Dock from './components/Dock'
 import VideoPip from './components/VideoPip'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
+import { useWakeLock } from './hooks/useWakeLock'
 import { useGistSync } from './hooks/useGistSync'
 import { useSupabaseRoom } from './hooks/useSupabaseRoom'
 import { useSupabaseGallery } from './hooks/useSupabaseGallery'
@@ -63,6 +64,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
+  const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
@@ -103,6 +105,10 @@ export default function App() {
   useEffect(() => save('vibe.username', username), [username])
   useEffect(() => save('vibe.sync', syncConfig), [syncConfig])
   useEffect(() => save('vibe.admin', admin), [admin])
+  useEffect(() => save('vibe.keepAwake', keepAwake), [keepAwake])
+
+  // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
+  useWakeLock(keepAwake && yt.playing)
 
   const playAt = useCallback((i) => {
     setQueue((q) => {
@@ -211,6 +217,28 @@ export default function App() {
       const nq = [...q]; nq[index] = { ...nq[index], title: yt.nowTitle }; return nq
     })
   }, [yt.nowTitle, index])
+
+  // Điều khiển nhạc trên màn hình khóa / trung tâm thông báo (MediaSession)
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    try {
+      if (yt.nowTitle && typeof window.MediaMetadata === 'function') {
+        navigator.mediaSession.metadata = new window.MediaMetadata({
+          title: yt.nowTitle, artist: 'Hiên Mưa', album: 'Đà Lạt trong sương',
+        })
+      }
+      navigator.mediaSession.playbackState = yt.playing ? 'playing' : 'paused'
+    } catch { /* ignore */ }
+  }, [yt.nowTitle, yt.playing])
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    const set = (a, fn) => { try { navigator.mediaSession.setActionHandler(a, fn) } catch { /* ignore */ } }
+    set('play', () => yt.play())
+    set('pause', () => yt.pause())
+    set('previoustrack', () => onPrev())
+    set('nexttrack', () => onNext())
+    return () => { set('play', null); set('pause', null); set('previoustrack', null); set('nexttrack', null) }
+  }, [yt, onNext, onPrev])
 
   const rainDensity = useMemo(() => {
     const base = scene === 'rain' ? 0.55 : scene === 'ray' ? 0.12 : 0.28
@@ -402,6 +430,7 @@ export default function App() {
         config={syncConfig} setConfig={setSyncConfig}
         supaConfig={supaConfig} setSupaConfig={setSupaConfig} supaStatus={supa.status} supaError={supa.error}
         admin={admin} setAdmin={setAdmin}
+        keepAwake={keepAwake} setKeepAwake={setKeepAwake}
         scene={scene} setScene={setScene}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
