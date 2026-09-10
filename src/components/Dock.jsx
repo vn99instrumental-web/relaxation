@@ -2,7 +2,7 @@
 // âm lượng, và các nút mở/đóng panel (Nhạc / Không gian / Nhật ký).
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
-  leftTab, onToggleLeft, journalOpen, onToggleJournal,
+  leftTab, onToggleLeft, journalOpen, onToggleJournal, onHideUI,
 }) {
   const title = yt.nowTitle || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
 
@@ -32,6 +32,7 @@ export default function Dock({
         <button className={`dock__btn ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => onToggleLeft('music')}>♫ <span>Nhạc</span></button>
         <button className={`dock__btn ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => onToggleLeft('ambient')}>☔ <span>Không gian</span></button>
         <button className={`dock__btn ${journalOpen ? 'is-active' : ''}`} onClick={onToggleJournal}>📓 <span>Nhật ký</span></button>
+        <button className="dock__btn dock__btn--icon" onClick={onHideUI} title="Ẩn giao diện — chỉ ngắm cảnh">⤢</button>
       </div>
     </div>
   )

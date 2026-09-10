@@ -5,6 +5,7 @@ import AmbientMixer from './components/AmbientMixer'
 import Journal from './components/Journal'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
+import VideoPip from './components/VideoPip'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useGistSync } from './hooks/useGistSync'
@@ -47,6 +48,7 @@ export default function App() {
   const [journalOpen, setJournalOpen] = useState(false)
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [uiHidden, setUiHidden] = useState(false)
 
   const journal = useGistSync({ ...syncConfig, username })
 
@@ -118,18 +120,14 @@ export default function App() {
 
   const toggleLeft = (tab) => setLeftTab((cur) => (cur === tab ? null : tab))
 
+  const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
+
   return (
-    <div className="app">
+    <div className={`app ${uiHidden ? 'is-immersive' : ''}`}>
       <Scene scene={scene} rain={rainDensity} photo={photo} />
 
-      {/* Video YouTube luôn tồn tại (để phát nhạc), nhưng thu nhỏ và có thể ẩn */}
-      <div className={`pip ${showVideo ? 'is-shown' : 'is-hidden'}`}>
-        <div className="pip__bar">
-          <span className="pip__label">Video</span>
-          <button className="pip__close" onClick={() => setShowVideo(false)} title="Ẩn video">✕</button>
-        </div>
-        <div className="pip__frame"><div id="yt-frame" /></div>
-      </div>
+      {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
+      <VideoPip showVideo={showVideo && !uiHidden} onClose={() => setShowVideo(false)} />
 
       <div className="stage">
         <header className="topbar">
@@ -155,41 +153,37 @@ export default function App() {
           </div>
         </header>
 
-        {/* Panel trái: Nhạc / Không gian (mở khi cần) */}
-        {leftTab && (
-          <div className="floaty floaty--left">
-            <div className="floaty__tabs">
-              <button className={`floaty__tab ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => setLeftTab('music')}>♫ Nhạc</button>
-              <button className={`floaty__tab ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => setLeftTab('ambient')}>☔ Không gian</button>
-              <button className="floaty__close" onClick={() => setLeftTab(null)} title="Đóng">✕</button>
-            </div>
-            <div className="floaty__body">
-              {leftTab === 'music' ? (
-                <Player
-                  queue={queue} index={index} nowTitle={yt.nowTitle}
-                  onAddMany={onAddMany} onSelect={playAt} onRemove={onRemove} onClear={onClear}
-                  presets={PRESETS} onLoadPreset={onLoadPreset}
-                  showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
-                />
-              ) : (
-                <AmbientMixer ambient={ambient} />
-              )}
-            </div>
+        {/* Drawer trái: Nhạc / Không gian (trượt từ cạnh trái) */}
+        <aside className={`drawer drawer--left ${leftTab ? 'is-open' : ''}`}>
+          <div className="drawer__tabs">
+            <button className={`drawer__tab ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => setLeftTab('music')}>♫ Nhạc</button>
+            <button className={`drawer__tab ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => setLeftTab('ambient')}>☔ Không gian</button>
+            <button className="drawer__close" onClick={() => setLeftTab(null)} title="Đóng">✕</button>
           </div>
-        )}
-
-        {/* Drawer phải: Nhật ký */}
-        {journalOpen && (
-          <div className="floaty floaty--right">
-            <div className="floaty__body floaty__body--flush">
-              <Journal
-                journal={journal} username={username} setUsername={setUsername}
-                onOpenSettings={() => setSettingsOpen(true)}
-                onClose={() => setJournalOpen(false)}
+          <div className="drawer__body">
+            {leftKind === 'music' ? (
+              <Player
+                queue={queue} index={index} nowTitle={yt.nowTitle}
+                onAddMany={onAddMany} onSelect={playAt} onRemove={onRemove} onClear={onClear}
+                presets={PRESETS} onLoadPreset={onLoadPreset}
+                showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
               />
-            </div>
+            ) : (
+              <AmbientMixer ambient={ambient} />
+            )}
           </div>
-        )}
+        </aside>
+
+        {/* Drawer phải: Nhật ký (trượt từ cạnh phải) */}
+        <aside className={`drawer drawer--right ${journalOpen ? 'is-open' : ''}`}>
+          <div className="drawer__body drawer__body--flush">
+            <Journal
+              journal={journal} username={username} setUsername={setUsername}
+              onOpenSettings={() => setSettingsOpen(true)}
+              onClose={() => setJournalOpen(false)}
+            />
+          </div>
+        </aside>
       </div>
 
       <Dock
@@ -197,7 +191,20 @@ export default function App() {
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
         leftTab={leftTab} onToggleLeft={toggleLeft}
         journalOpen={journalOpen} onToggleJournal={() => setJournalOpen((v) => !v)}
+        onHideUI={() => setUiHidden(true)}
       />
+
+      {/* Chế độ ngắm cảnh: chỉ còn vài toggle cần thiết */}
+      {uiHidden && (
+        <div className="immersive-bar">
+          <button className="ctrl" onClick={onPrev} title="Bài trước" disabled={!queue.length}>⏮</button>
+          <button className="ctrl ctrl--main" onClick={yt.toggle} title="Phát/Dừng" disabled={!yt.current}>
+            {yt.playing ? '❚❚' : '►'}
+          </button>
+          <button className="ctrl" onClick={onNext} title="Bài sau" disabled={!queue.length}>⏭</button>
+          <button className="ctrl" onClick={() => setUiHidden(false)} title="Hiện giao diện">◉</button>
+        </div>
+      )}
 
       <SettingsModal
         open={settingsOpen} onClose={() => setSettingsOpen(false)}
