@@ -13,7 +13,7 @@ import { useSupabaseRoom } from './hooks/useSupabaseRoom'
 import { useSupabaseGallery } from './hooks/useSupabaseGallery'
 import { useRoomSettings } from './hooks/useRoomSettings'
 import { load, save } from './lib/storage'
-import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, VINTAGE_SCENES, BUILTIN_SCENES } from './lib/backgrounds'
+import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, BUILTIN_SCENES } from './lib/backgrounds'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 
 let keySeed = 1
@@ -258,10 +258,6 @@ export default function App() {
     setBgId(ids[(i + dir + ids.length) % ids.length])
   }, [backgrounds, bgId])
 
-  // Chọn nhanh 1 trong 3 chủ đề vintage (dùng thẳng id chủ đề, luôn có sẵn)
-  const pickScene = useCallback((id) => setBgId(id), [])
-  const sceneActive = (id) => currentBg?.id === id
-
   const addUserBg = useCallback((label, url) => {
     const id = `u${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     setUserBgs((list) => [...list, { id, label: label || 'Ảnh của tôi', url, thumb: url }])
@@ -317,17 +313,6 @@ export default function App() {
             </div>
           </div>
           <div className="topbar__actions">
-            <div className="scene-tabs" title="Đổi chủ đề vintage">
-              {VINTAGE_SCENES.map((s) => (
-                <button
-                  key={s.id}
-                  className={`scene-tab ${sceneActive(s.id) ? 'is-active' : ''}`}
-                  onClick={() => pickScene(s.id)}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
             <button className="icon-btn" onClick={() => cycleBg(1)} title={`Ảnh: ${currentBg?.label || ''} — bấm để đổi`}>🖼</button>
             <button className="icon-btn" onClick={() => setSettingsOpen(true)} title="Cài đặt">⚙</button>
           </div>

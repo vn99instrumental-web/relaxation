@@ -432,7 +432,7 @@ input[type='range']:disabled { opacity: 0.4; }
 .bubble--mine { align-self: flex-end; background: var(--mine); border-top-left-radius: 13px; border-top-right-radius: 3px; }
 .bubble__meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
 .bubble__user { font-size: 0.74rem; font-weight: 600; color: var(--gold-soft); font-family: var(--ui); letter-spacing: 0.02em; }
-.bubble__time { font-size: 0.64rem; color: var(--ink-dim); }
+.bubble__time { font-size: 0.72rem; color: var(--ink-dim); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
 .bubble__text { font-family: var(--serif-body); font-size: 0.94rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--paper); }
 .bubble__edit { margin-left: auto; background: none; border: none; color: var(--ink-dim); font-size: 0.72rem; padding: 0 3px; line-height: 1; opacity: 0.6; }
 .bubble__edit:hover { color: var(--gold-soft); opacity: 1; }
