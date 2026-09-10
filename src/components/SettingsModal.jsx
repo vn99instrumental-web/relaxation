@@ -1,11 +1,15 @@
 import { useRef, useState } from 'react'
 import { createGist } from '../lib/gist'
 
+const isVector = (id) => id === 'vector' || id.endsWith('__vector')
+const isUserImg = (id) => id.startsWith('u') || id.includes('__u')
+
 // Cửa sổ cài đặt: thời tiết cảnh, THƯ VIỆN ẢNH NỀN (chọn/thêm/xóa),
 // và đồng bộ nhật ký qua GitHub Gist.
 export default function SettingsModal({
   open, onClose, config, setConfig, scene, setScene,
-  backgrounds, bgId, setBgId, onAddBg, onRemoveBg, hiddenCount, onRestoreBg,
+  backgrounds, bgId, setBgId, onAddImage, onRemoveImage, hiddenCount, onRestoreBg,
+  shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
   admin, setAdmin,
 }) {
@@ -44,16 +48,13 @@ export default function SettingsModal({
   const addByUrl = () => {
     const u = urlInput.trim()
     if (!u) return
-    onAddBg('Ảnh của tôi', u)
+    onAddImage({ label: 'Ảnh của tôi', url: u })
     setUrlInput('')
   }
   const addByFiles = (fileList) => {
-    const files = Array.from(fileList || [])
-    files.forEach((f) => {
+    Array.from(fileList || []).forEach((f) => {
       if (!f.type.startsWith('image')) return
-      const reader = new FileReader()
-      reader.onload = () => onAddBg(f.name.replace(/\.[^.]+$/, ''), reader.result)
-      reader.readAsDataURL(f)
+      onAddImage({ label: f.name.replace(/\.[^.]+$/, ''), file: f })
     })
   }
 
@@ -81,11 +82,14 @@ export default function SettingsModal({
           </section>
 
           <section className="settings-block">
-            <h3>🖼️ Ảnh nền ({backgrounds.length})</h3>
+            <h3>🖼️ Ảnh nền ({backgrounds.length}){shared ? ' · chung 2 người' : ''}</h3>
             <p className="settings-note">
-              Bấm để chọn. Cũng có thể bấm nút <b>🖼</b> trên thanh trên cùng để đổi nhanh.
-              Ảnh nào không tải được sẽ tự quay về tranh vẽ.
+              Bấm để chọn (hoặc nút <b>🖼</b> trên thanh trên cùng để đổi nhanh).
+              {shared
+                ? ' Ảnh lưu chung trên Supabase — thêm/xóa thì cả 2 người thấy.'
+                : ' Ảnh lưu trên máy này. Ảnh lỗi sẽ tự quay về tranh vẽ.'}
             </p>
+            {galleryError && <p className="form-note">{galleryError}</p>}
             <div className="bg-grid">
               {backgrounds.map((b) => (
                 <button key={b.id} className={`bg-tile ${bgId === b.id ? 'is-active' : ''}`}
@@ -94,8 +98,8 @@ export default function SettingsModal({
                     ? <span className="bg-tile__vector">✎ Tranh vẽ</span>
                     : <img src={b.thumb || b.url} alt="" loading="lazy" />}
                   <span className="bg-tile__label">{b.label}</span>
-                  {(admin || b.id.startsWith('u')) && b.id !== 'vector' && (
-                    <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); onRemoveBg(b.id) }} title="Xóa ảnh này">✕</span>
+                  {(admin || isUserImg(b.id)) && !isVector(b.id) && (
+                    <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); onRemoveImage(b.id) }} title="Xóa ảnh này">✕</span>
                   )}
                 </button>
               ))}

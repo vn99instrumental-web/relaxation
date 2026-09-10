@@ -63,3 +63,31 @@ grant select, insert, update, delete on public.rooms, public.messages, public.pl
 -- ------------------------------------------------------------
 alter publication supabase_realtime add table public.messages;
 alter publication supabase_realtime add table public.playlists;
+
+-- ============================================================
+-- THƯ VIỆN ẢNH NỀN DÙNG CHUNG (Storage + bảng backgrounds)
+-- ============================================================
+insert into storage.buckets (id, name, public) values ('backgrounds','backgrounds',true)
+  on conflict (id) do nothing;
+
+drop policy if exists "bg read"   on storage.objects;
+drop policy if exists "bg insert" on storage.objects;
+drop policy if exists "bg update" on storage.objects;
+drop policy if exists "bg delete" on storage.objects;
+create policy "bg read"   on storage.objects for select to anon using (bucket_id = 'backgrounds');
+create policy "bg insert" on storage.objects for insert to anon with check (bucket_id = 'backgrounds');
+create policy "bg update" on storage.objects for update to anon using (bucket_id = 'backgrounds') with check (bucket_id = 'backgrounds');
+create policy "bg delete" on storage.objects for delete to anon using (bucket_id = 'backgrounds');
+
+create table if not exists public.backgrounds (
+  id text primary key, room_id text not null, label text not null,
+  url text not null default '', path text, sort int not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists backgrounds_room_idx on public.backgrounds (room_id, sort, created_at);
+alter table public.backgrounds enable row level security;
+drop policy if exists "anon backgrounds" on public.backgrounds;
+create policy "anon backgrounds" on public.backgrounds for all to anon using (true) with check (true);
+grant select, insert, update, delete on public.backgrounds to anon, authenticated;
+alter table public.backgrounds replica identity full;
+do $$ begin begin execute 'alter publication supabase_realtime add table public.backgrounds'; exception when duplicate_object then null; end; end $$;

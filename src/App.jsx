@@ -10,6 +10,7 @@ import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useGistSync } from './hooks/useGistSync'
 import { useSupabaseRoom } from './hooks/useSupabaseRoom'
+import { useSupabaseGallery } from './hooks/useSupabaseGallery'
 import { load, save } from './lib/storage'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID } from './lib/backgrounds'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
@@ -37,11 +38,6 @@ export default function App() {
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
   const [hiddenBg, setHiddenBg] = useState(() => load('vibe.hiddenBg', []))
   const [bgId, setBgId] = useState(() => load('vibe.bgId', DEFAULT_BG_ID))
-  const backgrounds = useMemo(
-    () => [...DEFAULT_BACKGROUNDS, ...userBgs].filter((b) => !hiddenBg.includes(b.id)),
-    [userBgs, hiddenBg],
-  )
-  const currentBg = backgrounds.find((b) => b.id === bgId) || backgrounds[0]
 
   const [username, setUsername] = useState(() => load('vibe.username', ''))
   const [syncConfig, setSyncConfig] = useState(() =>
@@ -61,10 +57,22 @@ export default function App() {
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
+  const gallery = useSupabaseGallery(supaConfig)
   const journal = supa.enabled ? supa.journal : gist
   const playlists = supa.enabled ? supa.playlists : localPlaylists
 
+  // Ảnh nền: dùng thư viện Supabase (chung 2 người) khi có; không thì dùng local.
+  const localBackgrounds = useMemo(
+    () => [...DEFAULT_BACKGROUNDS, ...userBgs].filter((b) => !hiddenBg.includes(b.id)),
+    [userBgs, hiddenBg],
+  )
+  const useShared = gallery.enabled && gallery.ready && gallery.items.length > 0
+  const backgrounds = useShared ? gallery.items : localBackgrounds
+  const currentBg = backgrounds.find((b) => b.id === bgId) || backgrounds.find((b) => b.url) || backgrounds[0]
+
   const supaRef = useRef(supa); supaRef.current = supa
+  const galleryRef = useRef(gallery); galleryRef.current = gallery
+  const sharedRef = useRef(useShared); sharedRef.current = useShared
   const playlistsRef = useRef(playlists); playlistsRef.current = playlists
 
   useEffect(() => save('vibe.queue', queue), [queue])
@@ -196,6 +204,23 @@ export default function App() {
     setBgId((cur) => (cur === id ? 'vector' : cur))
   }, [])
 
+  // Thêm/xóa ảnh hợp nhất: Supabase khi bật chung, không thì local.
+  const addImage = useCallback(async ({ label, file, url }) => {
+    if (sharedRef.current) return galleryRef.current.addImage({ label, file, url })
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = () => addUserBg(label || file.name.replace(/\.[^.]+$/, ''), reader.result)
+      reader.readAsDataURL(file)
+    } else if (url) {
+      addUserBg(label || 'Ảnh của tôi', url)
+    }
+  }, [addUserBg])
+
+  const removeImage = useCallback((id) => {
+    if (sharedRef.current) galleryRef.current.removeImage(id)
+    else removeBackground(id)
+  }, [removeBackground])
+
   const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
 
   return (
@@ -289,8 +314,9 @@ export default function App() {
         admin={admin} setAdmin={setAdmin}
         scene={scene} setScene={setScene}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
-        onAddBg={addUserBg} onRemoveBg={removeBackground}
-        hiddenCount={hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
+        onAddImage={addImage} onRemoveImage={removeImage}
+        shared={useShared} galleryError={gallery.error}
+        hiddenCount={useShared ? 0 : hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
       />
     </div>
   )
