@@ -66,7 +66,7 @@ export default function App() {
     () => [...DEFAULT_BACKGROUNDS, ...userBgs].filter((b) => !hiddenBg.includes(b.id)),
     [userBgs, hiddenBg],
   )
-  const useShared = gallery.enabled && gallery.ready && gallery.items.length > 0
+  const useShared = gallery.enabled && gallery.ready
   const backgrounds = useShared ? gallery.items : localBackgrounds
   const currentBg = backgrounds.find((b) => b.id === bgId) || backgrounds.find((b) => b.url) || backgrounds[0]
 
