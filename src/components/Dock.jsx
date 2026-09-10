@@ -2,6 +2,7 @@
 // âm lượng, và các nút mở/đóng panel (Nhạc / Không gian / Nhật ký).
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
+  shuffle, onToggleShuffle,
   leftTab, onToggleLeft, journalOpen, onToggleJournal, onHideUI,
 }) {
   const title = yt.nowTitle || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
@@ -17,6 +18,8 @@ export default function Dock({
       </div>
 
       <div className="dock__transport">
+        <button className={`ctrl ctrl--sm ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
+          title="Trộn ngẫu nhiên" disabled={queue.length < 2}>🔀</button>
         <button className="ctrl" onClick={onPrev} title="Bài trước" disabled={!queue.length}>⏮</button>
         <button className="ctrl ctrl--main" onClick={yt.toggle} title="Phát/Dừng" disabled={!yt.current}>
           {yt.playing ? '❚❚' : '►'}

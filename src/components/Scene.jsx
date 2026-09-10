@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { load, save } from '../lib/storage'
+
+const clamp = (v) => Math.min(100, Math.max(0, v))
 
 // Cảnh Đà Lạt cổ điển vẽ bằng SVG: trời chiều, mặt trời mờ sau sương,
 // những dãy đồi thông xa dần, mặt hồ phẳng lặng, hàng thông tiền cảnh và
@@ -15,6 +18,30 @@ export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
   const [failed, setFailed] = useState(false)
   useEffect(() => { setFailed(false) }, [photo])
   const usePhoto = photo && !failed
+
+  // Kéo để di chuyển khung nhìn ảnh nền (ảnh bị cắt trên màn hình dọc).
+  const [pan, setPan] = useState(() => load('vibe.pan', { x: 50, y: 45 }))
+  useEffect(() => save('vibe.pan', pan), [pan])
+  const dragRef = useRef(null)
+  const onDown = (e) => {
+    if (!usePhoto) return
+    dragRef.current = { sx: e.clientX, sy: e.clientY, px: pan.x, py: pan.y }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* ignore */ }
+  }
+  const onMove = (e) => {
+    const d = dragRef.current
+    if (!d) return
+    const dx = e.clientX - d.sx
+    const dy = e.clientY - d.sy
+    setPan({
+      x: clamp(d.px - (dx / window.innerWidth) * 100),
+      y: clamp(d.py - (dy / window.innerHeight) * 100),
+    })
+  }
+  const onUp = (e) => {
+    dragRef.current = null
+    try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* ignore */ }
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -71,10 +98,16 @@ export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
   }, [])
 
   return (
-    <div className={`scene scene--${scene}`} aria-hidden="true">
+    <div
+      className={`scene scene--${scene} ${usePhoto ? 'scene--draggable' : ''}`}
+      aria-hidden="true"
+      onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+    >
       {usePhoto ? (
         <div className="scene__photo">
-          <img src={photo} alt="" className="scene__photo-img" onError={() => setFailed(true)} />
+          <img src={photo} alt="" className="scene__photo-img"
+            style={{ objectPosition: `${pan.x}% ${pan.y}%` }}
+            draggable="false" onError={() => setFailed(true)} />
         </div>
       ) : (
         <DalatSVG />

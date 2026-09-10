@@ -470,6 +470,7 @@ export default function App() {
       <Dock
         yt={yt} queue={queue} index={index}
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
+        shuffle={shuffle} onToggleShuffle={onToggleShuffle}
         leftTab={leftTab} onToggleLeft={toggleLeft}
         journalOpen={journalOpen} onToggleJournal={() => setJournalOpen((v) => !v)}
         onHideUI={() => setUiHidden(true)}

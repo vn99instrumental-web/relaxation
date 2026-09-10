@@ -101,6 +101,8 @@ input, textarea { font-family: inherit; }
 
 /* ============ CẢNH NỀN ============ */
 .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--bg-0); }
+.scene--draggable { touch-action: none; cursor: grab; }
+.scene--draggable:active { cursor: grabbing; }
 .scene__svg, .scene__photo {
   position: absolute; inset: -2%;
   width: 104%; height: 104%;
@@ -372,6 +374,8 @@ input, textarea { font-family: inherit; }
 .ctrl { border: 1px solid var(--border); background: var(--surface); color: var(--ink); width: 42px; height: 42px; border-radius: 50%; font-size: 0.9rem; transition: 0.2s; }
 .ctrl:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-2); }
 .ctrl:disabled { opacity: 0.38; cursor: default; }
+.ctrl.is-on { color: var(--gold-soft); border-color: var(--border-strong); background: var(--sel); }
+.ctrl--sm { width: 36px; height: 36px; font-size: 0.82rem; }
 .ctrl--main { width: 50px; height: 50px; background: linear-gradient(160deg, var(--gold-soft), var(--gold)); border-color: transparent; color: #2a1e0c; font-size: 1rem; box-shadow: 0 4px 14px rgba(201,154,78,0.3); }
 .ctrl--main:hover:not(:disabled) { filter: brightness(1.08); }
 .player__vol { margin-left: auto; display: flex; align-items: center; gap: 9px; font-size: 0.85rem; }
