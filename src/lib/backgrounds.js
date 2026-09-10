@@ -9,6 +9,10 @@ const px = (id) => ({
 })
 
 export const DEFAULT_BACKGROUNDS = [
+  // Cảnh vintage "Đà Lạt 1994" (từ thiết kế Stitch) — ảnh nội bộ
+  { id: 'vs_dusk', label: 'Hoàng hôn 1994', tag: 'vintage', url: '/scenes/dusk.jpg', thumb: '/scenes/dusk.jpg' },
+  { id: 'vs_rain', label: 'Đêm mưa Cà phê Tùng', tag: 'vintage', url: '/scenes/rainynight.jpg', thumb: '/scenes/rainynight.jpg' },
+  { id: 'vs_morning', label: 'Sáng sớm Đồi Thông', tag: 'vintage', url: '/scenes/morning.jpg', thumb: '/scenes/morning.jpg' },
   // Đúng Đà Lạt
   { id: 'dl1', label: 'Hồ Đà Lạt trong sương', tag: 'Đà Lạt', ...px(31017723) },
   { id: 'dl2', label: 'Quảng trường Lâm Viên', tag: 'Đà Lạt', ...px(21250288) },
@@ -25,4 +29,11 @@ export const DEFAULT_BACKGROUNDS = [
   { id: 'hl7', label: 'Đường núi mờ sương', tag: 'cao nguyên', ...px(15977280) },
 ]
 
-export const DEFAULT_BG_ID = 'dl1'
+export const DEFAULT_BG_ID = 'vs_dusk'
+
+// 3 cảnh vintage để nút chọn nhanh (khớp theo URL, chạy được cả bản local lẫn Supabase)
+export const VINTAGE_SCENES = [
+  { key: 'dusk', label: 'Hoàng hôn', url: '/scenes/dusk.jpg' },
+  { key: 'rain', label: 'Đêm mưa', url: '/scenes/rainynight.jpg' },
+  { key: 'morning', label: 'Sáng sớm', url: '/scenes/morning.jpg' },
+]

@@ -13,7 +13,7 @@ import { useSupabaseRoom } from './hooks/useSupabaseRoom'
 import { useSupabaseGallery } from './hooks/useSupabaseGallery'
 import { useRoomSettings } from './hooks/useRoomSettings'
 import { load, save } from './lib/storage'
-import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID } from './lib/backgrounds'
+import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, VINTAGE_SCENES } from './lib/backgrounds'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 
 let keySeed = 1
@@ -252,6 +252,13 @@ export default function App() {
     setBgId(ids[(i + dir + ids.length) % ids.length])
   }, [backgrounds, bgId])
 
+  // Chọn nhanh 1 trong 3 cảnh vintage (khớp theo URL nên chạy cả local lẫn Supabase)
+  const pickScene = useCallback((url) => {
+    const b = backgrounds.find((x) => (x.url || '').endsWith(url))
+    if (b) setBgId(b.id)
+  }, [backgrounds])
+  const sceneActive = (url) => (currentBg?.url || '').endsWith(url)
+
   const addUserBg = useCallback((label, url) => {
     const id = `u${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     setUserBgs((list) => [...list, { id, label: label || 'Ảnh của tôi', url, thumb: url }])
@@ -300,6 +307,17 @@ export default function App() {
             <h1>Vibe Space</h1>
           </div>
           <div className="topbar__actions">
+            <div className="scene-tabs" title="Chọn cảnh vintage">
+              {VINTAGE_SCENES.map((s) => (
+                <button
+                  key={s.key}
+                  className={`scene-tab ${sceneActive(s.url) ? 'is-active' : ''}`}
+                  onClick={() => pickScene(s.url)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
             <button className="icon-btn" onClick={() => cycleBg(1)} title={`Ảnh: ${currentBg?.label || ''} — bấm để đổi`}>🖼</button>
             <button className="icon-btn" onClick={() => setSettingsOpen(true)} title="Cài đặt">⚙</button>
           </div>
