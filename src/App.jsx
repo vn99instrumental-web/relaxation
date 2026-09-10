@@ -12,6 +12,7 @@ import { useGistSync } from './hooks/useGistSync'
 import { useSupabaseRoom } from './hooks/useSupabaseRoom'
 import { load, save } from './lib/storage'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID } from './lib/backgrounds'
+import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 
 const PRESETS = [
   { title: 'Lofi Girl · radio', videoId: 'jfKfPfyJRdk' },
@@ -49,7 +50,7 @@ export default function App() {
     load('vibe.sync', { token: '', gistId: '', roomName: 'Vibe Space Journal' }),
   )
   const [supaConfig, setSupaConfig] = useState(() =>
-    load('vibe.supabase', { url: '', key: '', room: '' }),
+    load('vibe.supabase', SUPABASE_DEFAULTS),
   )
 
   // Điều khiển hiển thị: mặc định đóng hết để thấy trọn khung cảnh
