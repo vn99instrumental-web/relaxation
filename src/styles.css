@@ -112,15 +112,12 @@ input, textarea { font-family: inherit; }
 .scene--rain .scene__svg { filter: brightness(0.8) saturate(0.8); }
 .scene--rain .fog { opacity: 0.6; }
 
-/* ============ KHUNG APP ============ */
-.app { position: relative; height: 100%; z-index: 1; }
-.app__shell {
-  position: relative; height: 100%;
-  display: flex; flex-direction: column;
-  padding: 18px clamp(14px, 3vw, 36px); overflow: hidden;
-}
+/* ============ KHUNG APP (điện ảnh — cảnh là chính) ============ */
+.app { position: relative; height: 100%; z-index: 1; overflow: hidden; }
+.stage { position: absolute; inset: 0; z-index: 1; padding: 16px clamp(12px, 3vw, 30px); pointer-events: none; }
+.stage > * { pointer-events: auto; }
 
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 13px; }
 .brand__mark { font-size: 1.7rem; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); color: var(--gold-soft); }
 .brand h1 { font-family: var(--serif); font-size: 1.6rem; letter-spacing: 0.4px; font-weight: 600; }
@@ -133,23 +130,80 @@ input, textarea { font-family: inherit; }
 .icon-btn { border: 1px solid var(--border); background: var(--panel); color: var(--ink); width: 40px; height: 40px; border-radius: 10px; font-size: 1.1rem; backdrop-filter: blur(8px); transition: 0.25s; }
 .icon-btn:hover { border-color: var(--border-strong); }
 
-.grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: clamp(12px, 2vw, 22px); }
-.grid__col { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
-.grid__col--left { overflow: hidden; }
-
-/* ============ PANEL (khung ảnh cũ) ============ */
-.panel {
-  position: relative;
+/* ---- Panel nổi (mở khi cần, không che kín cảnh) ---- */
+.floaty {
+  position: absolute;
+  bottom: 94px;
+  width: min(410px, 44vw);
+  max-height: min(64vh, 560px);
+  display: flex; flex-direction: column;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
-  backdrop-filter: blur(16px) saturate(1.1) brightness(0.92);
-  box-shadow: var(--shadow), inset 0 0 0 1px rgba(0,0,0,0.25), inset 0 1px 0 rgba(231,220,196,0.06);
-  display: flex; flex-direction: column; min-height: 0;
+  backdrop-filter: blur(18px) saturate(1.1) brightness(0.9);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(231,220,196,0.06);
+  overflow: hidden;
+  animation: floatIn 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.panel__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; padding-bottom: 11px; border-bottom: 1px solid var(--border); }
-.panel__head h2 { font-family: var(--serif); font-size: 1.12rem; letter-spacing: 0.3px; display: flex; align-items: center; gap: 9px; color: var(--paper); }
+.floaty--left { left: clamp(12px, 3vw, 30px); }
+.floaty--right { right: clamp(12px, 3vw, 30px); }
+@keyframes floatIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+.floaty__tabs { display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.floaty__tab { border: none; background: transparent; color: var(--ink-dim); padding: 6px 12px; border-radius: 8px; font-size: 0.84rem; font-family: var(--serif); transition: 0.2s; }
+.floaty__tab.is-active { background: rgba(201,154,78,0.16); color: var(--ink); }
+.floaty__close { margin-left: auto; background: none; border: none; color: var(--ink-dim); font-size: 0.95rem; padding: 4px 7px; border-radius: 7px; }
+.floaty__close:hover { color: var(--ink); }
+.floaty__body { flex: 1; min-height: 0; padding: 14px; overflow: hidden; display: flex; }
+.floaty__body--flush { padding: 0; }
+
+.pane { flex: 1; min-height: 0; display: flex; flex-direction: column; width: 100%; }
+.pane--pad, .floaty__body--flush .pane { padding: 14px; }
+.pane__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.pane__head h2 { font-family: var(--serif); font-size: 1.08rem; letter-spacing: 0.3px; color: var(--paper); }
+.pane.mixer { overflow-y: auto; }
+
+/* ---- Cửa sổ video nhỏ (PiP) ---- */
+.pip { position: fixed; top: 72px; right: clamp(12px, 3vw, 30px); z-index: 6; width: 280px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-strong); background: rgba(10,8,5,0.9); box-shadow: var(--shadow); transition: opacity 0.25s, transform 0.25s; }
+.pip.is-hidden { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+.pip.is-shown { opacity: 1; }
+.pip__bar { display: flex; align-items: center; justify-content: space-between; padding: 5px 9px; background: rgba(0,0,0,0.4); }
+.pip__label { font-size: 0.72rem; color: var(--ink-dim); letter-spacing: 0.05em; }
+.pip__close { background: none; border: none; color: var(--ink-dim); font-size: 0.8rem; }
+.pip__close:hover { color: var(--ink); }
+.pip__frame { aspect-ratio: 16/9; }
+#yt-frame, #yt-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+/* Khi ẩn: vẫn gắn trong DOM (để phát tiếng) nhưng đưa ra ngoài màn hình */
+.pip.is-hidden .pip__frame { position: fixed; left: -9999px; width: 280px; height: 158px; }
+
+/* ---- Thanh dock đáy ---- */
+.dock {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: 16px; z-index: 7;
+  display: flex; align-items: center; gap: 14px;
+  max-width: calc(100vw - 24px);
+  padding: 8px 14px;
+  background: rgba(24, 19, 12, 0.72);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  backdrop-filter: blur(20px) saturate(1.1);
+  box-shadow: var(--shadow);
+}
+.dock__now { display: flex; align-items: center; gap: 9px; min-width: 0; max-width: 240px; }
+.dock__spin { color: var(--gold-soft); font-size: 0.95rem; display: inline-block; }
+.dock__spin.is-spinning { animation: spin 6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.dock__title { font-family: var(--serif-body); font-size: 0.86rem; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dock__count { color: var(--ink-dim); }
+.dock__transport { display: flex; align-items: center; gap: 8px; }
+.dock__vol { display: flex; align-items: center; gap: 7px; margin-left: 4px; }
+.dock__vol input { width: 82px; }
+.dock__tabs { display: flex; align-items: center; gap: 6px; padding-left: 12px; border-left: 1px solid var(--border); }
+.dock__btn { display: flex; align-items: center; gap: 5px; border: 1px solid var(--border); background: rgba(231,220,196,0.04); color: var(--ink-dim); padding: 8px 12px; border-radius: 10px; font-size: 0.82rem; transition: 0.2s; }
+.dock__btn:hover { color: var(--ink); border-color: var(--border-strong); }
+.dock__btn.is-active { background: rgba(201,154,78,0.2); color: var(--ink); border-color: var(--border-strong); }
+
+.queue__head-actions { display: flex; align-items: center; gap: 8px; }
 
 /* ============ MÁY HÁT ============ */
 .player { flex: 1; min-height: 0; }
@@ -294,21 +348,20 @@ input[type='range']:disabled { opacity: 0.4; }
 .settings-msg { font-size: 0.78rem; color: var(--gold-soft); }
 
 /* ============ RESPONSIVE ============ */
-@media (max-width: 900px) {
-  body { overflow: auto; }
-  .app, .app__shell { height: auto; min-height: 100%; overflow: visible; }
-  .scene { position: fixed; }
-  .grid { grid-template-columns: 1fr; }
-  .grid__col--left { overflow: visible; }
-  .queue { max-height: 220px; }
-  .journal__list { max-height: 50vh; }
-  .journal, .player { min-height: 420px; }
-  .player__vol input { width: 80px; }
+@media (max-width: 820px) {
+  .floaty { width: auto; left: 10px; right: 10px; bottom: 88px; max-height: 62vh; }
+  .floaty--left, .floaty--right { left: 10px; right: 10px; }
+  .pip { top: auto; bottom: 88px; right: 10px; width: 210px; }
+  .dock { gap: 10px; padding: 7px 10px; overflow-x: auto; }
+  .dock__now { display: none; }
+  .dock__btn span { display: none; }
+  .dock__vol { display: none; }
 }
 @media (max-width: 480px) {
   .brand p { display: none; }
-  .scene-tab { padding: 6px 9px; font-size: 0.75rem; }
-  .mixer__row { grid-template-columns: 112px 1fr; }
+  .brand h1 { font-size: 1.35rem; }
+  .scene-tab { padding: 6px 9px; font-size: 0.74rem; }
+  .mixer__row { grid-template-columns: 108px 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   .scene__grain, .fog, .scene__rays span, .scene__svg { animation: none !important; }

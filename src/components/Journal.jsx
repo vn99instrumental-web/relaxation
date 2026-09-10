@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 // Cuốn nhật ký chung 2 người. Hiển thị tin nhắn nhóm theo ngày,
 // ô nhập tên + ô soạn tin. Trạng thái kết nối Gist ở góc.
 // props: journal (hook useGistSync), username, setUsername, onOpenSettings
-export default function Journal({ journal, username, setUsername, onOpenSettings }) {
+export default function Journal({ journal, username, setUsername, onOpenSettings, onClose }) {
   const { messages, status, error, sending, online, send, refresh } = journal
   const [draft, setDraft] = useState('')
   const [editingName, setEditingName] = useState(!username)
@@ -41,9 +41,9 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
   }[status]
 
   return (
-    <section className="panel journal">
-      <header className="panel__head">
-        <h2>📓 Nhật ký chung</h2>
+    <section className="pane journal">
+      <header className="pane__head">
+        <h2>Nhật ký chung</h2>
         <div className="journal__status">
           <span className={`dot dot--${status}`} />
           <span className="muted">{statusText}</span>
@@ -51,6 +51,7 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
             <button className="link-btn" onClick={refresh} title="Làm mới">↻</button>
           )}
           <button className="link-btn" onClick={onOpenSettings} title="Cài đặt đồng bộ">⚙</button>
+          {onClose && <button className="link-btn" onClick={onClose} title="Đóng">✕</button>}
         </div>
       </header>
 

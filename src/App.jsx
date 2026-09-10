@@ -4,12 +4,12 @@ import Player from './components/Player'
 import AmbientMixer from './components/AmbientMixer'
 import Journal from './components/Journal'
 import SettingsModal from './components/SettingsModal'
+import Dock from './components/Dock'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useGistSync } from './hooks/useGistSync'
 import { load, save } from './lib/storage'
 
-// Vài gợi ý lofi/piano buồn (người dùng có thể thay bằng link của mình).
 const PRESETS = [
   { title: 'Lofi Girl · radio', videoId: 'jfKfPfyJRdk' },
   { title: 'Piano buồn', videoId: 'lTRiuFIWV54' },
@@ -41,11 +41,15 @@ export default function App() {
   const [syncConfig, setSyncConfig] = useState(() =>
     load('vibe.sync', { token: '', gistId: '', roomName: 'Vibe Space Journal' }),
   )
+
+  // Điều khiển hiển thị: mặc định đóng hết để thấy trọn khung cảnh
+  const [leftTab, setLeftTab] = useState(null)   // null | 'music' | 'ambient'
+  const [journalOpen, setJournalOpen] = useState(false)
+  const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const journal = useGistSync({ ...syncConfig, username })
 
-  // ---- Lưu trạng thái ----
   useEffect(() => save('vibe.queue', queue), [queue])
   useEffect(() => save('vibe.ytVolume', ytVolume), [ytVolume])
   useEffect(() => save('vibe.scene', scene), [scene])
@@ -53,7 +57,6 @@ export default function App() {
   useEffect(() => save('vibe.username', username), [username])
   useEffect(() => save('vibe.sync', syncConfig), [syncConfig])
 
-  // ---- Điều khiển hàng chờ ----
   const playAt = useCallback((i) => {
     setQueue((q) => {
       const t = q[i]
@@ -75,15 +78,8 @@ export default function App() {
     })
   }, [yt])
 
-  const onLoadPreset = useCallback((p) => {
-    onAddMany([{ type: 'video', videoId: p.videoId }])
-  }, [onAddMany])
-
-  const onClear = useCallback(() => {
-    setQueue([])
-    setIndex(0)
-  }, [])
-
+  const onLoadPreset = useCallback((p) => onAddMany([{ type: 'video', videoId: p.videoId }]), [onAddMany])
+  const onClear = useCallback(() => { setQueue([]); setIndex(0) }, [])
   const onRemove = useCallback((i) => {
     setQueue((q) => q.filter((_, idx) => idx !== i))
     setIndex((cur) => (i < cur ? cur - 1 : cur))
@@ -93,53 +89,52 @@ export default function App() {
     setQueue((q) => {
       if (!q.length) return q
       const ni = (index + 1) % q.length
-      setIndex(ni)
-      yt.playTrack(q[ni])
-      return q
+      setIndex(ni); yt.playTrack(q[ni]); return q
     })
   }, [index, yt])
-
   const onPrev = useCallback(() => {
     setQueue((q) => {
       if (!q.length) return q
       const pi = (index - 1 + q.length) % q.length
-      setIndex(pi)
-      yt.playTrack(q[pi])
-      return q
+      setIndex(pi); yt.playTrack(q[pi]); return q
     })
   }, [index, yt])
 
-  // Hết bài -> tự chuyển bài
   useEffect(() => { yt.setOnEnded(onNext) }, [yt, onNext])
-
-  // Áp âm lượng YouTube
   useEffect(() => { if (yt.ready) yt.setVolume(ytVolume) }, [ytVolume, yt.ready, yt])
 
-  // Cập nhật tên bài thật vào hàng chờ khi biết được
   useEffect(() => {
     if (!yt.nowTitle) return
     setQueue((q) => {
       if (!q[index] || q[index].title === yt.nowTitle) return q
-      const nq = [...q]
-      nq[index] = { ...nq[index], title: yt.nowTitle }
-      return nq
+      const nq = [...q]; nq[index] = { ...nq[index], title: yt.nowTitle }; return nq
     })
   }, [yt.nowTitle, index])
 
-  // Mật độ mưa nhìn = nền theo preset + mức âm lượng mưa đang chỉnh
   const rainDensity = useMemo(() => {
     const base = scene === 'rain' ? 0.55 : scene === 'ray' ? 0.12 : 0.28
     return Math.min(1, base + ambient.levels.rain * 0.6)
   }, [scene, ambient.levels.rain])
 
+  const toggleLeft = (tab) => setLeftTab((cur) => (cur === tab ? null : tab))
+
   return (
     <div className="app">
       <Scene scene={scene} rain={rainDensity} photo={photo} />
 
-      <div className="app__shell">
+      {/* Video YouTube luôn tồn tại (để phát nhạc), nhưng thu nhỏ và có thể ẩn */}
+      <div className={`pip ${showVideo ? 'is-shown' : 'is-hidden'}`}>
+        <div className="pip__bar">
+          <span className="pip__label">Video</span>
+          <button className="pip__close" onClick={() => setShowVideo(false)} title="Ẩn video">✕</button>
+        </div>
+        <div className="pip__frame"><div id="yt-frame" /></div>
+      </div>
+
+      <div className="stage">
         <header className="topbar">
           <div className="brand">
-            <span className="brand__mark">☔</span>
+            <span className="brand__mark">☂</span>
             <div>
               <h1>Vibe Space</h1>
               <p>Đà Lạt trong màn sương những năm 90</p>
@@ -152,63 +147,62 @@ export default function App() {
                 { id: 'rain', label: '🌧️ Mưa' },
                 { id: 'ray', label: '🌤️ Nắng' },
               ].map((s) => (
-                <button
-                  key={s.id}
-                  className={`scene-tab ${scene === s.id ? 'is-active' : ''}`}
-                  onClick={() => setScene(s.id)}
-                >
-                  {s.label}
-                </button>
+                <button key={s.id} className={`scene-tab ${scene === s.id ? 'is-active' : ''}`}
+                  onClick={() => setScene(s.id)}>{s.label}</button>
               ))}
             </div>
             <button className="icon-btn" onClick={() => setSettingsOpen(true)} title="Cài đặt">⚙</button>
           </div>
         </header>
 
-        <main className="grid">
-          <div className="grid__col grid__col--left">
-            <Player
-              yt={yt}
-              queue={queue}
-              index={index}
-              onAddMany={onAddMany}
-              onSelect={playAt}
-              onRemove={onRemove}
-              onClear={onClear}
-              onNext={onNext}
-              onPrev={onPrev}
-              ytVolume={ytVolume}
-              setYtVolume={setYtVolume}
-              presets={PRESETS}
-              onLoadPreset={onLoadPreset}
-            />
-            <AmbientMixer ambient={ambient} />
+        {/* Panel trái: Nhạc / Không gian (mở khi cần) */}
+        {leftTab && (
+          <div className="floaty floaty--left">
+            <div className="floaty__tabs">
+              <button className={`floaty__tab ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => setLeftTab('music')}>♫ Nhạc</button>
+              <button className={`floaty__tab ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => setLeftTab('ambient')}>☔ Không gian</button>
+              <button className="floaty__close" onClick={() => setLeftTab(null)} title="Đóng">✕</button>
+            </div>
+            <div className="floaty__body">
+              {leftTab === 'music' ? (
+                <Player
+                  queue={queue} index={index} nowTitle={yt.nowTitle}
+                  onAddMany={onAddMany} onSelect={playAt} onRemove={onRemove} onClear={onClear}
+                  presets={PRESETS} onLoadPreset={onLoadPreset}
+                  showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
+                />
+              ) : (
+                <AmbientMixer ambient={ambient} />
+              )}
+            </div>
           </div>
+        )}
 
-          <div className="grid__col grid__col--right">
-            <Journal
-              journal={journal}
-              username={username}
-              setUsername={setUsername}
-              onOpenSettings={() => setSettingsOpen(true)}
-            />
+        {/* Drawer phải: Nhật ký */}
+        {journalOpen && (
+          <div className="floaty floaty--right">
+            <div className="floaty__body floaty__body--flush">
+              <Journal
+                journal={journal} username={username} setUsername={setUsername}
+                onOpenSettings={() => setSettingsOpen(true)}
+                onClose={() => setJournalOpen(false)}
+              />
+            </div>
           </div>
-        </main>
-
-        <footer className="footer">
-          <span>Pha một tách trà, nghe mưa rơi… ☕</span>
-        </footer>
+        )}
       </div>
 
+      <Dock
+        yt={yt} queue={queue} index={index}
+        onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
+        leftTab={leftTab} onToggleLeft={toggleLeft}
+        journalOpen={journalOpen} onToggleJournal={() => setJournalOpen((v) => !v)}
+      />
+
       <SettingsModal
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        config={syncConfig}
-        setConfig={setSyncConfig}
-        scene={scene}
-        setScene={setScene}
-        photo={photo}
-        setPhoto={setPhoto}
+        open={settingsOpen} onClose={() => setSettingsOpen(false)}
+        config={syncConfig} setConfig={setSyncConfig}
+        scene={scene} setScene={setScene} photo={photo} setPhoto={setPhoto}
       />
     </div>
   )

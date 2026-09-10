@@ -65,9 +65,9 @@ export default function AmbientMixer({ ambient }) {
   }
 
   return (
-    <section className="panel mixer">
-      <header className="panel__head">
-        <h2>☔ Không gian</h2>
+    <section className="pane mixer">
+      <header className="pane__head">
+        <h2>Pha không gian</h2>
         <button className={`toggle ${started ? 'is-on' : ''}`} onClick={started ? stop : start}>
           {started ? 'Đang bật' : 'Bật tiếng'}
         </button>
