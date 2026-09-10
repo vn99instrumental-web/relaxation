@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Vibe Space - lofi music, ambient sounds & a shared journal for two, wrapped in a misty 90s Da Lat atmosphere.",
+  "description": "Hien Mua - lofi music, ambient sounds & a shared journal for two, wrapped in a misty 90s Da Lat atmosphere.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

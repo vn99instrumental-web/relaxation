@@ -297,8 +297,11 @@ export default function App() {
 
   const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
 
+  // Tông khung theo chủ đề đang chọn (đổi màu kính/viền/nhấn cho hợp cảnh)
+  const themeKey = { vs_dusk: 'dusk', vs_rain: 'rain', vs_morning: 'morning' }[currentBg?.id] || 'dusk'
+
   return (
-    <div className={`app ${uiHidden ? 'is-immersive' : ''}`}>
+    <div className={`app ${uiHidden ? 'is-immersive' : ''}`} data-theme={themeKey}>
       <Scene scene={scene} rain={rainDensity} photo={currentBg?.url || ''} />
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
@@ -308,7 +311,10 @@ export default function App() {
         <header className="topbar">
           <div className="brand">
             <span className="brand__mark">☂</span>
-            <h1>Vibe Space</h1>
+            <div className="brand__name">
+              <h1>Hiên Mưa</h1>
+              <p>nghe mưa, viết cho nhau</p>
+            </div>
           </div>
           <div className="topbar__actions">
             <div className="scene-tabs" title="Đổi chủ đề vintage">
