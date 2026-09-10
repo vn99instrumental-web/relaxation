@@ -11,7 +11,7 @@ export default function SettingsModal({
   backgrounds, bgId, setBgId, onAddImage, onRemoveImage, hiddenCount, onRestoreBg,
   shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
-  admin, setAdmin, keepAwake, setKeepAwake,
+  admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -116,6 +116,10 @@ export default function SettingsModal({
 
           <section className="settings-block">
             <h3>🎵 Nghe nhạc</h3>
+            <label className="admin-row">
+              <input type="checkbox" checked={!!autoplay} onChange={(e) => setAutoplay(e.target.checked)} />
+              <span>Mở trang là tự phát một bài ngẫu nhiên trong hàng chờ.</span>
+            </label>
             <label className="admin-row">
               <input type="checkbox" checked={!!keepAwake} onChange={(e) => setKeepAwake(e.target.checked)} />
               <span>Giữ màn hình sáng khi đang phát để nhạc không bị ngắt (điện thoại).</span>

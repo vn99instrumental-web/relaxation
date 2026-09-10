@@ -457,6 +457,7 @@ input[type='range']:disabled { opacity: 0.4; }
 @keyframes pulse { 50% { opacity: 0.3; } }
 .link-btn { background: none; border: none; color: var(--ink-dim); font-size: 0.82rem; padding: 2px 5px; transition: 0.2s; }
 .link-btn:hover { color: var(--gold-soft); }
+.link-btn.is-on { color: var(--gold-soft); background: var(--sel); border-radius: 7px; }
 .journal__error { background: rgba(187, 138, 120, 0.14); color: #e0b6a8; font-size: 0.78rem; padding: 8px 10px; border-radius: 8px; margin-bottom: 10px; }
 
 .journal__list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px; }

@@ -5,7 +5,7 @@ import { parseYouTube, videoThumb } from '../lib/youtube'
 // playlist mới), hàng chờ, và lưu/mở playlist.
 export default function Player({
   queue, index, onAddMany, onSelect, onRemove, onClear,
-  showVideo, onToggleVideo,
+  showVideo, onToggleVideo, shuffle, onToggleShuffle,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
   onAddToPlaylist, onCreatePlaylist,
 }) {
@@ -79,6 +79,10 @@ export default function Player({
       <div className="queue__head">
         <span className="muted">Hàng chờ · {queue.length}</span>
         <div className="queue__head-actions">
+          {queue.length > 1 && (
+            <button className={`link-btn ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
+              title="Phát ngẫu nhiên">🔀 Trộn</button>
+          )}
           <button className="link-btn" onClick={onToggleVideo}>{showVideo ? 'Ẩn video' : 'Video'}</button>
           {queue.length > 0 && <button className="link-btn" onClick={() => setSaving((s) => !s)}>Lưu playlist</button>}
           {queue.length > 0 && <button className="link-btn" onClick={onClear}>Xóa</button>}

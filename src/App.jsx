@@ -42,6 +42,8 @@ export default function App() {
   const [index, setIndex] = useState(0)
   const [ytVolume, setYtVolume] = useState(() => load('vibe.ytVolume', 70))
   const [localPlaylists, setLocalPlaylists] = useState(() => load('vibe.playlists', []))
+  const [shuffle, setShuffle] = useState(() => load('vibe.shuffle', false))
+  const [autoplay, setAutoplay] = useState(() => load('vibe.autoplay', true))
 
   const [scene, setScene] = useState(() => load('vibe.scene', 'fog'))
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
@@ -95,6 +97,8 @@ export default function App() {
 
   useEffect(() => save('vibe.queue', queue), [queue])
   useEffect(() => save('vibe.playlists', localPlaylists), [localPlaylists])
+  useEffect(() => save('vibe.shuffle', shuffle), [shuffle])
+  useEffect(() => save('vibe.autoplay', autoplay), [autoplay])
   useEffect(() => save('vibe.supabase', supaConfig), [supaConfig])
   useEffect(() => save('vibe.ytVolume', ytVolume), [ytVolume])
   useEffect(() => save('vibe.scene', scene), [scene])
@@ -195,10 +199,39 @@ export default function App() {
   const onNext = useCallback(() => {
     setQueue((q) => {
       if (!q.length) return q
-      const ni = (index + 1) % q.length
+      let ni
+      if (shuffle && q.length > 1) {
+        do { ni = Math.floor(Math.random() * q.length) } while (ni === index)
+      } else {
+        ni = (index + 1) % q.length
+      }
       setIndex(ni); yt.playTrack(q[ni]); return q
     })
-  }, [index, yt])
+  }, [index, yt, shuffle])
+
+  // Trộn thứ tự hàng chờ ngay (giữ bài đang phát lên đầu để không ngắt nhạc)
+  const shuffleNow = useCallback(() => {
+    setQueue((q) => {
+      if (q.length < 2) return q
+      const cur = q[index]
+      const rest = q.filter((_, i) => i !== index)
+      for (let i = rest.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[rest[i], rest[j]] = [rest[j], rest[i]]
+      }
+      const nq = cur ? [cur, ...rest] : rest
+      setIndex(0)
+      return nq
+    })
+  }, [index])
+
+  const onToggleShuffle = useCallback(() => {
+    setShuffle((s) => {
+      const next = !s
+      if (next) shuffleNow() // bật trộn -> xáo luôn 1 lần cho thấy hiệu quả
+      return next
+    })
+  }, [shuffleNow])
   const onPrev = useCallback(() => {
     setQueue((q) => {
       if (!q.length) return q
@@ -209,6 +242,34 @@ export default function App() {
 
   useEffect(() => { yt.setOnEnded(onNext) }, [yt, onNext])
   useEffect(() => { if (yt.ready) yt.setVolume(ytVolume) }, [ytVolume, yt.ready, yt])
+
+  // Tự phát 1 bài NGẪU NHIÊN khi mở trang (nếu bật). Trình duyệt thường chặn
+  // phát-tự-động có tiếng (nhất là điện thoại) -> chạm đầu tiên sẽ phát bài đã chọn.
+  const ytLiveRef = useRef(yt); ytLiveRef.current = yt
+  const autoStartedRef = useRef(false)
+  const pendingAutoRef = useRef(false)
+  useEffect(() => {
+    if (autoStartedRef.current || !autoplay || !yt.ready) return
+    autoStartedRef.current = true
+    setQueue((q) => {
+      if (!q.length) return q
+      const i = Math.floor(Math.random() * q.length)
+      setIndex(i)
+      pendingAutoRef.current = true
+      setTimeout(() => ytLiveRef.current.playTrack(q[i]), 0)
+      return q
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yt.ready, autoplay])
+  useEffect(() => {
+    const kick = () => {
+      const y = ytLiveRef.current
+      if (pendingAutoRef.current && !y.playing) y.play()
+      pendingAutoRef.current = false
+    }
+    window.addEventListener('pointerdown', kick, { once: true })
+    return () => window.removeEventListener('pointerdown', kick)
+  }, [])
 
   useEffect(() => {
     if (!yt.nowTitle) return
@@ -382,6 +443,7 @@ export default function App() {
                 queue={queue} index={index} nowTitle={yt.nowTitle}
                 onAddMany={onAddMany} onSelect={playAt} onRemove={onRemove} onClear={onClear}
                 showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
+                shuffle={shuffle} onToggleShuffle={onToggleShuffle}
                 playlists={playlists} onSavePlaylist={savePlaylist}
                 onLoadPlaylist={loadPlaylist} onDeletePlaylist={deletePlaylist}
                 onAddToPlaylist={addToPlaylist} onCreatePlaylist={createPlaylistWith}
@@ -431,6 +493,7 @@ export default function App() {
         supaConfig={supaConfig} setSupaConfig={setSupaConfig} supaStatus={supa.status} supaError={supa.error}
         admin={admin} setAdmin={setAdmin}
         keepAwake={keepAwake} setKeepAwake={setKeepAwake}
+        autoplay={autoplay} setAutoplay={setAutoplay}
         scene={scene} setScene={setScene}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
