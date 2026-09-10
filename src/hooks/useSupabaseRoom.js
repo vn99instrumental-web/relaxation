@@ -127,7 +127,14 @@ export function useSupabaseRoom(config, username) {
     reloadPlaylists()
   }, [reloadPlaylists])
 
+  const updatePlaylistRow = useCallback(async (id, tracks) => {
+    const c = clientRef.current
+    if (!c) return
+    try { await c.from('playlists').update({ tracks, updated_at: new Date().toISOString() }).eq('id', id) } catch (e) { setError(e.message || 'Cập nhật playlist lỗi') }
+    reloadPlaylists()
+  }, [reloadPlaylists])
+
   const journal = { messages, status, error, sending, online: enabled && status === 'online', send, refresh, deleteMessage, clearMessages }
 
-  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, deleteMessage, clearMessages }
+  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, updatePlaylistRow, deleteMessage, clearMessages }
 }

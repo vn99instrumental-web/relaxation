@@ -144,6 +144,26 @@ export default function App() {
     if (supaRef.current.enabled) supaRef.current.deletePlaylistRow(id)
     else setLocalPlaylists((list) => list.filter((p) => p.id !== id))
   }, [])
+
+  const tracksFromParsed = (parsedList) =>
+    parsedList.map((p) => { const { key, ...rest } = trackFromParsed(p); return rest })
+
+  // Thêm link vào một playlist đã tạo
+  const addToPlaylist = useCallback((playlistId, parsedList) => {
+    const pl = playlistsRef.current.find((p) => p.id === playlistId)
+    if (!pl) return
+    const merged = [...pl.tracks, ...tracksFromParsed(parsedList)]
+    if (supaRef.current.enabled) supaRef.current.updatePlaylistRow(playlistId, merged)
+    else setLocalPlaylists((list) => list.map((p) => (p.id === playlistId ? { ...p, tracks: merged } : p)))
+  }, [])
+
+  // Tạo playlist mới từ link
+  const createPlaylistWith = useCallback((name, parsedList) => {
+    const tracks = tracksFromParsed(parsedList)
+    const nm = name || `Playlist ${new Date().toLocaleDateString('vi-VN')}`
+    if (supaRef.current.enabled) supaRef.current.savePlaylistRow(nm, tracks)
+    else setLocalPlaylists((list) => [{ id: `pl${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, name: nm, tracks, ts: Date.now() }, ...list])
+  }, [])
   const onRemove = useCallback((i) => {
     setQueue((q) => q.filter((_, idx) => idx !== i))
     setIndex((cur) => (i < cur ? cur - 1 : cur))
@@ -236,16 +256,6 @@ export default function App() {
             <h1>Vibe Space</h1>
           </div>
           <div className="topbar__actions">
-            <div className="scene-tabs">
-              {[
-                { id: 'fog', label: '🌫️ Sương' },
-                { id: 'rain', label: '🌧️ Mưa' },
-                { id: 'ray', label: '🌤️ Nắng' },
-              ].map((s) => (
-                <button key={s.id} className={`scene-tab ${scene === s.id ? 'is-active' : ''}`}
-                  onClick={() => setScene(s.id)}>{s.label}</button>
-              ))}
-            </div>
             <button className="icon-btn" onClick={() => cycleBg(1)} title={`Ảnh: ${currentBg?.label || ''} — bấm để đổi`}>🖼</button>
             <button className="icon-btn" onClick={() => setSettingsOpen(true)} title="Cài đặt">⚙</button>
           </div>
@@ -266,6 +276,7 @@ export default function App() {
                 showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
                 playlists={playlists} onSavePlaylist={savePlaylist}
                 onLoadPlaylist={loadPlaylist} onDeletePlaylist={deletePlaylist}
+                onAddToPlaylist={addToPlaylist} onCreatePlaylist={createPlaylistWith}
               />
             ) : (
               <AmbientMixer ambient={ambient} />

@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { parseYouTube, videoThumb } from '../lib/youtube'
 
-// Panel "Nhạc": dán nhiều link, gợi ý, hàng chờ, và lưu/tải playlist.
+// Panel "Nhạc": dán nhiều link (chọn thêm vào Hàng chờ / playlist đã tạo /
+// playlist mới), hàng chờ, và lưu/mở playlist.
 export default function Player({
   queue, index, onAddMany, onSelect, onRemove, onClear,
   showVideo, onToggleVideo,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
+  onAddToPlaylist, onCreatePlaylist,
 }) {
   const [input, setInput] = useState('')
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [plName, setPlName] = useState('')
+  const [target, setTarget] = useState('__queue__') // __queue__ | <playlistId> | __new__
+  const [newName, setNewName] = useState('')
+
+  const flash = (m) => { setNote(m); setTimeout(() => setNote(''), 3500) }
 
   const submit = (e) => {
     e.preventDefault()
@@ -21,23 +27,31 @@ export default function Player({
       const r = parseYouTube(p)
       if (r) parsed.push(r); else bad++
     }
-    if (parsed.length) {
+    if (!parsed.length) { flash('Không có link hợp lệ.'); return }
+    const tail = bad ? `, bỏ ${bad} link lỗi` : ''
+    if (target === '__new__') {
+      onCreatePlaylist(newName.trim(), parsed)
+      flash(`Đã tạo playlist với ${parsed.length} bài${tail}.`)
+      setNewName('')
+    } else if (target === '__queue__') {
       onAddMany(parsed)
-      setInput('')
-      setNote(`Đã thêm ${parsed.length} mục${bad ? `, bỏ ${bad} link lỗi` : ''}.`)
+      flash(`Đã thêm ${parsed.length} bài vào hàng chờ${tail}.`)
     } else {
-      setNote('Không có link hợp lệ.')
+      const pl = playlists.find((p) => p.id === target)
+      if (!pl) { onAddMany(parsed); flash(`Đã thêm ${parsed.length} bài vào hàng chờ${tail}.`) }
+      else { onAddToPlaylist(target, parsed); flash(`Đã thêm ${parsed.length} bài vào “${pl.name}”${tail}.`) }
     }
-    setTimeout(() => setNote(''), 3500)
+    setInput('')
   }
 
   const doSave = (e) => {
     e.preventDefault()
     onSavePlaylist(plName.trim() || `Playlist ${new Date().toLocaleDateString('vi-VN')}`)
     setPlName(''); setSaving(false)
-    setNote('Đã lưu playlist.')
-    setTimeout(() => setNote(''), 3000)
+    flash('Đã lưu playlist.')
   }
+
+  const targetValid = target === '__queue__' || target === '__new__' || playlists.some((p) => p.id === target)
 
   return (
     <div className="pane">
@@ -47,7 +61,18 @@ export default function Player({
           value={input} onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(e) }}
         />
-        <button type="submit" title="Thêm (Ctrl/⌘+Enter)">Thêm</button>
+        <div className="player__addbar">
+          <select className="player__target" value={targetValid ? target : '__queue__'}
+            onChange={(e) => setTarget(e.target.value)} title="Thêm vào đâu">
+            <option value="__queue__">▶ Hàng chờ</option>
+            {playlists.map((p) => <option key={p.id} value={p.id}>♫ {p.name}</option>)}
+            <option value="__new__">＋ Playlist mới…</option>
+          </select>
+          <button type="submit" title="Thêm (Ctrl/⌘+Enter)">Thêm</button>
+        </div>
+        {target === '__new__' && (
+          <input className="pl-newname" placeholder="Tên playlist mới…" value={newName} onChange={(e) => setNewName(e.target.value)} />
+        )}
       </form>
       {note && <div className="form-note">{note}</div>}
 
