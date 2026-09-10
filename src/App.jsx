@@ -195,13 +195,12 @@ export default function App() {
   }, [])
 
   const removeBackground = useCallback((id) => {
-    if (id === 'vector') return // giữ lại tranh vẽ làm nền dự phòng
     setUserBgs((list) => {
       if (list.some((b) => b.id === id)) return list.filter((b) => b.id !== id) // ảnh tự thêm -> xóa hẳn
       setHiddenBg((h) => (h.includes(id) ? h : [...h, id])) // ảnh mặc định -> ẩn đi
       return list
     })
-    setBgId((cur) => (cur === id ? 'vector' : cur))
+    setBgId((cur) => (cur === id ? '' : cur))
   }, [])
 
   // Thêm/xóa ảnh hợp nhất: Supabase khi bật chung, không thì local.
@@ -217,7 +216,7 @@ export default function App() {
   }, [addUserBg])
 
   const removeImage = useCallback((id) => {
-    if (sharedRef.current) galleryRef.current.removeImage(id)
+    if (sharedRef.current) { galleryRef.current.removeImage(id); setBgId((cur) => (cur === id ? '' : cur)) }
     else removeBackground(id)
   }, [removeBackground])
 

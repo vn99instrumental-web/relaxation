@@ -94,11 +94,11 @@ export default function SettingsModal({
               {backgrounds.map((b) => (
                 <button key={b.id} className={`bg-tile ${bgId === b.id ? 'is-active' : ''}`}
                   onClick={() => setBgId(b.id)} title={b.label}>
-                  {b.id === 'vector'
-                    ? <span className="bg-tile__vector">✎ Tranh vẽ</span>
+                  {isVector(b.id) || !b.url
+                    ? <span className="bg-tile__vector">✎ {b.label}</span>
                     : <img src={b.thumb || b.url} alt="" loading="lazy" />}
                   <span className="bg-tile__label">{b.label}</span>
-                  {(admin || isUserImg(b.id)) && !isVector(b.id) && (
+                  {(admin || isUserImg(b.id)) && (
                     <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); onRemoveImage(b.id) }} title="Xóa ảnh này">✕</span>
                   )}
                 </button>

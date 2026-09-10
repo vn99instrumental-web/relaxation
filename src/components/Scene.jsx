@@ -96,8 +96,7 @@ export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
       {/* Mưa phùn */}
       <canvas ref={canvasRef} className="scene__rain" />
 
-      {/* Phủ màu theo cảnh + chất phim cũ */}
-      <div className="scene__grade" />
+      {/* Chất phim nhẹ */}
       <div className="scene__grain" />
       <div className="scene__vignette" />
     </div>
