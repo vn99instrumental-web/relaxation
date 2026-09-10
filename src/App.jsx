@@ -35,6 +35,7 @@ export default function App() {
   const [queue, setQueue] = useState(() => load('vibe.queue', []))
   const [index, setIndex] = useState(0)
   const [ytVolume, setYtVolume] = useState(() => load('vibe.ytVolume', 70))
+  const [playlists, setPlaylists] = useState(() => load('vibe.playlists', []))
 
   const [scene, setScene] = useState(() => load('vibe.scene', 'fog'))
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
@@ -57,6 +58,7 @@ export default function App() {
   const journal = useGistSync({ ...syncConfig, username })
 
   useEffect(() => save('vibe.queue', queue), [queue])
+  useEffect(() => save('vibe.playlists', playlists), [playlists])
   useEffect(() => save('vibe.ytVolume', ytVolume), [ytVolume])
   useEffect(() => save('vibe.scene', scene), [scene])
   useEffect(() => save('vibe.bgId', bgId), [bgId])
@@ -87,6 +89,39 @@ export default function App() {
 
   const onLoadPreset = useCallback((p) => onAddMany([{ type: 'video', videoId: p.videoId }]), [onAddMany])
   const onClear = useCallback(() => { setQueue([]); setIndex(0) }, [])
+
+  // ---- Playlist: lưu / tải / xóa ----
+  const savePlaylist = useCallback((name) => {
+    setQueue((q) => {
+      if (!q.length) return q
+      const tracks = q.map(({ kind, videoId, playlistId, title }) => ({ kind, videoId, playlistId, title }))
+      const pl = { id: `pl${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, name: name || 'Playlist mới', tracks, ts: Date.now() }
+      setPlaylists((list) => [pl, ...list])
+      return q
+    })
+  }, [])
+
+  const loadPlaylist = useCallback((id, mode = 'replace') => {
+    setPlaylists((list) => {
+      const pl = list.find((p) => p.id === id)
+      if (pl) {
+        const tracks = pl.tracks.map((t) => ({ key: nextKey(), ...t }))
+        setQueue((q) => {
+          const nq = mode === 'append' ? [...q, ...tracks] : tracks
+          if (mode !== 'append' || q.length === 0) {
+            setIndex(0)
+            setTimeout(() => yt.playTrack(nq[0]), 0)
+          }
+          return nq
+        })
+      }
+      return list
+    })
+  }, [yt])
+
+  const deletePlaylist = useCallback((id) => {
+    setPlaylists((list) => list.filter((p) => p.id !== id))
+  }, [])
   const onRemove = useCallback((i) => {
     setQueue((q) => q.filter((_, idx) => idx !== i))
     setIndex((cur) => (i < cur ? cur - 1 : cur))
@@ -155,10 +190,7 @@ export default function App() {
         <header className="topbar">
           <div className="brand">
             <span className="brand__mark">☂</span>
-            <div>
-              <h1>Vibe Space</h1>
-              <p>Đà Lạt trong màn sương những năm 90</p>
-            </div>
+            <h1>Vibe Space</h1>
           </div>
           <div className="topbar__actions">
             <div className="scene-tabs">
@@ -190,6 +222,8 @@ export default function App() {
                 onAddMany={onAddMany} onSelect={playAt} onRemove={onRemove} onClear={onClear}
                 presets={PRESETS} onLoadPreset={onLoadPreset}
                 showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
+                playlists={playlists} onSavePlaylist={savePlaylist}
+                onLoadPlaylist={loadPlaylist} onDeletePlaylist={deletePlaylist}
               />
             ) : (
               <AmbientMixer ambient={ambient} />

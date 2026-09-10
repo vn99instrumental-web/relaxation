@@ -73,10 +73,6 @@ export default function AmbientMixer({ ambient }) {
         </button>
       </header>
 
-      {!started && (
-        <p className="mixer__hint">Nhấn “Bật tiếng” rồi kéo các thanh để pha trộn không gian của riêng bạn.</p>
-      )}
-
       <div className="mixer__rows">
         <div className="mixer__row mixer__row--master">
           <span className="mixer__label">◐ Tổng</span>
@@ -95,16 +91,14 @@ export default function AmbientMixer({ ambient }) {
       {/* Âm thanh thật do bạn tải lên */}
       <div className="mixer__user">
         <div className="queue__head">
-          <span className="muted">Âm thanh của bạn (file thật)</span>
+          <span className="muted">Âm thanh của bạn</span>
           <button className="link-btn" onClick={() => fileRef.current?.click()}>+ Tải lên</button>
         </div>
         <input ref={fileRef} type="file" accept="audio/*" multiple hidden
           onChange={(e) => { addFiles(e.target.files); e.target.value = '' }} />
 
         {tracks.length === 0 ? (
-          <p className="mixer__hint mixer__hint--sm">
-            Tải file mưa/chim/piano… (mp3, wav) để phát lặp — âm thanh thu thật, không cần mạng.
-          </p>
+          <p className="mixer__hint mixer__hint--sm">Tải mp3/wav để phát lặp.</p>
         ) : (
           <div className="mixer__rows">
             {tracks.map((tk) => (

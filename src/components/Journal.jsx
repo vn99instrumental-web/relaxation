@@ -34,10 +34,10 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
   }
 
   const statusText = {
-    offline: 'Offline (lưu trên máy)',
+    offline: 'Riêng tư',
     connecting: 'Đang kết nối…',
-    online: 'Đã đồng bộ 2 người',
-    error: 'Lỗi kết nối',
+    online: 'Đồng bộ',
+    error: 'Lỗi',
   }[status]
 
   return (
