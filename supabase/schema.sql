@@ -53,6 +53,11 @@ create policy "anon rooms"      on public.rooms      for all to anon using (true
 create policy "anon messages"   on public.messages   for all to anon using (true) with check (true);
 create policy "anon playlists"  on public.playlists  for all to anon using (true) with check (true);
 
+-- QUYỀN BẢNG: RLS chỉ lọc dòng, vẫn cần GRANT thì client (anon) mới truy cập được.
+-- (Nếu thiếu bước này sẽ gặp lỗi "permission denied for schema public".)
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.rooms, public.messages, public.playlists to anon, authenticated;
+
 -- ============================================================
 -- REALTIME: đẩy tin nhắn/playlist mới xuống ngay (không cần refresh)
 -- ------------------------------------------------------------
