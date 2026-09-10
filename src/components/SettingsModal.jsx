@@ -6,6 +6,7 @@ import { createGist } from '../lib/gist'
 export default function SettingsModal({
   open, onClose, config, setConfig, scene, setScene,
   backgrounds, bgId, setBgId, onAddBg, onRemoveBg,
+  supaConfig, setSupaConfig, supaStatus, supaError,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -14,6 +15,11 @@ export default function SettingsModal({
   const [msg, setMsg] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const fileRef = useRef(null)
+  const [sbUrl, setSbUrl] = useState(supaConfig?.url || '')
+  const [sbKey, setSbKey] = useState(supaConfig?.key || '')
+  const [sbRoom, setSbRoom] = useState(supaConfig?.room || '')
+  const saveSupa = () => setSupaConfig({ url: sbUrl.trim(), key: sbKey.trim(), room: sbRoom.trim() })
+  const supaStatusText = { online: 'Đã kết nối (realtime)', connecting: 'Đang kết nối…', error: 'Lỗi', offline: 'Chưa bật' }[supaStatus] || ''
 
   if (!open) return null
 
@@ -105,7 +111,33 @@ export default function SettingsModal({
           </section>
 
           <section className="settings-block">
-            <h3>👥 Đồng bộ nhật ký 2 người (GitHub Gist)</h3>
+            <h3>⚡ Supabase — chat & playlist realtime</h3>
+            <p className="settings-note">
+              2 người nhắn tin/lưu playlist thấy nhau <b>ngay lập tức</b>. Tạo project ở
+              supabase.com, chạy <code>supabase/schema.sql</code>, rồi dán <b>Project URL</b> +
+              <b> anon key</b> và một <b>mã phòng</b> chung (khó đoán). Điền đủ 3 ô này thì
+              app dùng Supabase thay cho Gist. Trạng thái: <b>{supaStatusText}</b>
+              {supaError ? ` — ${supaError}` : ''}
+            </p>
+            <label className="field">
+              <span>Project URL</span>
+              <input type="text" placeholder="https://xxxx.supabase.co" value={sbUrl} onChange={(e) => setSbUrl(e.target.value)} />
+            </label>
+            <label className="field">
+              <span>anon public key</span>
+              <input type="password" placeholder="eyJhbGci…" value={sbKey} onChange={(e) => setSbKey(e.target.value)} />
+            </label>
+            <label className="field">
+              <span>Mã phòng chung</span>
+              <input type="text" placeholder="vd: mai-nam-2026-x7q" value={sbRoom} onChange={(e) => setSbRoom(e.target.value)} />
+            </label>
+            <div className="settings-actions">
+              <button className="btn btn--primary" onClick={saveSupa}>Lưu & kết nối</button>
+            </div>
+          </section>
+
+          <section className="settings-block">
+            <h3>👥 Nhật ký 2 người qua GitHub Gist (thay thế)</h3>
             <p className="settings-note">
               Để 2 người ở 2 máy thấy nhật ký của nhau, cả hai dùng chung <b>1 Gist</b> và <b>1 token</b> có
               quyền <code>gist</code>. Token chỉ lưu trong trình duyệt của bạn và chỉ gửi tới GitHub.

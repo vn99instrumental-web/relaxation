@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import Scene from './components/Scene'
 import Player from './components/Player'
 import AmbientMixer from './components/AmbientMixer'
@@ -9,6 +9,7 @@ import VideoPip from './components/VideoPip'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useGistSync } from './hooks/useGistSync'
+import { useSupabaseRoom } from './hooks/useSupabaseRoom'
 import { load, save } from './lib/storage'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID } from './lib/backgrounds'
 
@@ -35,7 +36,7 @@ export default function App() {
   const [queue, setQueue] = useState(() => load('vibe.queue', []))
   const [index, setIndex] = useState(0)
   const [ytVolume, setYtVolume] = useState(() => load('vibe.ytVolume', 70))
-  const [playlists, setPlaylists] = useState(() => load('vibe.playlists', []))
+  const [localPlaylists, setLocalPlaylists] = useState(() => load('vibe.playlists', []))
 
   const [scene, setScene] = useState(() => load('vibe.scene', 'fog'))
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
@@ -47,6 +48,9 @@ export default function App() {
   const [syncConfig, setSyncConfig] = useState(() =>
     load('vibe.sync', { token: '', gistId: '', roomName: 'Vibe Space Journal' }),
   )
+  const [supaConfig, setSupaConfig] = useState(() =>
+    load('vibe.supabase', { url: '', key: '', room: '' }),
+  )
 
   // Điều khiển hiển thị: mặc định đóng hết để thấy trọn khung cảnh
   const [leftTab, setLeftTab] = useState(null)   // null | 'music' | 'ambient'
@@ -55,10 +59,17 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
 
-  const journal = useGistSync({ ...syncConfig, username })
+  const gist = useGistSync({ ...syncConfig, username })
+  const supa = useSupabaseRoom(supaConfig, username)
+  const journal = supa.enabled ? supa.journal : gist
+  const playlists = supa.enabled ? supa.playlists : localPlaylists
+
+  const supaRef = useRef(supa); supaRef.current = supa
+  const playlistsRef = useRef(playlists); playlistsRef.current = playlists
 
   useEffect(() => save('vibe.queue', queue), [queue])
-  useEffect(() => save('vibe.playlists', playlists), [playlists])
+  useEffect(() => save('vibe.playlists', localPlaylists), [localPlaylists])
+  useEffect(() => save('vibe.supabase', supaConfig), [supaConfig])
   useEffect(() => save('vibe.ytVolume', ytVolume), [ytVolume])
   useEffect(() => save('vibe.scene', scene), [scene])
   useEffect(() => save('vibe.bgId', bgId), [bgId])
@@ -90,37 +101,39 @@ export default function App() {
   const onLoadPreset = useCallback((p) => onAddMany([{ type: 'video', videoId: p.videoId }]), [onAddMany])
   const onClear = useCallback(() => { setQueue([]); setIndex(0) }, [])
 
-  // ---- Playlist: lưu / tải / xóa ----
+  // ---- Playlist: lưu / tải / xóa (Supabase khi bật, không thì localStorage) ----
   const savePlaylist = useCallback((name) => {
     setQueue((q) => {
       if (!q.length) return q
       const tracks = q.map(({ kind, videoId, playlistId, title }) => ({ kind, videoId, playlistId, title }))
-      const pl = { id: `pl${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, name: name || 'Playlist mới', tracks, ts: Date.now() }
-      setPlaylists((list) => [pl, ...list])
+      const nm = name || 'Playlist mới'
+      if (supaRef.current.enabled) {
+        supaRef.current.savePlaylistRow(nm, tracks)
+      } else {
+        const pl = { id: `pl${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, name: nm, tracks, ts: Date.now() }
+        setLocalPlaylists((list) => [pl, ...list])
+      }
       return q
     })
   }, [])
 
   const loadPlaylist = useCallback((id, mode = 'replace') => {
-    setPlaylists((list) => {
-      const pl = list.find((p) => p.id === id)
-      if (pl) {
-        const tracks = pl.tracks.map((t) => ({ key: nextKey(), ...t }))
-        setQueue((q) => {
-          const nq = mode === 'append' ? [...q, ...tracks] : tracks
-          if (mode !== 'append' || q.length === 0) {
-            setIndex(0)
-            setTimeout(() => yt.playTrack(nq[0]), 0)
-          }
-          return nq
-        })
+    const pl = playlistsRef.current.find((p) => p.id === id)
+    if (!pl) return
+    const tracks = pl.tracks.map((t) => ({ key: nextKey(), ...t }))
+    setQueue((q) => {
+      const nq = mode === 'append' ? [...q, ...tracks] : tracks
+      if (mode !== 'append' || q.length === 0) {
+        setIndex(0)
+        setTimeout(() => yt.playTrack(nq[0]), 0)
       }
-      return list
+      return nq
     })
   }, [yt])
 
   const deletePlaylist = useCallback((id) => {
-    setPlaylists((list) => list.filter((p) => p.id !== id))
+    if (supaRef.current.enabled) supaRef.current.deletePlaylistRow(id)
+    else setLocalPlaylists((list) => list.filter((p) => p.id !== id))
   }, [])
   const onRemove = useCallback((i) => {
     setQueue((q) => q.filter((_, idx) => idx !== i))
@@ -266,6 +279,7 @@ export default function App() {
       <SettingsModal
         open={settingsOpen} onClose={() => setSettingsOpen(false)}
         config={syncConfig} setConfig={setSyncConfig}
+        supaConfig={supaConfig} setSupaConfig={setSupaConfig} supaStatus={supa.status} supaError={supa.error}
         scene={scene} setScene={setScene}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddBg={addUserBg} onRemoveBg={removeUserBg}
