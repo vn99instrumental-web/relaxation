@@ -91,3 +91,17 @@ create policy "anon backgrounds" on public.backgrounds for all to anon using (tr
 grant select, insert, update, delete on public.backgrounds to anon, authenticated;
 alter table public.backgrounds replica identity full;
 do $$ begin begin execute 'alter publication supabase_realtime add table public.backgrounds'; exception when duplicate_object then null; end; end $$;
+
+-- ============================================================
+-- CÀI ĐẶT CHUNG CỦA PHÒNG (admin đổi -> mọi người theo, realtime)
+-- ============================================================
+create table if not exists public.room_settings (
+  id text primary key, scene text, bg_id text, queue jsonb, q_index int,
+  updated_by text, updated_at timestamptz not null default now()
+);
+alter table public.room_settings enable row level security;
+drop policy if exists "anon room_settings" on public.room_settings;
+create policy "anon room_settings" on public.room_settings for all to anon using (true) with check (true);
+grant select, insert, update, delete on public.room_settings to anon, authenticated;
+alter table public.room_settings replica identity full;
+do $$ begin begin execute 'alter publication supabase_realtime add table public.room_settings'; exception when duplicate_object then null; end; end $$;

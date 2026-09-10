@@ -11,6 +11,7 @@ import { useAmbient } from './hooks/useAmbient'
 import { useGistSync } from './hooks/useGistSync'
 import { useSupabaseRoom } from './hooks/useSupabaseRoom'
 import { useSupabaseGallery } from './hooks/useSupabaseGallery'
+import { useRoomSettings } from './hooks/useRoomSettings'
 import { load, save } from './lib/storage'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID } from './lib/backgrounds'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
@@ -58,6 +59,7 @@ export default function App() {
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
   const gallery = useSupabaseGallery(supaConfig)
+  const roomSettings = useRoomSettings(supaConfig, admin)
   const journal = supa.enabled ? supa.journal : gist
   const playlists = supa.enabled ? supa.playlists : localPlaylists
 
@@ -199,6 +201,48 @@ export default function App() {
     const base = scene === 'rain' ? 0.55 : scene === 'ray' ? 0.12 : 0.28
     return Math.min(1, base + ambient.levels.rain * 0.6)
   }, [scene, ambient.levels.rain])
+
+  // ---- Đồng bộ cài đặt phòng: admin đổi -> mọi người theo (realtime) ----
+  const syncRef = useRef({ scene: null, bgId: null, queueSig: null })
+  const queueSig = (arr) => (arr || []).map((t) => t.videoId || t.playlistId || '').join('|')
+
+  // Nhận cài đặt từ phòng và áp dụng
+  useEffect(() => {
+    const s = roomSettings.settings
+    if (!s || s.updated_by === roomSettings.clientId) return
+    if (s.scene && s.scene !== scene) { syncRef.current.scene = s.scene; setScene(s.scene) }
+    if (s.bg_id && s.bg_id !== bgId) { syncRef.current.bgId = s.bg_id; setBgId(s.bg_id) }
+    if (Array.isArray(s.queue) && queueSig(s.queue) !== queueSig(queue)) {
+      const sig = queueSig(s.queue)
+      syncRef.current.queueSig = sig
+      const nq = s.queue.map((t) => ({ key: nextKey(), ...t }))
+      setQueue(nq); setIndex(0)
+      if (nq.length) setTimeout(() => yt.playTrack(nq[0]), 0)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomSettings.settings])
+
+  // Admin phát cài đặt khi thay đổi (bỏ qua khi giá trị vừa nhận từ phòng)
+  useEffect(() => {
+    if (!admin || !roomSettings.enabled || scene === syncRef.current.scene) return
+    syncRef.current.scene = scene
+    roomSettings.save({ scene })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene, admin, roomSettings.enabled])
+  useEffect(() => {
+    if (!admin || !roomSettings.enabled || bgId === syncRef.current.bgId) return
+    syncRef.current.bgId = bgId
+    roomSettings.save({ bg_id: bgId })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bgId, admin, roomSettings.enabled])
+  useEffect(() => {
+    if (!admin || !roomSettings.enabled) return
+    const sig = queueSig(queue)
+    if (sig === syncRef.current.queueSig) return
+    syncRef.current.queueSig = sig
+    roomSettings.save({ queue: queue.map(({ kind, videoId, playlistId, title }) => ({ kind, videoId, playlistId, title })), q_index: 0 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue, admin, roomSettings.enabled])
 
   const toggleLeft = (tab) => setLeftTab((cur) => (cur === tab ? null : tab))
 
