@@ -434,8 +434,24 @@ input[type='range']:disabled { opacity: 0.4; }
 .bubble__user { font-size: 0.74rem; font-weight: 600; color: var(--gold-soft); font-family: var(--ui); letter-spacing: 0.02em; }
 .bubble__time { font-size: 0.64rem; color: var(--ink-dim); }
 .bubble__text { font-family: var(--serif-body); font-size: 0.94rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--paper); }
-.bubble__del { margin-left: auto; background: none; border: none; color: var(--ink-dim); font-size: 0.68rem; padding: 0 2px; line-height: 1; opacity: 0.6; }
+.bubble__edit { margin-left: auto; background: none; border: none; color: var(--ink-dim); font-size: 0.72rem; padding: 0 3px; line-height: 1; opacity: 0.6; }
+.bubble__edit:hover { color: var(--gold-soft); opacity: 1; }
+.bubble__del { background: none; border: none; color: var(--ink-dim); font-size: 0.68rem; padding: 0 2px; line-height: 1; opacity: 0.6; }
+.bubble__edit + .bubble__del { margin-left: 2px; }
 .bubble__del:hover { color: var(--rose); opacity: 1; }
+/* Ô sửa nội dung tin */
+.bubble__edit-box { display: flex; flex-direction: column; gap: 6px; }
+.bubble__edit-box textarea {
+  width: 100%; resize: vertical; min-height: 40px;
+  background: rgba(0,0,0,0.28); border: 1px solid var(--border-strong); color: var(--paper);
+  padding: 8px 10px; border-radius: 9px; font-size: 0.92rem; line-height: 1.5;
+  font-family: var(--serif-body);
+}
+.bubble__edit-box textarea:focus { outline: none; border-color: var(--gold-soft); }
+.bubble__edit-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.bubble__save { border: none; background: var(--pine-soft); color: var(--ink); padding: 5px 14px; border-radius: 8px; font-size: 0.78rem; transition: 0.2s; }
+.bubble__save:hover { filter: brightness(1.08); }
+.bubble__save:disabled { opacity: 0.5; }
 .admin-row { display: flex; align-items: flex-start; gap: 10px; font-size: 0.84rem; color: var(--ink-dim); line-height: 1.5; cursor: pointer; }
 .admin-row input { margin-top: 3px; accent-color: var(--gold); }
 

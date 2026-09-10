@@ -100,5 +100,20 @@ export function useGistSync(config) {
     if (online) { try { await writeMessages(token, gistId, [], roomName) } catch { /* ignore */ } }
   }, [online, token, gistId, roomName, persistLocal])
 
-  return { messages, status, error, sending, online, send, refresh, clearLocal, deleteMessage, clearMessages }
+  const editMessage = useCallback(async (id, text) => {
+    const clean = String(text || '').trim()
+    if (!clean) return
+    const next = messagesRef.current.map((m) => (m.id === id ? { ...m, text: clean, edited: true, editedTs: Date.now() } : m))
+    setMessages(next); persistLocal(next)
+    if (!online) return
+    try {
+      // gộp bản mới nhất trên server để không đè mất tin của người kia
+      const { messages: remote } = await readMessages(token, gistId)
+      const merged = mergeMessages(remote, next)
+      await writeMessages(token, gistId, merged, roomName)
+      setMessages(merged); persistLocal(merged)
+    } catch { /* để lần đồng bộ sau */ }
+  }, [online, token, gistId, roomName, persistLocal])
+
+  return { messages, status, error, sending, online, send, refresh, clearLocal, deleteMessage, editMessage, clearMessages }
 }

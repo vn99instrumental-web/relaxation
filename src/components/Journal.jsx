@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 // ô nhập tên + ô soạn tin. Trạng thái kết nối Gist ở góc.
 // props: journal (hook useGistSync), username, setUsername, onOpenSettings
 export default function Journal({ journal, username, setUsername, onOpenSettings, onClose, admin }) {
-  const { messages, status, error, sending, online, send, refresh, deleteMessage, clearMessages } = journal
+  const { messages, status, error, sending, online, send, refresh, deleteMessage, editMessage, clearMessages } = journal
 
   const removeOne = (id) => { if (deleteMessage) deleteMessage(id) }
   const clearAll = () => {
@@ -14,7 +14,18 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
   const [draft, setDraft] = useState('')
   const [editingName, setEditingName] = useState(!username)
   const [nameInput, setNameInput] = useState(username || '')
+  const [editingId, setEditingId] = useState(null)   // id tin đang sửa
+  const [editText, setEditText] = useState('')
   const listRef = useRef(null)
+
+  const startEdit = (m) => { setEditingId(m.id); setEditText(m.text) }
+  const cancelEdit = () => { setEditingId(null); setEditText('') }
+  const saveEdit = () => {
+    const t = editText.trim()
+    if (!t) return
+    if (editMessage) editMessage(editingId, t)
+    cancelEdit()
+  }
 
   useEffect(() => {
     const el = listRef.current
@@ -77,16 +88,40 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
             <div className="journal__daysep"><span>{group.day}</span></div>
             {group.items.map((m) => {
               const mine = m.user === username
+              const canEdit = (mine || admin) && editMessage
+              const editing = editingId === m.id
               return (
                 <div className={`bubble ${mine ? 'bubble--mine' : ''}`} key={m.id}>
                   <div className="bubble__meta">
                     <span className="bubble__user">{m.user}</span>
-                    <span className="bubble__time">{formatTime(m.ts)}</span>
-                    {admin && (
+                    <span className="bubble__time">
+                      {formatTime(m.ts)}{m.edited ? ' · đã sửa' : ''}
+                    </span>
+                    {!editing && canEdit && (
+                      <button className="bubble__edit" onClick={() => startEdit(m)} title="Sửa tin này">✎</button>
+                    )}
+                    {!editing && admin && (
                       <button className="bubble__del" onClick={() => removeOne(m.id)} title="Xóa tin này">✕</button>
                     )}
                   </div>
-                  <div className="bubble__text">{m.text}</div>
+                  {editing ? (
+                    <div className="bubble__edit-box">
+                      <textarea
+                        autoFocus rows={2} value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit() }
+                          if (e.key === 'Escape') cancelEdit()
+                        }}
+                      />
+                      <div className="bubble__edit-actions">
+                        <button type="button" className="link-btn" onClick={cancelEdit}>Hủy</button>
+                        <button type="button" className="bubble__save" onClick={saveEdit} disabled={!editText.trim()}>Lưu</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bubble__text">{m.text}</div>
+                  )}
                 </div>
               )
             })}

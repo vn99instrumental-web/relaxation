@@ -18,7 +18,8 @@ create table if not exists public.messages (
   room_id     text not null references public.rooms(id) on delete cascade,
   author      text not null,          -- tên người gõ (nhập mỗi buổi)
   body        text not null,
-  created_at  timestamptz not null default now()
+  created_at  timestamptz not null default now(),
+  edited_at   timestamptz             -- có giá trị khi tin đã được sửa
 );
 create index if not exists messages_room_time_idx
   on public.messages (room_id, created_at);

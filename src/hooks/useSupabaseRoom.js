@@ -3,7 +3,7 @@ import { makeClient } from '../lib/supabase'
 
 // Đồng bộ chat + playlist qua Supabase, có REALTIME (tin nhắn hiện ngay).
 // config: { url, key, room }. Khi thiếu -> enabled=false (app dùng cách khác).
-const mapMsg = (r) => ({ id: r.id, user: r.author, text: r.body, ts: new Date(r.created_at).getTime() })
+const mapMsg = (r) => ({ id: r.id, user: r.author, text: r.body, ts: new Date(r.created_at).getTime(), edited: !!r.edited_at, editedTs: r.edited_at ? new Date(r.edited_at).getTime() : null })
 const mapPl = (r) => ({ id: r.id, name: r.name, tracks: Array.isArray(r.tracks) ? r.tracks : [], ts: new Date(r.created_at).getTime() })
 
 function mergeById(list, incoming) {
@@ -75,6 +75,8 @@ export function useSupabaseRoom(config, username) {
       .channel(`room:${room}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` },
         (payload) => setMessages((prev) => mergeById(prev, [mapMsg(payload.new)])))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` },
+        (payload) => setMessages((prev) => mergeById(prev, [mapMsg(payload.new)])))
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` },
         (payload) => setMessages((prev) => prev.filter((m) => m.id !== payload.old.id)))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'playlists', filter: `room_id=eq.${room}` },
@@ -113,6 +115,17 @@ export function useSupabaseRoom(config, username) {
     try { await c.from('messages').delete().eq('room_id', room) } catch (e) { setError(e.message || 'Xóa lỗi') }
   }, [room])
 
+  const editMessage = useCallback(async (id, text) => {
+    const clean = String(text || '').trim()
+    const c = clientRef.current
+    if (!clean || !c) return
+    const nowIso = new Date().toISOString()
+    // sửa ngay trên máy mình (lạc quan)
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: clean, edited: true, editedTs: Date.now() } : m)))
+    try { await c.from('messages').update({ body: clean, edited_at: nowIso }).eq('id', id) } catch (e) { setError(e.message || 'Sửa lỗi') }
+    // realtime sẽ đồng bộ cho người kia
+  }, [])
+
   const savePlaylistRow = useCallback(async (name, tracks) => {
     const c = clientRef.current
     if (!c) return
@@ -134,7 +147,7 @@ export function useSupabaseRoom(config, username) {
     reloadPlaylists()
   }, [reloadPlaylists])
 
-  const journal = { messages, status, error, sending, online: enabled && status === 'online', send, refresh, deleteMessage, clearMessages }
+  const journal = { messages, status, error, sending, online: enabled && status === 'online', send, refresh, deleteMessage, editMessage, clearMessages }
 
-  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, updatePlaylistRow, deleteMessage, clearMessages }
+  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, updatePlaylistRow, deleteMessage, editMessage, clearMessages }
 }
