@@ -91,6 +91,58 @@ input, textarea { font-family: inherit; }
 
 .scene__rain { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
+/* Sương là đà sát mặt đất (dâng lên từ đáy) */
+.fog--ground {
+  left: -10%; width: 120%; bottom: -8%; height: 34%;
+  background: linear-gradient(0deg, rgba(224,214,190,0.5), rgba(224,214,190,0.14) 55%, transparent);
+  filter: blur(20px); opacity: 0.65;
+  animation: groundBreathe 14s ease-in-out infinite;
+}
+@keyframes groundBreathe { 0%,100% { opacity: 0.5; transform: translateY(6px); } 50% { opacity: 0.8; transform: translateY(-4px); } }
+
+/* Quầng nắng ấm quanh mặt trời (góc phải trên) */
+.scene__bloom {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.4s ease;
+  background: radial-gradient(38% 46% at 78% 16%, rgba(247,226,184,0.5), rgba(233,197,120,0.18) 40%, transparent 68%);
+  mix-blend-mode: screen;
+}
+
+/* Bụi sáng lơ lửng trong nắng */
+.scene__dust { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.6s ease; }
+.scene__dust i {
+  position: absolute; width: 3px; height: 3px; border-radius: 50%;
+  background: rgba(247,232,198,0.85); box-shadow: 0 0 6px rgba(247,232,198,0.7);
+  animation: floatMote linear infinite;
+}
+.scene__dust i:nth-child(1){left:20%;top:30%;animation-duration:17s}
+.scene__dust i:nth-child(2){left:35%;top:55%;animation-duration:23s;width:2px;height:2px}
+.scene__dust i:nth-child(3){left:52%;top:22%;animation-duration:19s}
+.scene__dust i:nth-child(4){left:64%;top:48%;animation-duration:26s;width:2px;height:2px}
+.scene__dust i:nth-child(5){left:74%;top:34%;animation-duration:15s}
+.scene__dust i:nth-child(6){left:82%;top:60%;animation-duration:21s}
+.scene__dust i:nth-child(7){left:44%;top:70%;animation-duration:28s;width:2px;height:2px}
+.scene__dust i:nth-child(8){left:28%;top:44%;animation-duration:18s}
+.scene__dust i:nth-child(9){left:58%;top:64%;animation-duration:24s}
+.scene__dust i:nth-child(10){left:70%;top:24%;animation-duration:20s;width:2px;height:2px}
+.scene__dust i:nth-child(11){left:16%;top:62%;animation-duration:25s}
+.scene__dust i:nth-child(12){left:88%;top:40%;animation-duration:16s}
+.scene__dust i:nth-child(13){left:48%;top:38%;animation-duration:22s;width:2px;height:2px}
+.scene__dust i:nth-child(14){left:38%;top:28%;animation-duration:27s}
+.scene__dust i:nth-child(15){left:78%;top:52%;animation-duration:19s}
+.scene__dust i:nth-child(16){left:60%;top:76%;animation-duration:23s;width:2px;height:2px}
+@keyframes floatMote {
+  0% { transform: translate(0,0); opacity: 0; }
+  10% { opacity: 0.9; }
+  90% { opacity: 0.8; }
+  100% { transform: translate(-24px,-40px); opacity: 0; }
+}
+
+/* Lớp phủ màu theo cảnh (color grade) */
+.scene__grade { position: absolute; inset: 0; pointer-events: none; transition: opacity 0.8s ease, background 0.8s ease; }
+.scene--fog  .scene__grade { background: linear-gradient(180deg, rgba(206,210,205,0.16), rgba(150,160,158,0.12)); }
+.scene--rain .scene__grade { background: linear-gradient(180deg, rgba(60,78,92,0.30), rgba(28,38,46,0.42)); }
+.scene--ray  .scene__grade { background: radial-gradient(60% 50% at 76% 14%, rgba(240,205,140,0.20), transparent 60%); }
+
 /* Hạt phim + vignette + ám vàng cũ */
 .scene__grain {
   position: absolute; inset: 0; pointer-events: none; opacity: 0.09;
@@ -111,6 +163,15 @@ input, textarea { font-family: inherit; }
 .scene--fog  .scene__svg { filter: brightness(0.94) saturate(0.85) blur(0.4px); }
 .scene--rain .scene__svg { filter: brightness(0.8) saturate(0.8); }
 .scene--rain .fog { opacity: 0.6; }
+.scene--ray  .scene__bloom { opacity: 1; }
+.scene--ray  .scene__dust { opacity: 1; }
+.scene--ray  .fog { opacity: 0.5; }
+.scene--fog  .fog--ground { opacity: 0.95; }
+.scene--ray  .fog--ground { opacity: 0.4; }
+.scene--rain .fog--ground { opacity: 0.5; }
+.scene--rain .scene__vignette { background:
+  radial-gradient(130% 110% at 50% 32%, transparent 52%, rgba(14, 20, 26, 0.62) 100%),
+  linear-gradient(180deg, rgba(40,54,64,0.10), transparent 26%); }
 
 /* ============ KHUNG APP (điện ảnh — cảnh là chính) ============ */
 .app { position: relative; height: 100%; z-index: 1; overflow: hidden; }

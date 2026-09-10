@@ -20,37 +20,46 @@ export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     let raf, drops = [], w = 0, h = 0
+    const DPR = Math.min(window.devicePixelRatio || 1, 2)
 
     const resize = () => {
-      w = canvas.width = canvas.offsetWidth * window.devicePixelRatio
-      h = canvas.height = canvas.offsetHeight * window.devicePixelRatio
-      const count = Math.floor((w * h) / 26000)
+      w = canvas.width = canvas.offsetWidth * DPR
+      h = canvas.height = canvas.offsetHeight * DPR
+      const count = Math.floor((w * h) / 22000)
       drops = new Array(count).fill(0).map(() => newDrop(true))
     }
+    // z: 0 = xa (nhỏ, chậm, mờ), 1 = gần (to, nhanh, rõ) -> tạo chiều sâu
     function newDrop(init) {
+      const z = Math.random()
       return {
         x: Math.random() * w,
-        y: init ? Math.random() * h : -20,
-        len: 8 + Math.random() * 18,
-        speed: 4 + Math.random() * 7,
-        drift: -0.6 + Math.random() * 0.4,
-        alpha: 0.05 + Math.random() * 0.16,
+        y: init ? Math.random() * h : -40 * DPR,
+        len: (10 + z * 26) * DPR,
+        speed: (3 + z * 9) * DPR,
+        drift: (-0.7 - z * 0.9) * DPR, // gió thổi nghiêng nhẹ
+        alpha: 0.05 + z * 0.22,
+        width: (0.6 + z * 1.2) * DPR,
       }
     }
     const draw = () => {
       ctx.clearRect(0, 0, w, h)
       const density = rainRef.current
-      const visible = Math.floor(drops.length * Math.min(1, density * 1.2 + 0.05))
+      const visible = Math.floor(drops.length * Math.min(1, density * 1.25 + 0.05))
       ctx.lineCap = 'round'
       for (let i = 0; i < visible; i++) {
         const d = drops[i]
-        ctx.strokeStyle = `rgba(226, 214, 188, ${d.alpha})`
-        ctx.lineWidth = 1.1 * window.devicePixelRatio
+        const x2 = d.x + d.drift * (d.len / 10)
+        const y2 = d.y + d.len
+        const g = ctx.createLinearGradient(d.x, d.y, x2, y2) // vệt mưa mờ dần ở đầu
+        g.addColorStop(0, 'rgba(210, 224, 230, 0)')
+        g.addColorStop(1, `rgba(210, 224, 230, ${d.alpha})`)
+        ctx.strokeStyle = g
+        ctx.lineWidth = d.width
         ctx.beginPath()
         ctx.moveTo(d.x, d.y)
-        ctx.lineTo(d.x + d.drift * d.len, d.y + d.len)
+        ctx.lineTo(x2, y2)
         ctx.stroke()
-        d.y += d.speed * (0.6 + density)
+        d.y += d.speed * (0.7 + density)
         d.x += d.drift
         if (d.y > h) Object.assign(d, newDrop(false))
       }
@@ -71,18 +80,24 @@ export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
         <DalatSVG />
       )}
 
-      {/* Tia nắng xuyên sương */}
+      {/* Quầng nắng ấm + tia nắng xuyên sương */}
+      <div className="scene__bloom" />
       <div className="scene__rays"><span /><span /><span /><span /><span /></div>
+      <div className="scene__dust">
+        {Array.from({ length: 16 }).map((_, i) => <i key={i} />)}
+      </div>
 
-      {/* Sương trôi */}
+      {/* Sương trôi + sương là đà mặt đất */}
       <div className="scene__fog">
         <div className="fog fog--1" /><div className="fog fog--2" /><div className="fog fog--3" />
+        <div className="fog fog--ground" />
       </div>
 
       {/* Mưa phùn */}
       <canvas ref={canvasRef} className="scene__rain" />
 
-      {/* Chất phim cũ */}
+      {/* Phủ màu theo cảnh + chất phim cũ */}
+      <div className="scene__grade" />
       <div className="scene__grain" />
       <div className="scene__vignette" />
     </div>

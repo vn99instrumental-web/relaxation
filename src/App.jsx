@@ -14,12 +14,6 @@ import { load, save } from './lib/storage'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID } from './lib/backgrounds'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 
-const PRESETS = [
-  { title: 'Lofi Girl · radio', videoId: 'jfKfPfyJRdk' },
-  { title: 'Piano buồn', videoId: 'lTRiuFIWV54' },
-  { title: 'Lofi để ngủ', videoId: 'rUxyKA_-grg' },
-]
-
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
 
@@ -41,8 +35,12 @@ export default function App() {
 
   const [scene, setScene] = useState(() => load('vibe.scene', 'fog'))
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
+  const [hiddenBg, setHiddenBg] = useState(() => load('vibe.hiddenBg', []))
   const [bgId, setBgId] = useState(() => load('vibe.bgId', DEFAULT_BG_ID))
-  const backgrounds = useMemo(() => [...DEFAULT_BACKGROUNDS, ...userBgs], [userBgs])
+  const backgrounds = useMemo(
+    () => [...DEFAULT_BACKGROUNDS, ...userBgs].filter((b) => !hiddenBg.includes(b.id)),
+    [userBgs, hiddenBg],
+  )
   const currentBg = backgrounds.find((b) => b.id === bgId) || backgrounds[0]
 
   const [username, setUsername] = useState(() => load('vibe.username', ''))
@@ -76,6 +74,7 @@ export default function App() {
   useEffect(() => save('vibe.scene', scene), [scene])
   useEffect(() => save('vibe.bgId', bgId), [bgId])
   useEffect(() => save('vibe.userBgs', userBgs), [userBgs])
+  useEffect(() => save('vibe.hiddenBg', hiddenBg), [hiddenBg])
   useEffect(() => save('vibe.username', username), [username])
   useEffect(() => save('vibe.sync', syncConfig), [syncConfig])
   useEffect(() => save('vibe.admin', admin), [admin])
@@ -101,7 +100,6 @@ export default function App() {
     })
   }, [yt])
 
-  const onLoadPreset = useCallback((p) => onAddMany([{ type: 'video', videoId: p.videoId }]), [onAddMany])
   const onClear = useCallback(() => { setQueue([]); setIndex(0) }, [])
 
   // ---- Playlist: lưu / tải / xóa (Supabase khi bật, không thì localStorage) ----
@@ -188,9 +186,14 @@ export default function App() {
     setBgId(id)
   }, [])
 
-  const removeUserBg = useCallback((id) => {
-    setUserBgs((list) => list.filter((b) => b.id !== id))
-    setBgId((cur) => (cur === id ? DEFAULT_BG_ID : cur))
+  const removeBackground = useCallback((id) => {
+    if (id === 'vector') return // giữ lại tranh vẽ làm nền dự phòng
+    setUserBgs((list) => {
+      if (list.some((b) => b.id === id)) return list.filter((b) => b.id !== id) // ảnh tự thêm -> xóa hẳn
+      setHiddenBg((h) => (h.includes(id) ? h : [...h, id])) // ảnh mặc định -> ẩn đi
+      return list
+    })
+    setBgId((cur) => (cur === id ? 'vector' : cur))
   }, [])
 
   const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
@@ -236,7 +239,6 @@ export default function App() {
               <Player
                 queue={queue} index={index} nowTitle={yt.nowTitle}
                 onAddMany={onAddMany} onSelect={playAt} onRemove={onRemove} onClear={onClear}
-                presets={PRESETS} onLoadPreset={onLoadPreset}
                 showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
                 playlists={playlists} onSavePlaylist={savePlaylist}
                 onLoadPlaylist={loadPlaylist} onDeletePlaylist={deletePlaylist}
@@ -287,7 +289,8 @@ export default function App() {
         admin={admin} setAdmin={setAdmin}
         scene={scene} setScene={setScene}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
-        onAddBg={addUserBg} onRemoveBg={removeUserBg}
+        onAddBg={addUserBg} onRemoveBg={removeBackground}
+        hiddenCount={hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
       />
     </div>
   )

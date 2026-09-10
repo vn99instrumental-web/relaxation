@@ -4,7 +4,7 @@ import { parseYouTube, videoThumb } from '../lib/youtube'
 // Panel "Nhạc": dán nhiều link, gợi ý, hàng chờ, và lưu/tải playlist.
 export default function Player({
   queue, index, onAddMany, onSelect, onRemove, onClear,
-  presets, onLoadPreset, showVideo, onToggleVideo,
+  showVideo, onToggleVideo,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
 }) {
   const [input, setInput] = useState('')
@@ -50,14 +50,6 @@ export default function Player({
         <button type="submit" title="Thêm (Ctrl/⌘+Enter)">Thêm</button>
       </form>
       {note && <div className="form-note">{note}</div>}
-
-      {presets?.length > 0 && (
-        <div className="player__presets">
-          {presets.map((p) => (
-            <button key={p.videoId} className="chip" onClick={() => onLoadPreset(p)}>{p.title}</button>
-          ))}
-        </div>
-      )}
 
       <div className="queue__head">
         <span className="muted">Hàng chờ · {queue.length}</span>

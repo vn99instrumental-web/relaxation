@@ -5,7 +5,7 @@ import { createGist } from '../lib/gist'
 // và đồng bộ nhật ký qua GitHub Gist.
 export default function SettingsModal({
   open, onClose, config, setConfig, scene, setScene,
-  backgrounds, bgId, setBgId, onAddBg, onRemoveBg,
+  backgrounds, bgId, setBgId, onAddBg, onRemoveBg, hiddenCount, onRestoreBg,
   supaConfig, setSupaConfig, supaStatus, supaError,
   admin, setAdmin,
 }) {
@@ -94,8 +94,8 @@ export default function SettingsModal({
                     ? <span className="bg-tile__vector">✎ Tranh vẽ</span>
                     : <img src={b.thumb || b.url} alt="" loading="lazy" />}
                   <span className="bg-tile__label">{b.label}</span>
-                  {b.id.startsWith('u') && (
-                    <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); onRemoveBg(b.id) }} title="Xóa">✕</span>
+                  {(admin || b.id.startsWith('u')) && b.id !== 'vector' && (
+                    <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); onRemoveBg(b.id) }} title="Xóa ảnh này">✕</span>
                   )}
                 </button>
               ))}
@@ -109,6 +109,11 @@ export default function SettingsModal({
                 onKeyDown={(e) => { if (e.key === 'Enter') addByUrl() }} />
               <button className="btn" onClick={addByUrl}>Thêm</button>
             </div>
+            {admin && hiddenCount > 0 && (
+              <div className="settings-actions">
+                <button className="btn btn--ghost" onClick={onRestoreBg}>Khôi phục {hiddenCount} ảnh đã ẩn</button>
+              </div>
+            )}
           </section>
 
           <section className="settings-block">
