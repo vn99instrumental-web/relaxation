@@ -565,6 +565,10 @@ input[type='range']:disabled { opacity: 0.4; }
 }
 @media (max-width: 640px) {
   .drawer { top: 60px; bottom: 80px; width: min(440px, 94vw); }
+  /* Ảnh nền: bỏ zoom thừa (104% + hiệu ứng trôi) để trên màn hình dọc
+     thấy được nhiều cảnh hơn, ít bị cắt hai bên; đứng yên cho nhẹ máy. */
+  .scene__photo { inset: 0; width: 100%; height: 100%; animation: none; }
+  .scene__photo-img { object-position: center 45%; }
 }
 /* ---- Điện thoại: khung tràn viền, gõ chat gọn, nút to dễ chạm ---- */
 @media (max-width: 480px) {
