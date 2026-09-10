@@ -13,7 +13,7 @@ import { useSupabaseRoom } from './hooks/useSupabaseRoom'
 import { useSupabaseGallery } from './hooks/useSupabaseGallery'
 import { useRoomSettings } from './hooks/useRoomSettings'
 import { load, save } from './lib/storage'
-import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, VINTAGE_SCENES } from './lib/backgrounds'
+import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, VINTAGE_SCENES, BUILTIN_SCENES } from './lib/backgrounds'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 
 let keySeed = 1
@@ -69,7 +69,13 @@ export default function App() {
     [userBgs, hiddenBg],
   )
   const useShared = gallery.enabled && gallery.ready
-  const backgrounds = useShared ? gallery.items : localBackgrounds
+  // 3 chủ đề vintage LUÔN ghép sẵn ở đầu (asset nội bộ, không phụ thuộc Supabase).
+  // Lọc trùng phòng khi thư viện Supabase còn dòng cũ trỏ /scenes/*.
+  const backgrounds = useMemo(() => {
+    const rest = (useShared ? gallery.items : localBackgrounds)
+      .filter((b) => !BUILTIN_SCENES.some((s) => s.id === b.id) && !(b.url || '').startsWith('/scenes/'))
+    return [...BUILTIN_SCENES, ...rest]
+  }, [useShared, gallery.items, localBackgrounds])
   const currentBg = backgrounds.find((b) => b.id === bgId) || backgrounds.find((b) => b.url) || backgrounds[0]
 
   const supaRef = useRef(supa); supaRef.current = supa
@@ -252,12 +258,9 @@ export default function App() {
     setBgId(ids[(i + dir + ids.length) % ids.length])
   }, [backgrounds, bgId])
 
-  // Chọn nhanh 1 trong 3 cảnh vintage (khớp theo URL nên chạy cả local lẫn Supabase)
-  const pickScene = useCallback((url) => {
-    const b = backgrounds.find((x) => (x.url || '').endsWith(url))
-    if (b) setBgId(b.id)
-  }, [backgrounds])
-  const sceneActive = (url) => (currentBg?.url || '').endsWith(url)
+  // Chọn nhanh 1 trong 3 chủ đề vintage (dùng thẳng id chủ đề, luôn có sẵn)
+  const pickScene = useCallback((id) => setBgId(id), [])
+  const sceneActive = (id) => currentBg?.id === id
 
   const addUserBg = useCallback((label, url) => {
     const id = `u${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -287,6 +290,7 @@ export default function App() {
   }, [addUserBg])
 
   const removeImage = useCallback((id) => {
+    if (BUILTIN_SCENES.some((s) => s.id === id)) return // chủ đề dựng sẵn: không xóa
     if (sharedRef.current) { galleryRef.current.removeImage(id); setBgId((cur) => (cur === id ? '' : cur)) }
     else removeBackground(id)
   }, [removeBackground])
@@ -307,12 +311,12 @@ export default function App() {
             <h1>Vibe Space</h1>
           </div>
           <div className="topbar__actions">
-            <div className="scene-tabs" title="Chọn cảnh vintage">
+            <div className="scene-tabs" title="Đổi chủ đề vintage">
               {VINTAGE_SCENES.map((s) => (
                 <button
-                  key={s.key}
-                  className={`scene-tab ${sceneActive(s.url) ? 'is-active' : ''}`}
-                  onClick={() => pickScene(s.url)}
+                  key={s.id}
+                  className={`scene-tab ${sceneActive(s.id) ? 'is-active' : ''}`}
+                  onClick={() => pickScene(s.id)}
                 >
                   {s.label}
                 </button>

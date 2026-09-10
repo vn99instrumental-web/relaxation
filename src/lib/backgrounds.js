@@ -8,11 +8,22 @@ const px = (id) => ({
   thumb: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=400`,
 })
 
+// 3 CHỦ ĐỀ vintage "Đà Lạt 1994" (từ thiết kế Stitch) — asset nội bộ của app,
+// luôn có sẵn nên không phụ thuộc Supabase và không bao giờ hỏng ảnh.
+// Nút chuyển nhanh trên thanh trên cùng dùng đúng 3 chủ đề này.
+export const VINTAGE_SCENES = [
+  { id: 'vs_dusk', label: 'Hoàng hôn', full: 'Hoàng hôn 1994', url: '/scenes/dusk.jpg' },
+  { id: 'vs_rain', label: 'Đêm mưa', full: 'Đêm mưa Cà phê Tùng', url: '/scenes/rainynight.jpg' },
+  { id: 'vs_morning', label: 'Sáng sớm', full: 'Sáng sớm Đồi Thông', url: '/scenes/morning.jpg' },
+]
+
+// Dạng "ảnh nền" để ghép sẵn vào đầu danh sách (cả bản local lẫn Supabase đều
+// luôn thấy 3 chủ đề này). builtin: true -> không cho xóa.
+export const BUILTIN_SCENES = VINTAGE_SCENES.map((s) => ({
+  id: s.id, label: s.full, tag: 'vintage', url: s.url, thumb: s.url, builtin: true,
+}))
+
 export const DEFAULT_BACKGROUNDS = [
-  // Cảnh vintage "Đà Lạt 1994" (từ thiết kế Stitch) — ảnh nội bộ
-  { id: 'vs_dusk', label: 'Hoàng hôn 1994', tag: 'vintage', url: '/scenes/dusk.jpg', thumb: '/scenes/dusk.jpg' },
-  { id: 'vs_rain', label: 'Đêm mưa Cà phê Tùng', tag: 'vintage', url: '/scenes/rainynight.jpg', thumb: '/scenes/rainynight.jpg' },
-  { id: 'vs_morning', label: 'Sáng sớm Đồi Thông', tag: 'vintage', url: '/scenes/morning.jpg', thumb: '/scenes/morning.jpg' },
   // Đúng Đà Lạt
   { id: 'dl1', label: 'Hồ Đà Lạt trong sương', tag: 'Đà Lạt', ...px(31017723) },
   { id: 'dl2', label: 'Quảng trường Lâm Viên', tag: 'Đà Lạt', ...px(21250288) },
@@ -30,10 +41,3 @@ export const DEFAULT_BACKGROUNDS = [
 ]
 
 export const DEFAULT_BG_ID = 'vs_dusk'
-
-// 3 cảnh vintage để nút chọn nhanh (khớp theo URL, chạy được cả bản local lẫn Supabase)
-export const VINTAGE_SCENES = [
-  { key: 'dusk', label: 'Hoàng hôn', url: '/scenes/dusk.jpg' },
-  { key: 'rain', label: 'Đêm mưa', url: '/scenes/rainynight.jpg' },
-  { key: 'morning', label: 'Sáng sớm', url: '/scenes/morning.jpg' },
-]

@@ -98,7 +98,7 @@ export default function SettingsModal({
                     ? <span className="bg-tile__vector">✎ {b.label}</span>
                     : <img src={b.thumb || b.url} alt="" loading="lazy" />}
                   <span className="bg-tile__label">{b.label}</span>
-                  {(admin || isUserImg(b.id)) && (
+                  {(admin || isUserImg(b.id)) && !b.builtin && (
                     <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); onRemoveImage(b.id) }} title="Xóa ảnh này">✕</span>
                   )}
                 </button>
