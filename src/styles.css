@@ -83,6 +83,22 @@
   --surface: rgba(90, 78, 45, 0.06); --surface-2: rgba(90, 78, 45, 0.12);
   --bubble-bg: rgba(255, 255, 255, 0.55); --track: rgba(90, 78, 45, 0.2);
 }
+/* Chủ đề 4 — Phim xưa (retro, màu film hết đát: khói nâu, ám rêu, hổ phách) */
+.app[data-theme='film'] {
+  --ink: #ede4d0; --ink-dim: #9e9282; --paper: #f2ead9;
+  --panel: rgba(42, 36, 30, 0.72);
+  --panel-solid: rgba(30, 26, 21, 0.97);
+  --dock-bg: rgba(34, 30, 24, 0.8);
+  --border: rgba(212, 178, 126, 0.28);
+  --border-strong: rgba(212, 178, 126, 0.48);
+  --gold: #d89858; --gold-soft: #e8b57e;
+  --pine-soft: #6b7256;
+  --mine: rgba(138, 102, 69, 0.45);
+  --sel: rgba(143, 158, 124, 0.22); --sel-strong: rgba(143, 158, 124, 0.36);
+  --field-bg: rgba(0, 0, 0, 0.32);
+  --surface: rgba(230, 222, 205, 0.05); --surface-2: rgba(230, 222, 205, 0.1);
+  --bubble-bg: rgba(230, 222, 205, 0.06); --track: rgba(230, 222, 205, 0.16);
+}
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -244,14 +260,22 @@ input, textarea { font-family: inherit; }
 .icon-btn { border: 1px solid var(--border); background: var(--panel); color: var(--ink); width: 40px; height: 40px; border-radius: 10px; font-size: 1.1rem; backdrop-filter: blur(8px); transition: 0.25s; }
 .icon-btn:hover { border-color: var(--border-strong); }
 
-/* Bộ chọn giao diện (3 chấm màu, độc lập với ảnh nền) */
-.theme-dots { display: flex; align-items: center; gap: 8px; padding: 7px 11px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; backdrop-filter: blur(8px); }
-.theme-dot { width: 19px; height: 19px; padding: 0; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.28); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35); transition: transform 0.18s; }
-.theme-dot:hover { transform: scale(1.12); }
-.theme-dot.is-active { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+/* Bộ chọn giao diện — nút dropdown + danh sách (độc lập với ảnh nền) */
+.theme-select-wrap { position: relative; }
+.theme-select { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; color: var(--ink); backdrop-filter: blur(8px); font-size: 0.82rem; transition: 0.2s; }
+.theme-select:hover { border-color: var(--border-strong); }
+.theme-select__label { font-family: var(--ui); white-space: nowrap; }
+.theme-select__caret { color: var(--ink-dim); font-size: 0.66rem; }
+.theme-dot { width: 16px; height: 16px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.28); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35); }
 .theme-dot--dusk { background: linear-gradient(135deg, #f0c08a, #b8662a); }
 .theme-dot--rain { background: linear-gradient(135deg, #86cfcd, #27505e); }
 .theme-dot--morning { background: linear-gradient(135deg, #f6f3eb 45%, #8ba368); }
+.theme-dot--film { background: linear-gradient(135deg, #e8b57e 40%, #8f9e7c); }
+.theme-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; min-width: 170px; margin: 0; padding: 6px; list-style: none; background: var(--panel-solid); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: var(--shadow); }
+.theme-menu li { margin: 0; }
+.theme-menu__item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: none; background: none; color: var(--ink); border-radius: 8px; font-size: 0.86rem; text-align: left; transition: 0.15s; }
+.theme-menu__item:hover { background: var(--surface); }
+.theme-menu__item.is-active { background: var(--sel); }
 
 /* ---- Drawer trượt từ cạnh (không che kín cảnh) ---- */
 .drawer {
@@ -584,8 +608,8 @@ input[type='range']:disabled { opacity: 0.4; }
   .brand__mark { font-size: 1.45rem; }
   .topbar { gap: 10px; }
   .topbar__actions { gap: 7px; }
-  .theme-dots { gap: 7px; padding: 6px 9px; }
-  .theme-dot { width: 17px; height: 17px; }
+  .theme-select { padding: 7px 10px; gap: 6px; }
+  .theme-select__label { display: none; } /* điện thoại: chỉ hiện chấm màu + mũi tên */
   .icon-btn { width: 38px; height: 38px; font-size: 1rem; }
   .drawer { top: 56px; bottom: 74px; left: 0; right: 0; width: 100vw; border-radius: 0; }
   .drawer--left { border-right: none; }

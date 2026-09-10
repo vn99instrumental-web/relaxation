@@ -20,11 +20,12 @@ import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
 
-// 3 giao diện (độc lập với ảnh nền) — bộ màu từ thiết kế Stitch
+// Các giao diện (độc lập với ảnh nền) — bộ màu từ thiết kế Stitch
 const THEMES = [
   { id: 'dusk', label: 'Hoàng hôn' },
   { id: 'rain', label: 'Đêm mưa' },
   { id: 'morning', label: 'Sáng sớm' },
+  { id: 'film', label: 'Phim xưa' },
 ]
 
 function trackFromParsed(p, title = '') {
@@ -65,6 +66,7 @@ export default function App() {
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
 
@@ -113,6 +115,14 @@ export default function App() {
 
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
+
+  // Đóng menu chọn giao diện khi bấm ra ngoài
+  useEffect(() => {
+    if (!themeMenuOpen) return
+    const close = (e) => { if (!e.target.closest?.('.theme-select-wrap')) setThemeMenuOpen(false) }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [themeMenuOpen])
 
   const playAt = useCallback((i) => {
     setQueue((q) => {
@@ -415,15 +425,26 @@ export default function App() {
             </div>
           </div>
           <div className="topbar__actions">
-            <div className="theme-dots" title="Đổi giao diện">
-              {THEMES.map((t) => (
-                <button
-                  key={t.id}
-                  className={`theme-dot theme-dot--${t.id} ${theme === t.id ? 'is-active' : ''}`}
-                  onClick={() => setTheme(t.id)}
-                  title={t.label} aria-label={`Giao diện ${t.label}`}
-                />
-              ))}
+            <div className="theme-select-wrap">
+              <button className="theme-select" onClick={() => setThemeMenuOpen((o) => !o)}
+                title="Đổi giao diện" aria-haspopup="listbox" aria-expanded={themeMenuOpen}>
+                <span className={`theme-dot theme-dot--${theme}`} />
+                <span className="theme-select__label">{THEMES.find((t) => t.id === theme)?.label || 'Giao diện'}</span>
+                <span className="theme-select__caret">▾</span>
+              </button>
+              {themeMenuOpen && (
+                <ul className="theme-menu" role="listbox">
+                  {THEMES.map((t) => (
+                    <li key={t.id} role="option" aria-selected={theme === t.id}>
+                      <button className={`theme-menu__item ${theme === t.id ? 'is-active' : ''}`}
+                        onClick={() => { setTheme(t.id); setThemeMenuOpen(false) }}>
+                        <span className={`theme-dot theme-dot--${t.id}`} />
+                        <span>{t.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <button className="icon-btn" onClick={() => cycleBg(1)} title={`Ảnh: ${currentBg?.label || ''} — bấm để đổi`}>🖼</button>
             <button className="icon-btn" onClick={() => setSettingsOpen(true)} title="Cài đặt">⚙</button>
