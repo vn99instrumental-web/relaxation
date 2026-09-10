@@ -101,7 +101,6 @@ export default function Player({
                 : <img className="queue__thumb" src={videoThumb(t.videoId, 'default')} alt="" loading="lazy" />}
               <span className="queue__label">
                 <span className="queue__name">{t.title || (t.kind === 'playlist' ? 'Playlist' : 'Video')}</span>
-                <span className="queue__kind">{t.kind === 'playlist' ? 'playlist' : 'video'}</span>
               </span>
             </button>
             <button className="queue__remove" onClick={() => onRemove(i)} title="Xóa">✕</button>
