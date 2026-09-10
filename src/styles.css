@@ -336,6 +336,10 @@ input[type='range']:disabled { opacity: 0.4; }
 .bubble__user { font-size: 0.74rem; font-weight: 600; color: var(--gold-soft); font-family: var(--serif); letter-spacing: 0.02em; }
 .bubble__time { font-size: 0.64rem; color: var(--ink-dim); }
 .bubble__text { font-family: var(--serif-body); font-size: 0.94rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--paper); }
+.bubble__del { margin-left: auto; background: none; border: none; color: var(--ink-dim); font-size: 0.68rem; padding: 0 2px; line-height: 1; opacity: 0.6; }
+.bubble__del:hover { color: var(--rose); opacity: 1; }
+.admin-row { display: flex; align-items: flex-start; gap: 10px; font-size: 0.84rem; color: var(--ink-dim); line-height: 1.5; cursor: pointer; }
+.admin-row input { margin-top: 3px; accent-color: var(--gold); }
 
 .journal__compose, .journal__name { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
 .journal__compose input, .journal__name input { flex: 1; min-width: 0; background: rgba(0,0,0,0.26); border: 1px solid var(--border); color: var(--ink); padding: 11px 13px; border-radius: 10px; font-size: 0.9rem; font-family: var(--serif-body); }

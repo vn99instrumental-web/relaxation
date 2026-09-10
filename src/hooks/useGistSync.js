@@ -89,5 +89,16 @@ export function useGistSync(config) {
     persistLocal([])
   }, [persistLocal])
 
-  return { messages, status, error, sending, online, send, refresh, clearLocal }
+  const deleteMessage = useCallback(async (id) => {
+    const next = messagesRef.current.filter((m) => m.id !== id)
+    setMessages(next); persistLocal(next)
+    if (online) { try { await writeMessages(token, gistId, next, roomName) } catch { /* ignore */ } }
+  }, [online, token, gistId, roomName, persistLocal])
+
+  const clearMessages = useCallback(async () => {
+    setMessages([]); persistLocal([])
+    if (online) { try { await writeMessages(token, gistId, [], roomName) } catch { /* ignore */ } }
+  }, [online, token, gistId, roomName, persistLocal])
+
+  return { messages, status, error, sending, online, send, refresh, clearLocal, deleteMessage, clearMessages }
 }

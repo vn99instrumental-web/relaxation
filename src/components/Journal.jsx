@@ -3,8 +3,14 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 // Cuốn nhật ký chung 2 người. Hiển thị tin nhắn nhóm theo ngày,
 // ô nhập tên + ô soạn tin. Trạng thái kết nối Gist ở góc.
 // props: journal (hook useGistSync), username, setUsername, onOpenSettings
-export default function Journal({ journal, username, setUsername, onOpenSettings, onClose }) {
-  const { messages, status, error, sending, online, send, refresh } = journal
+export default function Journal({ journal, username, setUsername, onOpenSettings, onClose, admin }) {
+  const { messages, status, error, sending, online, send, refresh, deleteMessage, clearMessages } = journal
+
+  const removeOne = (id) => { if (deleteMessage) deleteMessage(id) }
+  const clearAll = () => {
+    if (!clearMessages) return
+    if (window.confirm('Xóa toàn bộ nhật ký? Không thể hoàn tác.')) clearMessages()
+  }
   const [draft, setDraft] = useState('')
   const [editingName, setEditingName] = useState(!username)
   const [nameInput, setNameInput] = useState(username || '')
@@ -50,6 +56,9 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
           {online && (
             <button className="link-btn" onClick={refresh} title="Làm mới">↻</button>
           )}
+          {admin && messages.length > 0 && (
+            <button className="link-btn" onClick={clearAll} title="Xóa toàn bộ nhật ký">🗑</button>
+          )}
           <button className="link-btn" onClick={onOpenSettings} title="Cài đặt đồng bộ">⚙</button>
           {onClose && <button className="link-btn" onClick={onClose} title="Đóng">✕</button>}
         </div>
@@ -73,6 +82,9 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
                   <div className="bubble__meta">
                     <span className="bubble__user">{m.user}</span>
                     <span className="bubble__time">{formatTime(m.ts)}</span>
+                    {admin && (
+                      <button className="bubble__del" onClick={() => removeOne(m.id)} title="Xóa tin này">✕</button>
+                    )}
                   </div>
                   <div className="bubble__text">{m.text}</div>
                 </div>

@@ -75,6 +75,8 @@ export function useSupabaseRoom(config, username) {
       .channel(`room:${room}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` },
         (payload) => setMessages((prev) => mergeById(prev, [mapMsg(payload.new)])))
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` },
+        (payload) => setMessages((prev) => prev.filter((m) => m.id !== payload.old.id)))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'playlists', filter: `room_id=eq.${room}` },
         () => reloadPlaylists())
       .subscribe((s) => { if (s === 'SUBSCRIBED' && !cancelled) setStatus('online') })
@@ -97,6 +99,20 @@ export function useSupabaseRoom(config, username) {
     // realtime sẽ tự thêm tin vào danh sách
   }, [room, username])
 
+  const deleteMessage = useCallback(async (id) => {
+    const c = clientRef.current
+    if (!c) return
+    setMessages((prev) => prev.filter((m) => m.id !== id)) // xóa ngay trên máy mình
+    try { await c.from('messages').delete().eq('id', id) } catch (e) { setError(e.message || 'Xóa lỗi') }
+  }, [])
+
+  const clearMessages = useCallback(async () => {
+    const c = clientRef.current
+    if (!c) return
+    setMessages([])
+    try { await c.from('messages').delete().eq('room_id', room) } catch (e) { setError(e.message || 'Xóa lỗi') }
+  }, [room])
+
   const savePlaylistRow = useCallback(async (name, tracks) => {
     const c = clientRef.current
     if (!c) return
@@ -111,7 +127,7 @@ export function useSupabaseRoom(config, username) {
     reloadPlaylists()
   }, [reloadPlaylists])
 
-  const journal = { messages, status, error, sending, online: enabled && status === 'online', send, refresh }
+  const journal = { messages, status, error, sending, online: enabled && status === 'online', send, refresh, deleteMessage, clearMessages }
 
-  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow }
+  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, deleteMessage, clearMessages }
 }

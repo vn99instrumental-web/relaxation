@@ -59,6 +59,7 @@ export default function App() {
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
+  const [admin, setAdmin] = useState(() => load('vibe.admin', false))
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
@@ -77,6 +78,7 @@ export default function App() {
   useEffect(() => save('vibe.userBgs', userBgs), [userBgs])
   useEffect(() => save('vibe.username', username), [username])
   useEffect(() => save('vibe.sync', syncConfig), [syncConfig])
+  useEffect(() => save('vibe.admin', admin), [admin])
 
   const playAt = useCallback((i) => {
     setQueue((q) => {
@@ -252,6 +254,7 @@ export default function App() {
               journal={journal} username={username} setUsername={setUsername}
               onOpenSettings={() => setSettingsOpen(true)}
               onClose={() => setJournalOpen(false)}
+              admin={admin}
             />
           </div>
         </aside>
@@ -281,6 +284,7 @@ export default function App() {
         open={settingsOpen} onClose={() => setSettingsOpen(false)}
         config={syncConfig} setConfig={setSyncConfig}
         supaConfig={supaConfig} setSupaConfig={setSupaConfig} supaStatus={supa.status} supaError={supa.error}
+        admin={admin} setAdmin={setAdmin}
         scene={scene} setScene={setScene}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddBg={addUserBg} onRemoveBg={removeUserBg}

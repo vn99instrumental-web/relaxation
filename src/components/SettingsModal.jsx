@@ -7,6 +7,7 @@ export default function SettingsModal({
   open, onClose, config, setConfig, scene, setScene,
   backgrounds, bgId, setBgId, onAddBg, onRemoveBg,
   supaConfig, setSupaConfig, supaStatus, supaError,
+  admin, setAdmin,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -108,6 +109,14 @@ export default function SettingsModal({
                 onKeyDown={(e) => { if (e.key === 'Enter') addByUrl() }} />
               <button className="btn" onClick={addByUrl}>Thêm</button>
             </div>
+          </section>
+
+          <section className="settings-block">
+            <h3>🔑 Quyền admin</h3>
+            <label className="admin-row">
+              <input type="checkbox" checked={!!admin} onChange={(e) => setAdmin(e.target.checked)} />
+              <span>Bật quyền admin — hiện nút <b>xóa từng tin</b> và <b>xóa toàn bộ nhật ký</b>. (Chỉ bật trên máy của bạn.)</span>
+            </label>
           </section>
 
           <section className="settings-block">
