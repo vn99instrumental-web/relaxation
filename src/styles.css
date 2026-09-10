@@ -396,7 +396,7 @@ input, textarea { font-family: inherit; }
   width: 100%; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink);
   padding: 7px 10px; border-radius: 9px; font-size: 0.78rem;
 }
-.player__add button, .journal__compose button, .journal__name button {
+.player__add button, .journal__name button {
   background: var(--pine-soft); border: 1px solid transparent; color: var(--ink);
   padding: 7px 16px; border-radius: 9px; font-size: 0.8rem; white-space: nowrap; transition: 0.2s;
 }
@@ -494,8 +494,17 @@ input[type='range']:disabled { opacity: 0.4; }
 .journal__compose, .journal__name { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
 .journal__compose input, .journal__name input { flex: 1; min-width: 0; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 11px 13px; border-radius: 10px; font-size: 0.9rem; font-family: var(--serif-body); }
 .journal__compose input:focus, .journal__name input:focus { outline: none; border-color: var(--border-strong); }
-.journal__whoami { background: var(--sel); border: 1px solid var(--border); color: var(--gold-soft); padding: 9px 11px; border-radius: 10px; font-size: 0.78rem; white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; font-family: var(--ui); }
+.journal__whoami { background: var(--sel); border: 1px solid var(--border); color: var(--gold-soft); padding: 9px 11px; border-radius: 10px; font-size: 0.78rem; white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; font-family: var(--ui); flex-shrink: 0; }
+.journal__compose button[type='submit'] { background: var(--pine-soft); border: 1px solid transparent; color: var(--ink); padding: 10px 15px; border-radius: 10px; font-size: 0.84rem; white-space: nowrap; flex-shrink: 0; transition: 0.2s; }
 .journal__compose button:disabled { opacity: 0.5; }
+
+/* Nút & bảng emoji */
+.emoji-toggle { border: 1px solid var(--border); background: var(--surface); color: var(--ink); width: 42px; height: 42px; border-radius: 10px; font-size: 1.15rem; flex-shrink: 0; transition: 0.2s; }
+.emoji-toggle:hover { border-color: var(--border-strong); }
+.emoji-toggle.is-on { background: var(--sel); border-color: var(--border-strong); }
+.emoji-panel { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 2px; margin-top: 10px; padding: 8px; background: var(--panel-solid); border: 1px solid var(--border); border-radius: 12px; max-height: 172px; overflow-y: auto; box-shadow: var(--shadow); }
+.emoji-item { border: none; background: none; font-size: 1.3rem; line-height: 1; padding: 6px 0; border-radius: 8px; transition: transform 0.12s, background 0.12s; }
+.emoji-item:hover { background: var(--surface-2); transform: scale(1.18); }
 
 .footer { text-align: center; padding-top: 13px; color: var(--ink-dim); font-size: 0.8rem; font-style: italic; font-family: var(--serif-body); letter-spacing: 0.02em; }
 
@@ -548,19 +557,40 @@ input[type='range']:disabled { opacity: 0.4; }
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 820px) {
-  .floaty { width: auto; left: 10px; right: 10px; bottom: 88px; max-height: 62vh; }
-  .floaty--left, .floaty--right { left: 10px; right: 10px; }
   .pip { top: auto; bottom: 88px; right: 10px; width: 210px; }
   .dock { gap: 10px; padding: 7px 10px; overflow-x: auto; }
   .dock__now { display: none; }
   .dock__btn span { display: none; }
   .dock__vol { display: none; }
 }
+@media (max-width: 640px) {
+  .drawer { top: 60px; bottom: 80px; width: min(440px, 94vw); }
+}
+/* ---- Điện thoại: khung tràn viền, gõ chat gọn, nút to dễ chạm ---- */
 @media (max-width: 480px) {
+  .stage { padding: 12px; }
+  .brand { gap: 9px; }
   .brand p { display: none; }
-  .brand h1 { font-size: 1.35rem; }
-  .scene-tab { padding: 6px 9px; font-size: 0.74rem; }
-  .mixer__row { grid-template-columns: 108px 1fr; }
+  .brand h1 { font-size: 1.28rem; }
+  .brand__mark { font-size: 1.45rem; }
+  .topbar { gap: 10px; }
+  .topbar__actions { gap: 7px; }
+  .theme-dots { gap: 7px; padding: 6px 9px; }
+  .theme-dot { width: 17px; height: 17px; }
+  .icon-btn { width: 38px; height: 38px; font-size: 1rem; }
+  .drawer { top: 56px; bottom: 74px; left: 0; right: 0; width: 100vw; border-radius: 0; }
+  .drawer--left { border-right: none; }
+  .drawer--right { border-left: none; }
+  .drawer__body { padding: 12px; }
+  .journal__compose, .journal__name { gap: 6px; }
+  .journal__whoami { max-width: 64px; padding: 9px 7px; font-size: 0.72rem; }
+  .journal__compose input { padding: 10px 11px; }
+  .emoji-toggle { width: 40px; height: 40px; font-size: 1.1rem; }
+  .journal__compose button[type='submit'] { padding: 10px 12px; }
+  .emoji-item { font-size: 1.45rem; padding: 7px 0; }
+  .mixer__row { grid-template-columns: 100px 1fr; }
+  .dock { gap: 7px; padding: 6px 8px; max-width: calc(100vw - 16px); }
+  .dock__btn--icon { padding: 9px 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .scene__grain, .fog, .scene__rays span, .scene__svg { animation: none !important; }

@@ -1,5 +1,14 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 
+// Bộ emoji gợi cảm giác ấm áp/thư giãn cho nhật ký đôi
+const EMOJIS = [
+  '😊', '🙂', '😌', '🥰', '😍', '😘', '🤗', '😴', '😆', '😂',
+  '🥹', '🥲', '😅', '🤭', '😋', '😎', '🤔', '😇', '🫶', '🙌',
+  '❤️', '🧡', '💛', '💚', '💙', '💜', '🤍', '💕', '💖', '✨',
+  '🌟', '🌙', '☁️', '🌧️', '☔', '🌈', '🍂', '🍁', '🌿', '🌸',
+  '🌼', '☕', '🍵', '🫖', '🎵', '🎶', '🎧', '📷', '🕯️', '🏔️',
+]
+
 // Cuốn nhật ký chung 2 người. Hiển thị tin nhắn nhóm theo ngày,
 // ô nhập tên + ô soạn tin. Trạng thái kết nối Gist ở góc.
 // props: journal (hook useGistSync), username, setUsername, onOpenSettings
@@ -16,7 +25,11 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
   const [nameInput, setNameInput] = useState(username || '')
   const [editingId, setEditingId] = useState(null)   // id tin đang sửa
   const [editText, setEditText] = useState('')
+  const [emojiOpen, setEmojiOpen] = useState(false)
   const listRef = useRef(null)
+  const inputRef = useRef(null)
+
+  const addEmoji = (e) => { setDraft((d) => d + e); inputRef.current?.focus() }
 
   const startEdit = (m) => { setEditingId(m.id); setEditText(m.text) }
   const cancelEdit = () => { setEditingId(null); setEditText('') }
@@ -40,6 +53,7 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
     if (!username) { setEditingName(true); return }
     send(draft)
     setDraft('')
+    setEmojiOpen(false)
   }
 
   const saveName = (e) => {
@@ -141,25 +155,43 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
           <button type="submit">Lưu tên</button>
         </form>
       ) : (
-        <form className="journal__compose" onSubmit={submit}>
-          <button
-            type="button"
-            className="journal__whoami"
-            onClick={() => { setNameInput(username); setEditingName(true) }}
-            title="Đổi tên"
-          >
-            {username} ▾
-          </button>
-          <input
-            type="text"
-            placeholder="Viết cho người ấy hoặc cho chính mình…"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-          />
-          <button type="submit" disabled={sending || !draft.trim()}>
-            {sending ? '…' : 'Gửi'}
-          </button>
-        </form>
+        <>
+          {emojiOpen && (
+            <div className="emoji-panel">
+              {EMOJIS.map((e) => (
+                <button type="button" key={e} className="emoji-item" onClick={() => addEmoji(e)}>{e}</button>
+              ))}
+            </div>
+          )}
+          <form className="journal__compose" onSubmit={submit}>
+            <button
+              type="button"
+              className="journal__whoami"
+              onClick={() => { setNameInput(username); setEditingName(true) }}
+              title="Đổi tên"
+            >
+              {username} ▾
+            </button>
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Viết cho người ấy hoặc cho chính mình…"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+            />
+            <button
+              type="button"
+              className={`emoji-toggle ${emojiOpen ? 'is-on' : ''}`}
+              onClick={() => setEmojiOpen((v) => !v)}
+              title="Chèn emoji"
+            >
+              😊
+            </button>
+            <button type="submit" disabled={sending || !draft.trim()}>
+              {sending ? '…' : 'Gửi'}
+            </button>
+          </form>
+        </>
       )}
     </section>
   )
