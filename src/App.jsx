@@ -19,6 +19,13 @@ import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
 
+// 3 giao diện (độc lập với ảnh nền) — bộ màu từ thiết kế Stitch
+const THEMES = [
+  { id: 'dusk', label: 'Hoàng hôn' },
+  { id: 'rain', label: 'Đêm mưa' },
+  { id: 'morning', label: 'Sáng sớm' },
+]
+
 function trackFromParsed(p, title = '') {
   if (p.type === 'playlist') {
     return { key: nextKey(), kind: 'playlist', playlistId: p.playlistId, title: title || 'Playlist YouTube' }
@@ -39,6 +46,7 @@ export default function App() {
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
   const [hiddenBg, setHiddenBg] = useState(() => load('vibe.hiddenBg', []))
   const [bgId, setBgId] = useState(() => load('vibe.bgId', DEFAULT_BG_ID))
+  const [theme, setTheme] = useState(() => load('vibe.theme', 'dusk')) // giao diện, độc lập ảnh nền
 
   const [username, setUsername] = useState(() => load('vibe.username', ''))
   const [syncConfig, setSyncConfig] = useState(() =>
@@ -89,6 +97,7 @@ export default function App() {
   useEffect(() => save('vibe.ytVolume', ytVolume), [ytVolume])
   useEffect(() => save('vibe.scene', scene), [scene])
   useEffect(() => save('vibe.bgId', bgId), [bgId])
+  useEffect(() => save('vibe.theme', theme), [theme])
   useEffect(() => save('vibe.userBgs', userBgs), [userBgs])
   useEffect(() => save('vibe.hiddenBg', hiddenBg), [hiddenBg])
   useEffect(() => save('vibe.username', username), [username])
@@ -209,7 +218,7 @@ export default function App() {
   }, [scene, ambient.levels.rain])
 
   // ---- Đồng bộ cài đặt phòng: admin đổi -> mọi người theo (realtime) ----
-  const syncRef = useRef({ scene: null, bgId: null, queueSig: null })
+  const syncRef = useRef({ scene: null, bgId: null, theme: null, queueSig: null })
   const queueSig = (arr) => (arr || []).map((t) => t.videoId || t.playlistId || '').join('|')
 
   // Nhận cài đặt từ phòng và áp dụng
@@ -218,6 +227,7 @@ export default function App() {
     if (!s || s.updated_by === roomSettings.clientId) return
     if (s.scene && s.scene !== scene) { syncRef.current.scene = s.scene; setScene(s.scene) }
     if (s.bg_id && s.bg_id !== bgId) { syncRef.current.bgId = s.bg_id; setBgId(s.bg_id) }
+    if (s.theme && s.theme !== theme) { syncRef.current.theme = s.theme; setTheme(s.theme) }
     if (Array.isArray(s.queue) && queueSig(s.queue) !== queueSig(queue)) {
       const sig = queueSig(s.queue)
       syncRef.current.queueSig = sig
@@ -241,6 +251,12 @@ export default function App() {
     roomSettings.save({ bg_id: bgId })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bgId, admin, roomSettings.enabled])
+  useEffect(() => {
+    if (!admin || !roomSettings.enabled || theme === syncRef.current.theme) return
+    syncRef.current.theme = theme
+    roomSettings.save({ theme })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme, admin, roomSettings.enabled])
   useEffect(() => {
     if (!admin || !roomSettings.enabled) return
     const sig = queueSig(queue)
@@ -293,11 +309,8 @@ export default function App() {
 
   const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
 
-  // Tông khung theo chủ đề đang chọn (đổi màu kính/viền/nhấn cho hợp cảnh)
-  const themeKey = { vs_dusk: 'dusk', vs_rain: 'rain', vs_morning: 'morning' }[currentBg?.id] || 'dusk'
-
   return (
-    <div className={`app ${uiHidden ? 'is-immersive' : ''}`} data-theme={themeKey}>
+    <div className={`app ${uiHidden ? 'is-immersive' : ''}`} data-theme={theme}>
       <Scene scene={scene} rain={rainDensity} photo={currentBg?.url || ''} />
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
@@ -313,6 +326,16 @@ export default function App() {
             </div>
           </div>
           <div className="topbar__actions">
+            <div className="theme-dots" title="Đổi giao diện">
+              {THEMES.map((t) => (
+                <button
+                  key={t.id}
+                  className={`theme-dot theme-dot--${t.id} ${theme === t.id ? 'is-active' : ''}`}
+                  onClick={() => setTheme(t.id)}
+                  title={t.label} aria-label={`Giao diện ${t.label}`}
+                />
+              ))}
+            </div>
             <button className="icon-btn" onClick={() => cycleBg(1)} title={`Ảnh: ${currentBg?.label || ''} — bấm để đổi`}>🖼</button>
             <button className="icon-btn" onClick={() => setSettingsOpen(true)} title="Cài đặt">⚙</button>
           </div>

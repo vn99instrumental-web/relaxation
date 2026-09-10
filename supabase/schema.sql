@@ -97,7 +97,7 @@ do $$ begin begin execute 'alter publication supabase_realtime add table public.
 -- CÀI ĐẶT CHUNG CỦA PHÒNG (admin đổi -> mọi người theo, realtime)
 -- ============================================================
 create table if not exists public.room_settings (
-  id text primary key, scene text, bg_id text, queue jsonb, q_index int,
+  id text primary key, scene text, bg_id text, theme text, queue jsonb, q_index int,
   updated_by text, updated_at timestamptz not null default now()
 );
 alter table public.room_settings enable row level security;
