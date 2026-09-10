@@ -10,6 +10,7 @@ import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useGistSync } from './hooks/useGistSync'
 import { load, save } from './lib/storage'
+import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID } from './lib/backgrounds'
 
 const PRESETS = [
   { title: 'Lofi Girl · radio', videoId: 'jfKfPfyJRdk' },
@@ -36,7 +37,10 @@ export default function App() {
   const [ytVolume, setYtVolume] = useState(() => load('vibe.ytVolume', 70))
 
   const [scene, setScene] = useState(() => load('vibe.scene', 'fog'))
-  const [photo, setPhoto] = useState(() => load('vibe.photo', ''))
+  const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
+  const [bgId, setBgId] = useState(() => load('vibe.bgId', DEFAULT_BG_ID))
+  const backgrounds = useMemo(() => [...DEFAULT_BACKGROUNDS, ...userBgs], [userBgs])
+  const currentBg = backgrounds.find((b) => b.id === bgId) || backgrounds[0]
 
   const [username, setUsername] = useState(() => load('vibe.username', ''))
   const [syncConfig, setSyncConfig] = useState(() =>
@@ -55,7 +59,8 @@ export default function App() {
   useEffect(() => save('vibe.queue', queue), [queue])
   useEffect(() => save('vibe.ytVolume', ytVolume), [ytVolume])
   useEffect(() => save('vibe.scene', scene), [scene])
-  useEffect(() => save('vibe.photo', photo), [photo])
+  useEffect(() => save('vibe.bgId', bgId), [bgId])
+  useEffect(() => save('vibe.userBgs', userBgs), [userBgs])
   useEffect(() => save('vibe.username', username), [username])
   useEffect(() => save('vibe.sync', syncConfig), [syncConfig])
 
@@ -120,11 +125,28 @@ export default function App() {
 
   const toggleLeft = (tab) => setLeftTab((cur) => (cur === tab ? null : tab))
 
+  const cycleBg = useCallback((dir) => {
+    const ids = backgrounds.map((b) => b.id)
+    const i = Math.max(0, ids.indexOf(bgId))
+    setBgId(ids[(i + dir + ids.length) % ids.length])
+  }, [backgrounds, bgId])
+
+  const addUserBg = useCallback((label, url) => {
+    const id = `u${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+    setUserBgs((list) => [...list, { id, label: label || 'Ảnh của tôi', url, thumb: url }])
+    setBgId(id)
+  }, [])
+
+  const removeUserBg = useCallback((id) => {
+    setUserBgs((list) => list.filter((b) => b.id !== id))
+    setBgId((cur) => (cur === id ? DEFAULT_BG_ID : cur))
+  }, [])
+
   const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
 
   return (
     <div className={`app ${uiHidden ? 'is-immersive' : ''}`}>
-      <Scene scene={scene} rain={rainDensity} photo={photo} />
+      <Scene scene={scene} rain={rainDensity} photo={currentBg?.url || ''} />
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
       <VideoPip showVideo={showVideo && !uiHidden} onClose={() => setShowVideo(false)} />
@@ -149,6 +171,7 @@ export default function App() {
                   onClick={() => setScene(s.id)}>{s.label}</button>
               ))}
             </div>
+            <button className="icon-btn" onClick={() => cycleBg(1)} title={`Ảnh: ${currentBg?.label || ''} — bấm để đổi`}>🖼</button>
             <button className="icon-btn" onClick={() => setSettingsOpen(true)} title="Cài đặt">⚙</button>
           </div>
         </header>
@@ -209,7 +232,9 @@ export default function App() {
       <SettingsModal
         open={settingsOpen} onClose={() => setSettingsOpen(false)}
         config={syncConfig} setConfig={setSyncConfig}
-        scene={scene} setScene={setScene} photo={photo} setPhoto={setPhoto}
+        scene={scene} setScene={setScene}
+        backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
+        onAddBg={addUserBg} onRemoveBg={removeUserBg}
       />
     </div>
   )

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // Cảnh Đà Lạt cổ điển vẽ bằng SVG: trời chiều, mặt trời mờ sau sương,
 // những dãy đồi thông xa dần, mặt hồ phẳng lặng, hàng thông tiền cảnh và
@@ -10,6 +10,11 @@ export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
   const canvasRef = useRef(null)
   const rainRef = useRef(rain)
   rainRef.current = rain
+
+  // Nếu ảnh lỗi (chặn mạng, sai URL) thì quay về tranh vẽ vector.
+  const [failed, setFailed] = useState(false)
+  useEffect(() => { setFailed(false) }, [photo])
+  const usePhoto = photo && !failed
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -58,8 +63,10 @@ export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
 
   return (
     <div className={`scene scene--${scene}`} aria-hidden="true">
-      {photo ? (
-        <div className="scene__photo" style={{ backgroundImage: `url("${photo}")` }} />
+      {usePhoto ? (
+        <div className="scene__photo">
+          <img src={photo} alt="" className="scene__photo-img" onError={() => setFailed(true)} />
+        </div>
       ) : (
         <DalatSVG />
       )}
