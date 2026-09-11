@@ -5,9 +5,9 @@ import RainField from './RainField'
 import { pickProfile, prefersReducedMotion } from './quality'
 
 // LeafEngine: lớp canvas WebGL nằm SAU toàn bộ giao diện, nền trong suốt,
-// không chặn chuột. Vẽ lá / cánh hoa / mưa. Tự chọn hồ sơ chất lượng theo thiết
-// bị và tạm dừng khi tab bị ẩn (không đụng tới trình phát nhạc).
-export default function LeafEngine({ mode = 'leaves', speed = 50, density = 50 }) {
+// không chặn chuột. Vẽ nhiều hiệu ứng cùng lúc (lá / cánh hoa / mưa) — chọn
+// nhiều tuỳ ý. Tự chọn hồ sơ chất lượng và tạm dừng khi tab bị ẩn.
+export default function LeafEngine({ modes = ['leaves'], speed = 50, density = 50, sizeLevel = 50 }) {
   const profile = useMemo(() => pickProfile(), [])
   const reduce = useMemo(() => prefersReducedMotion(), [])
   const [visible, setVisible] = useState(
@@ -20,15 +20,20 @@ export default function LeafEngine({ mode = 'leaves', speed = 50, density = 50 }
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [])
 
-  if (mode === 'none' || reduce) return null
+  const set = Array.isArray(modes) ? modes : [modes]
+  const hasLeaves = set.includes('leaves')
+  const hasPetals = set.includes('petals')
+  const hasRain = set.includes('rain')
+
+  if (reduce || (!hasLeaves && !hasPetals && !hasRain)) return null
+
+  // Lá + cánh hoa dùng chung 1 InstancedMesh (LeafField). Mưa dùng mesh riêng.
+  const leafMode = hasLeaves && hasPetals ? 'both' : hasLeaves ? 'leaves' : hasPetals ? 'petals' : null
 
   // Thanh mật độ 0..100 -> hệ số 0.35..1.65 (=1.0 tại 50)
   const d = Math.min(100, Math.max(0, Number(density) || 0)) / 100
   const factor = 0.35 + d * 1.3
-
-  const isRain = mode === 'rain'
-  // "cả hai" ít hơn chút (2 loại cùng lúc); mưa nhiều hạt hơn lá
-  const maxLeaves = Math.max(8, Math.round(profile.maxLeaves * (mode === 'both' ? 0.85 : 1) * factor))
+  const maxLeaves = Math.max(8, Math.round(profile.maxLeaves * (leafMode === 'both' ? 0.85 : 1) * factor))
   const maxDrops = Math.max(20, Math.round(profile.maxLeaves * 2.2 * factor))
 
   return (
@@ -40,9 +45,8 @@ export default function LeafEngine({ mode = 'leaves', speed = 50, density = 50 }
         camera={{ fov: 45, position: [0, 0, 14], near: 0.1, far: 60 }}
         style={{ background: 'transparent' }}
       >
-        {isRain
-          ? <RainField speed={speed} maxDrops={maxDrops} />
-          : <LeafField mode={mode} speed={speed} maxLeaves={maxLeaves} />}
+        {leafMode && <LeafField mode={leafMode} speed={speed} sizeLevel={sizeLevel} maxLeaves={maxLeaves} />}
+        {hasRain && <RainField speed={speed} sizeLevel={sizeLevel} maxDrops={maxDrops} />}
       </Canvas>
     </div>
   )

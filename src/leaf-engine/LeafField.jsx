@@ -8,7 +8,7 @@ import { makeAdaptive } from './quality'
 
 // Cảnh 3D chứa toàn bộ lá/cánh hoa: 1 InstancedMesh duy nhất (1 lệnh vẽ),
 // mỗi lá là 1 tấm phẳng lấy 1 ô trong atlas. Gió + vật lý cập nhật mỗi khung.
-export default function LeafField({ mode = 'leaves', speed = 50, maxLeaves = 120 }) {
+export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50, maxLeaves = 120 }) {
   const { camera, size } = useThree()
   const texture = useLoader(THREE.TextureLoader, `${import.meta.env.BASE_URL || '/'}leaves/leaf-atlas.webp`)
 
@@ -54,9 +54,13 @@ export default function LeafField({ mode = 'leaves', speed = 50, maxLeaves = 120
     rig.geom.dispose(); rig.material.dispose(); rig.mesh.dispose()
   }, [rig])
 
-  // Cập nhật chế độ (lá / cánh hoa / cả hai) và tốc độ gió theo thanh trượt
+  // Cập nhật chế độ (lá / cánh hoa / cả hai), tốc độ gió, và kích thước lá
   useEffect(() => { rig.sim.setMode(mode) }, [rig, mode])
   useEffect(() => { rig.wind.setBase(speed) }, [rig, speed])
+  useEffect(() => {
+    const s = Math.min(100, Math.max(0, Number(sizeLevel) || 0)) / 100
+    rig.sim.setSizeScale(0.6 + s * 0.8)   // 0.6 .. 1.4 (=1.0 tại 50)
+  }, [rig, sizeLevel])
 
   const tRef = useRef(0)
 

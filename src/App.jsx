@@ -27,6 +27,16 @@ import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 // không ảnh hưởng tốc độ mở trang hay trình phát nhạc.
 const LeafEngine = lazy(() => import('./leaf-engine'))
 
+// Hiệu ứng rơi giờ chọn NHIỀU loại cùng lúc -> lưu dạng mảng.
+// Chuyển đổi giá trị cũ (chuỗi 'none'|'leaves'|'petals'|'both'|'rain') sang mảng.
+const FX_ALL = ['leaves', 'petals', 'rain']
+function normalizeFx(v) {
+  if (Array.isArray(v)) return v.filter((x) => FX_ALL.includes(x))
+  if (v === 'both') return ['leaves', 'petals']
+  if (FX_ALL.includes(v)) return [v]
+  return [] // 'none' hoặc giá trị lạ
+}
+
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
 
@@ -83,9 +93,10 @@ export default function App() {
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
-  const [fx, setFx] = useState(() => load('vibe.fx', 'leaves')) // hiệu ứng rơi: none|leaves|petals|both
+  const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // mảng: leaves|petals|rain
   const [fxSpeed, setFxSpeed] = useState(() => { const v = load('vibe.fxSpeed', 50); return typeof v === 'number' ? v : 50 }) // 0 chậm .. 100 nhanh
   const [fxDensity, setFxDensity] = useState(() => { const v = load('vibe.fxDensity', 50); return typeof v === 'number' ? v : 50 }) // 0 thưa .. 100 dày
+  const [fxSize, setFxSize] = useState(() => { const v = load('vibe.fxSize', 50); return typeof v === 'number' ? v : 50 }) // 0 nhỏ .. 100 to
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
@@ -140,6 +151,7 @@ export default function App() {
   useEffect(() => save('vibe.fx', fx), [fx])
   useEffect(() => save('vibe.fxSpeed', fxSpeed), [fxSpeed])
   useEffect(() => save('vibe.fxDensity', fxDensity), [fxDensity])
+  useEffect(() => save('vibe.fxSize', fxSize), [fxSize])
 
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
@@ -514,12 +526,12 @@ export default function App() {
   return (
     <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
-      {webglOK && fx !== 'none' ? (
-        <Suspense fallback={<FallingFx mode={fx} speed={fxSpeed} density={fxDensity} />}>
-          <LeafEngine mode={fx} speed={fxSpeed} density={fxDensity} />
+      {webglOK && fx.length > 0 ? (
+        <Suspense fallback={<FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />}>
+          <LeafEngine modes={fx} speed={fxSpeed} density={fxDensity} sizeLevel={fxSize} />
         </Suspense>
       ) : (
-        <FallingFx mode={fx} speed={fxSpeed} density={fxDensity} />
+        <FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />
       )}
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
@@ -640,6 +652,7 @@ export default function App() {
         autoplay={autoplay} setAutoplay={setAutoplay}
         fx={fx} setFx={setFx} fxSpeed={fxSpeed} setFxSpeed={setFxSpeed}
         fxDensity={fxDensity} setFxDensity={setFxDensity}
+        fxSize={fxSize} setFxSize={setFxSize}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
         shared={useShared} galleryError={gallery.error}

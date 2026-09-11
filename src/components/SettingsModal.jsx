@@ -12,7 +12,7 @@ export default function SettingsModal({
   shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
   admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay,
-  fx, setFx, fxSpeed, setFxSpeed, fxDensity, setFxDensity,
+  fx, setFx, fxSpeed, setFxSpeed, fxDensity, setFxDensity, fxSize, setFxSize,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -72,20 +72,23 @@ export default function SettingsModal({
             <h3>🍂 Hiệu ứng rơi</h3>
             <div className="scene-picker">
               {[
-                { id: 'none', label: 'Không' },
                 { id: 'leaves', label: 'Lá rơi' },
                 { id: 'petals', label: 'Cánh hoa' },
-                { id: 'both', label: 'Cả hai' },
                 { id: 'rain', label: 'Mưa' },
-              ].map((o) => (
-                <button key={o.id} className={`scene-opt ${fx === o.id ? 'is-active' : ''}`}
-                  onClick={() => setFx(o.id)}>{o.label}</button>
-              ))}
+              ].map((o) => {
+                const on = Array.isArray(fx) && fx.includes(o.id)
+                return (
+                  <button key={o.id} className={`scene-opt ${on ? 'is-active' : ''}`}
+                    aria-pressed={on}
+                    onClick={() => setFx(on ? fx.filter((x) => x !== o.id) : [...fx, o.id])}>{o.label}</button>
+                )
+              })}
             </div>
-            {fx !== 'none' && (
+            <p className="muted fx-hint">Có thể chọn nhiều loại cùng lúc. Bỏ chọn hết để tắt.</p>
+            {Array.isArray(fx) && fx.length > 0 && (
               <>
                 <div className="fx-speed">
-                  <span className="muted">{fx === 'rain' ? 'Cường độ mưa' : 'Tốc độ rơi'}</span>
+                  <span className="muted">Tốc độ rơi</span>
                   <div className="fx-speed__row">
                     <span className="fx-speed__end">Chậm</span>
                     <input type="range" min="0" max="100" value={fxSpeed}
@@ -94,12 +97,21 @@ export default function SettingsModal({
                   </div>
                 </div>
                 <div className="fx-speed">
-                  <span className="muted">{fx === 'rain' ? 'Lượng hạt mưa' : 'Số lượng lá'}</span>
+                  <span className="muted">Số lượng</span>
                   <div className="fx-speed__row">
                     <span className="fx-speed__end">Thưa</span>
                     <input type="range" min="0" max="100" value={fxDensity}
                       onChange={(e) => setFxDensity(Number(e.target.value))} />
                     <span className="fx-speed__end">Dày</span>
+                  </div>
+                </div>
+                <div className="fx-speed">
+                  <span className="muted">Kích thước</span>
+                  <div className="fx-speed__row">
+                    <span className="fx-speed__end">Nhỏ</span>
+                    <input type="range" min="0" max="100" value={fxSize}
+                      onChange={(e) => setFxSize(Number(e.target.value))} />
+                    <span className="fx-speed__end">To</span>
                   </div>
                 </div>
               </>

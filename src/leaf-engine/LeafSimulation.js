@@ -16,6 +16,7 @@ export class LeafSimulation {
     this.wind = wind
     this.max = max
     this.mode = 'leaves'
+    this.sizeScale = 1
     this.spawnAcc = 0
     // trạng thái từng lá
     this.leaves = Array.from({ length: max }, () => ({
@@ -32,6 +33,7 @@ export class LeafSimulation {
   }
 
   setMode(mode) { this.mode = mode }
+  setSizeScale(v) { this.sizeScale = v }
   setBounds(camZ, fovRad, aspect) { this.camZ = camZ; this.tanHalf = Math.tan(fovRad / 2); this.aspect = aspect }
 
   halfH(z) { return this.tanHalf * (this.camZ - z) }
@@ -50,7 +52,7 @@ export class LeafSimulation {
     l.px = rand(-hw * 1.05, hw * 1.05)
     l.py = hh + rand(0.4, 3)
     l.vx = rand(-0.2, 0.2); l.vy = -rand(0.5, 1.2); l.vz = rand(-0.1, 0.1)
-    l.size = rand(0.4, 1.15) * (z > 5 ? 1.15 : 1)  // dải gần: to hơn chút
+    l.size = rand(0.4, 1.15) * (z > 5 ? 1.15 : 1) * this.sizeScale  // dải gần: to hơn chút
     l.drag = rand(0.5, 1.7)                    // độ cản gió (lá nhẹ bay nhiều hơn)
     l.spin = rand(-2.2, 2.2)
     l.flutter = rand(1.5, 3.5)

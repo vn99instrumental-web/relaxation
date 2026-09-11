@@ -680,7 +680,8 @@ input[type='range']:disabled { opacity: 0.4; }
 .btn--ghost { background: transparent; }
 .btn:disabled { opacity: 0.5; }
 
-.scene-picker { display: flex; gap: 8px; margin-bottom: 14px; }
+.scene-picker { display: flex; gap: 8px; margin-bottom: 8px; }
+.fx-hint { margin: 0 0 12px; font-style: italic; font-size: 0.74rem; }
 .fx-speed { margin: 6px 0 4px; }
 .fx-speed .muted { display: block; margin-bottom: 8px; }
 .fx-speed__row { display: flex; align-items: center; gap: 10px; }

@@ -12,6 +12,7 @@ export class RainSimulation {
     this.max = max
     this.spawnAcc = 0
     this.intensity = 1   // cường độ mưa (từ thanh tốc độ)
+    this.sizeScale = 1   // kích thước hạt (từ thanh kích thước)
     this.drops = Array.from({ length: max }, () => ({
       active: false, px: 0, py: 0, pz: 0, vx: 0, vy: 0,
       len: 1, wid: 0.02, tilt: 0, alpha: 0, targetAlpha: 1,
@@ -23,6 +24,7 @@ export class RainSimulation {
   }
 
   setIntensity(v) { this.intensity = v }
+  setSizeScale(v) { this.sizeScale = v }
   setBounds(camZ, fovRad, aspect) { this.camZ = camZ; this.tanHalf = Math.tan(fovRad / 2); this.aspect = aspect }
   halfH(z) { return this.tanHalf * (this.camZ - z) }
 
@@ -34,8 +36,8 @@ export class RainSimulation {
     d.pz = z
     d.px = rand(-hw * 1.1, hw * 1.1)
     d.py = hh + rand(0.3, 4)
-    d.len = rand(0.55, 1.2) * (near ? 1.35 : 1) * (0.8 + 0.5 * this.intensity)  // gần -> dài hơn
-    d.wid = rand(0.016, 0.034) * (near ? 1.4 : 1)
+    d.len = rand(0.55, 1.2) * (near ? 1.35 : 1) * (0.8 + 0.5 * this.intensity) * this.sizeScale  // gần -> dài hơn
+    d.wid = rand(0.016, 0.034) * (near ? 1.4 : 1) * this.sizeScale
     d.vy = -rand(9, 15) * (0.7 + 0.6 * this.intensity)                          // rơi nhanh
     d.vx = 0
     d.tilt = 0
