@@ -85,6 +85,7 @@ export default function App() {
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
   const [fx, setFx] = useState(() => load('vibe.fx', 'leaves')) // hiệu ứng rơi: none|leaves|petals|both
   const [fxSpeed, setFxSpeed] = useState(() => { const v = load('vibe.fxSpeed', 50); return typeof v === 'number' ? v : 50 }) // 0 chậm .. 100 nhanh
+  const [fxDensity, setFxDensity] = useState(() => { const v = load('vibe.fxDensity', 50); return typeof v === 'number' ? v : 50 }) // 0 thưa .. 100 dày
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
@@ -138,6 +139,7 @@ export default function App() {
   useEffect(() => save('vibe.seenTs', seenTs), [seenTs])
   useEffect(() => save('vibe.fx', fx), [fx])
   useEffect(() => save('vibe.fxSpeed', fxSpeed), [fxSpeed])
+  useEffect(() => save('vibe.fxDensity', fxDensity), [fxDensity])
 
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
@@ -513,11 +515,11 @@ export default function App() {
     <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
       {webglOK && fx !== 'none' ? (
-        <Suspense fallback={<FallingFx mode={fx} speed={fxSpeed} />}>
-          <LeafEngine mode={fx} speed={fxSpeed} />
+        <Suspense fallback={<FallingFx mode={fx} speed={fxSpeed} density={fxDensity} />}>
+          <LeafEngine mode={fx} speed={fxSpeed} density={fxDensity} />
         </Suspense>
       ) : (
-        <FallingFx mode={fx} speed={fxSpeed} />
+        <FallingFx mode={fx} speed={fxSpeed} density={fxDensity} />
       )}
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
@@ -637,6 +639,7 @@ export default function App() {
         keepAwake={keepAwake} setKeepAwake={setKeepAwake}
         autoplay={autoplay} setAutoplay={setAutoplay}
         fx={fx} setFx={setFx} fxSpeed={fxSpeed} setFxSpeed={setFxSpeed}
+        fxDensity={fxDensity} setFxDensity={setFxDensity}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
         shared={useShared} galleryError={gallery.error}

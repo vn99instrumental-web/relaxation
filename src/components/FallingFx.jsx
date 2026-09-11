@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 
-// Hiệu ứng rơi nhẹ, thưa: LÁ (thon, có gân, nhọn) và CÁNH HOA (tròn, mềm, khuyết
-// đầu như hoa anh đào) — hai hình rõ ràng khác nhau. Rơi theo chiều gió, gió tự
-// đổi hướng theo thời gian. Chỉ CSS animation nên nhẹ máy.
+// Hiệu ứng rơi nhẹ (bản dự phòng, chỉ CSS — dùng khi máy không có WebGL):
+// LÁ (thon, có gân), CÁNH HOA (tròn mềm) và MƯA (vệt mảnh, rơi nhanh). Rơi theo
+// chiều gió, gió tự đổi hướng theo thời gian.
 const LEAF_COLORS = ['#c98a3e', '#b56b39', '#9c7a3c', '#a85f2e', '#7f7a3a']
 const PETAL_COLORS = ['#f0b9c6', '#f6d0da', '#eec7bb', '#f4dbd4', '#e4b7bd']
 const rand = (a, b) => a + Math.random() * (b - a)
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
+const clamp01to100 = (s) => Math.min(100, Math.max(0, Number(s) || 0))
 // speed 0..100 (0 chậm, 100 nhanh) -> hệ số nhân thời gian rơi (2.0 .. 0.4)
-const speedMult = (s) => 2.0 - (Math.min(100, Math.max(0, Number(s) || 0)) / 100) * 1.6
+const speedMult = (s) => 2.0 - (clamp01to100(s) / 100) * 1.6
+// density 0..100 -> hệ số số lượng (0.4 .. 1.7, =1.05 tại 50)
+const densMult = (s) => 0.4 + (clamp01to100(s) / 100) * 1.3
 
 // Lá: thon dài, nhọn hai đầu, có gân giữa + gân phụ + cuống
 function LeafSVG({ c }) {
@@ -29,13 +32,27 @@ function PetalSVG({ c }) {
   )
 }
 
-export default function FallingFx({ mode = 'none', speed = 50 }) {
+export default function FallingFx({ mode = 'none', speed = 50, density = 50 }) {
   const mult = speedMult(speed)
-  const count = { leaves: 10, petals: 12, both: 14 }[mode] || 0
+  const base = { leaves: 10, petals: 12, both: 14, rain: 42 }[mode] || 0
+  const count = Math.round(base * densMult(density))
+  const isRain = mode === 'rain'
 
   const particles = useMemo(() => {
     const arr = []
     for (let i = 0; i < count; i++) {
+      if (isRain) {
+        arr.push({
+          id: i, type: 'rain',
+          left: rand(-4, 100),
+          streak: rand(38, 86),                 // độ dài vệt (px)
+          fall: rand(0.7, 1.5),                  // rơi nhanh
+          delay: -rand(0, 2),
+          drift: rand(-10, 10),
+          opacity: rand(0.25, 0.6),
+        })
+        continue
+      }
       const type = mode === 'both' ? (Math.random() < 0.5 ? 'leaf' : 'petal') : (mode === 'petals' ? 'petal' : 'leaf')
       arr.push({
         id: i, type,
@@ -52,7 +69,7 @@ export default function FallingFx({ mode = 'none', speed = 50 }) {
     }
     return arr
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode])
+  }, [mode, count])
 
   // Gió: đổi hướng/độ mạnh chậm rãi
   const [wind, setWind] = useState(0)
@@ -61,14 +78,34 @@ export default function FallingFx({ mode = 'none', speed = 50 }) {
     let t
     const gust = () => {
       const dir = Math.random() < 0.5 ? -1 : 1
-      setWind(dir * rand(15, 130))
+      setWind(dir * rand(15, 130) * (isRain ? 0.5 : 1))
       t = setTimeout(gust, rand(6000, 12000))
     }
     gust()
     return () => clearTimeout(t)
-  }, [count])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count, isRain])
 
   if (!count) return null
+
+  if (isRain) {
+    return (
+      <div className="fx" aria-hidden="true" style={{ '--wind-x': `${wind}px` }}>
+        {particles.map((p) => (
+          <span key={p.id} className="fx-drop fx-drop--rain" style={{
+            left: `${p.left}%`, height: p.streak,
+            animationDuration: `${(p.fall * mult).toFixed(2)}s`, animationDelay: `${(p.delay * mult).toFixed(2)}s`,
+            '--drift': `${p.drift}px`,
+          }}>
+            <span className="fx-wind">
+              <span className="fx-rainline" style={{ opacity: p.opacity }} />
+            </span>
+          </span>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="fx" aria-hidden="true" style={{ '--wind-x': `${wind}px` }}>
       {particles.map((p) => (

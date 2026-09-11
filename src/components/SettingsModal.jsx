@@ -11,7 +11,8 @@ export default function SettingsModal({
   backgrounds, bgId, setBgId, onAddImage, onRemoveImage, hiddenCount, onRestoreBg,
   shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
-  admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay, fx, setFx, fxSpeed, setFxSpeed,
+  admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay,
+  fx, setFx, fxSpeed, setFxSpeed, fxDensity, setFxDensity,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -75,21 +76,33 @@ export default function SettingsModal({
                 { id: 'leaves', label: 'Lá rơi' },
                 { id: 'petals', label: 'Cánh hoa' },
                 { id: 'both', label: 'Cả hai' },
+                { id: 'rain', label: 'Mưa' },
               ].map((o) => (
                 <button key={o.id} className={`scene-opt ${fx === o.id ? 'is-active' : ''}`}
                   onClick={() => setFx(o.id)}>{o.label}</button>
               ))}
             </div>
             {fx !== 'none' && (
-              <div className="fx-speed">
-                <span className="muted">Tốc độ rơi</span>
-                <div className="fx-speed__row">
-                  <span className="fx-speed__end">Chậm</span>
-                  <input type="range" min="0" max="100" value={fxSpeed}
-                    onChange={(e) => setFxSpeed(Number(e.target.value))} />
-                  <span className="fx-speed__end">Nhanh</span>
+              <>
+                <div className="fx-speed">
+                  <span className="muted">{fx === 'rain' ? 'Cường độ mưa' : 'Tốc độ rơi'}</span>
+                  <div className="fx-speed__row">
+                    <span className="fx-speed__end">Chậm</span>
+                    <input type="range" min="0" max="100" value={fxSpeed}
+                      onChange={(e) => setFxSpeed(Number(e.target.value))} />
+                    <span className="fx-speed__end">Nhanh</span>
+                  </div>
                 </div>
-              </div>
+                <div className="fx-speed">
+                  <span className="muted">{fx === 'rain' ? 'Lượng hạt mưa' : 'Số lượng lá'}</span>
+                  <div className="fx-speed__row">
+                    <span className="fx-speed__end">Thưa</span>
+                    <input type="range" min="0" max="100" value={fxDensity}
+                      onChange={(e) => setFxDensity(Number(e.target.value))} />
+                    <span className="fx-speed__end">Dày</span>
+                  </div>
+                </div>
+              </>
             )}
           </section>
 
