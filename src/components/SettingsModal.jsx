@@ -11,7 +11,7 @@ export default function SettingsModal({
   backgrounds, bgId, setBgId, onAddImage, onRemoveImage, hiddenCount, onRestoreBg,
   shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
-  admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay, fx, setFx,
+  admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay, fx, setFx, fxSpeed, setFxSpeed,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -80,6 +80,21 @@ export default function SettingsModal({
                   onClick={() => setFx(o.id)}>{o.label}</button>
               ))}
             </div>
+            {fx !== 'none' && (
+              <div className="fx-speed">
+                <span className="muted">Tốc độ rơi</span>
+                <div className="scene-picker">
+                  {[
+                    { id: 'slow', label: 'Chậm' },
+                    { id: 'normal', label: 'Vừa' },
+                    { id: 'fast', label: 'Nhanh' },
+                  ].map((o) => (
+                    <button key={o.id} className={`scene-opt ${fxSpeed === o.id ? 'is-active' : ''}`}
+                      onClick={() => setFxSpeed(o.id)}>{o.label}</button>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="settings-block">

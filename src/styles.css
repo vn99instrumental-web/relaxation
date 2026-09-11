@@ -597,8 +597,8 @@ input[type='range']:disabled { opacity: 0.4; }
 /* ============ GÓC THƠ ============ */
 .poems { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .poem-compose { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; flex-shrink: 0; }
-.poem-title { background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 9px; font-size: 0.82rem; font-family: var(--serif); }
-.poem-body { resize: vertical; min-height: 56px; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 9px; font-size: 0.86rem; line-height: 1.55; font-family: var(--serif-body); }
+.poem-title { background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 9px; font-size: 0.8rem; font-family: var(--chat); font-weight: 600; }
+.poem-body { resize: vertical; min-height: 52px; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 9px; font-size: 0.82rem; line-height: 1.5; font-family: var(--chat); }
 .poem-title:focus, .poem-body:focus, .pcm-add input:focus { outline: none; border-color: var(--border-strong); }
 .poem-compose__bar { display: flex; justify-content: flex-end; }
 .poem-compose__bar button { background: var(--pine-soft); border: none; color: var(--ink); padding: 7px 16px; border-radius: 9px; font-size: 0.8rem; }
@@ -610,8 +610,8 @@ input[type='range']:disabled { opacity: 0.4; }
 .poem__time { font-size: 0.66rem; color: var(--ink-dim); }
 .poem__del { margin-left: auto; background: none; border: none; color: var(--ink-dim); font-size: 0.7rem; opacity: 0.6; }
 .poem__del:hover { color: var(--rose); opacity: 1; }
-.poem__title { font-family: var(--serif); font-size: 1.05rem; margin: 6px 0 4px; color: var(--paper); }
-.poem__body { font-family: var(--serif-body); font-size: 0.92rem; line-height: 1.7; white-space: pre-wrap; word-break: break-word; color: var(--paper); }
+.poem__title { font-family: var(--chat); font-weight: 700; font-size: 0.95rem; margin: 6px 0 4px; color: var(--gold-soft); letter-spacing: 0.01em; }
+.poem__body { font-family: var(--chat); font-size: 0.83rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--ink); }
 .poem__toggle { margin-top: 8px; background: none; border: none; color: var(--ink-dim); font-size: 0.74rem; padding: 2px 0; }
 .poem__toggle:hover { color: var(--gold-soft); }
 .poem__comments { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
@@ -656,6 +656,9 @@ input[type='range']:disabled { opacity: 0.4; }
 .btn:disabled { opacity: 0.5; }
 
 .scene-picker { display: flex; gap: 8px; margin-bottom: 14px; }
+.fx-speed { margin: 4px 0 6px; }
+.fx-speed .muted { display: block; margin-bottom: 6px; }
+.fx-speed .scene-picker { margin-bottom: 0; }
 .scene-opt { flex: 1; border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); padding: 10px; border-radius: 10px; font-size: 0.82rem; transition: 0.2s; }
 .scene-opt.is-active { background: var(--sel); color: var(--ink); border-color: var(--border-strong); }
 

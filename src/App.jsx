@@ -79,6 +79,7 @@ export default function App() {
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
   const [fx, setFx] = useState(() => load('vibe.fx', 'leaves')) // hiệu ứng rơi: none|leaves|petals|both
+  const [fxSpeed, setFxSpeed] = useState(() => load('vibe.fxSpeed', 'normal')) // slow|normal|fast
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
@@ -131,6 +132,7 @@ export default function App() {
   useEffect(() => save('vibe.keepAwake', keepAwake), [keepAwake])
   useEffect(() => save('vibe.seenTs', seenTs), [seenTs])
   useEffect(() => save('vibe.fx', fx), [fx])
+  useEffect(() => save('vibe.fxSpeed', fxSpeed), [fxSpeed])
 
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
@@ -503,7 +505,7 @@ export default function App() {
   return (
     <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
-      <FallingFx mode={fx} />
+      <FallingFx mode={fx} speed={fxSpeed} />
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
       <VideoPip showVideo={showVideo && !uiHidden} onClose={() => setShowVideo(false)} />
@@ -621,7 +623,7 @@ export default function App() {
         admin={admin} setAdmin={setAdmin}
         keepAwake={keepAwake} setKeepAwake={setKeepAwake}
         autoplay={autoplay} setAutoplay={setAutoplay}
-        fx={fx} setFx={setFx}
+        fx={fx} setFx={setFx} fxSpeed={fxSpeed} setFxSpeed={setFxSpeed}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
         shared={useShared} galleryError={gallery.error}

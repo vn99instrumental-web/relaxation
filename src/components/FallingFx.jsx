@@ -23,7 +23,10 @@ function PetalSVG({ c }) {
   )
 }
 
-export default function FallingFx({ mode = 'none' }) {
+const SPEED = { slow: 1.8, normal: 1, fast: 0.55 } // hệ số nhân thời gian rơi
+
+export default function FallingFx({ mode = 'none', speed = 'normal' }) {
+  const mult = SPEED[speed] || 1
   const count = { leaves: 10, petals: 12, both: 14 }[mode] || 0
   const particles = useMemo(() => {
     const arr = []
@@ -52,9 +55,9 @@ export default function FallingFx({ mode = 'none' }) {
       {particles.map((p) => (
         <span key={p.id} className="fx-drop" style={{
           left: `${p.left}%`, width: p.size, height: p.size,
-          animationDuration: `${p.fall}s`, animationDelay: `${p.delay}s`, '--drift': `${p.drift}px`,
+          animationDuration: `${(p.fall * mult).toFixed(1)}s`, animationDelay: `${(p.delay * mult).toFixed(1)}s`, '--drift': `${p.drift}px`,
         }}>
-          <span className="fx-sway" style={{ animationDuration: `${p.sway}s`, opacity: p.opacity, '--spin': `${p.spin}deg` }}>
+          <span className="fx-sway" style={{ animationDuration: `${(p.sway * (0.7 + 0.3 * mult)).toFixed(1)}s`, opacity: p.opacity, '--spin': `${p.spin}deg` }}>
             {p.type === 'leaf' ? <LeafSVG c={p.color} /> : <PetalSVG c={p.color} />}
           </span>
         </span>
