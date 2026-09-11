@@ -769,7 +769,7 @@ input[type='range']:disabled { opacity: 0.4; }
 @media (max-width: 480px) {
   .stage { padding: 12px; }
   .brand { gap: 9px; }
-  .brand p { display: none; }
+  .brand p { display: block; font-size: 0.66rem; max-width: 56vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .brand h1 { font-size: 1.28rem; }
   .brand__mark { font-size: 1.45rem; }
   .topbar { gap: 10px; }
