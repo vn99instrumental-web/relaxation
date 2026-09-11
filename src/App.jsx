@@ -84,6 +84,7 @@ export default function App() {
   const [leftTab, setLeftTab] = useState(null)   // null | 'music' | 'ambient'
   const [rightTab, setRightTab] = useState(null) // null | 'journal' | 'poems'
   const journalOpen = rightTab === 'journal'
+  const poemsOpen = rightTab === 'poems'
   const toggleRight = (tab) => setRightTab((cur) => (cur === tab ? null : tab))
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -93,6 +94,7 @@ export default function App() {
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
+  const [seenPoemTs, setSeenPoemTs] = useState(() => load('vibe.seenPoemTs', Date.now())) // mốc thơ đã xem
   const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // mảng: leaves|petals|rain
   const [fxSpeed, setFxSpeed] = useState(() => { const v = load('vibe.fxSpeed', 50); return typeof v === 'number' ? v : 50 }) // 0 chậm .. 100 nhanh
   const [fxDensity, setFxDensity] = useState(() => { const v = load('vibe.fxDensity', 50); return typeof v === 'number' ? v : 50 }) // 0 thưa .. 100 dày
@@ -114,6 +116,12 @@ export default function App() {
     const msgs = journal.messages || []
     return msgs.filter((m) => m.user && m.user !== username && (m.ts || 0) > seenTs).length
   }, [journal.messages, username, seenTs])
+
+  // Số bài thơ mới (của người kia, chưa xem)
+  const unreadPoems = useMemo(() => {
+    const list = poemsApi.poems || []
+    return list.filter((p) => p.author && p.author !== username && (p.ts || 0) > seenPoemTs).length
+  }, [poemsApi.poems, username, seenPoemTs])
 
   // Ảnh nền: dùng thư viện Supabase (chung 2 người) khi có; không thì dùng local.
   const localBackgrounds = useMemo(
@@ -151,6 +159,7 @@ export default function App() {
   useEffect(() => save('vibe.admin', admin), [admin])
   useEffect(() => save('vibe.keepAwake', keepAwake), [keepAwake])
   useEffect(() => save('vibe.seenTs', seenTs), [seenTs])
+  useEffect(() => save('vibe.seenPoemTs', seenPoemTs), [seenPoemTs])
   useEffect(() => save('vibe.fx', fx), [fx])
   useEffect(() => save('vibe.fxSpeed', fxSpeed), [fxSpeed])
   useEffect(() => save('vibe.fxDensity', fxDensity), [fxDensity])
@@ -208,10 +217,41 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [journal.messages, journalOpen, username])
 
-  // Nhắc số tin chưa xem ngay trên tiêu đề tab
+  // Mở Góc Thơ -> đánh dấu đã xem hết thơ (mốc = bài mới nhất)
   useEffect(() => {
-    document.title = unread > 0 ? `(${unread}) Hiên Mưa` : 'Hiên Mưa — Đà Lạt trong sương'
-  }, [unread])
+    if (!poemsOpen) return
+    const list = poemsApi.poems || []
+    if (list.length) setSeenPoemTs(Math.max(seenPoemTs, list[0].ts || Date.now()))
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      try { Notification.requestPermission() } catch { /* ignore */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poemsOpen, poemsApi.poems])
+
+  // Có THƠ MỚI: đang xem -> đánh dấu đã xem; không -> thông báo hệ thống (title tự cập nhật)
+  const prevPoemLenRef = useRef((poemsApi.poems || []).length)
+  useEffect(() => {
+    const list = poemsApi.poems || []
+    const prev = prevPoemLenRef.current
+    prevPoemLenRef.current = list.length
+    if (list.length <= prev) return          // chỉ báo khi có bài MỚI (bỏ qua sửa/xoá/bình luận)
+    const latest = list[0]                    // thơ sắp xếp mới nhất trước
+    if (!latest) return
+    if (latest.author === username) { setSeenPoemTs(latest.ts || Date.now()); return }
+    const viewing = poemsOpen && (typeof document === 'undefined' || document.visibilityState === 'visible')
+    if (viewing) { setSeenPoemTs(latest.ts || Date.now()); return }
+    if (Date.now() - (latest.ts || 0) > 60000) return  // tránh báo dồn khi vừa tải trang
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try { new Notification('Hiên Mưa ✍️', { body: `${latest.author} vừa đăng thơ: ${latest.title || latest.body?.slice(0, 40) || ''}`, tag: 'hienmua-poem', renotify: true }) } catch { /* ignore */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poemsApi.poems, poemsOpen, username])
+
+  // Nhắc số tin/thơ chưa xem ngay trên tiêu đề tab
+  useEffect(() => {
+    const total = unread + unreadPoems
+    document.title = total > 0 ? `(${total}) Hiên Mưa` : 'Hiên Mưa — Đà Lạt trong sương'
+  }, [unread, unreadPoems])
 
   const playAt = useCallback((i) => {
     setQueue((q) => {
