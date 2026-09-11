@@ -1,6 +1,6 @@
 // Thanh điều khiển mỏng ở đáy màn hình: thông tin bài đang phát + nút phát,
 // âm lượng, và các nút mở/đóng panel (Nhạc / Không gian / Nhật ký).
-import { IconMusic, IconAmbient, IconJournal, IconImmersive, IconPoem } from './icons'
+import { IconMusic, IconAmbient, IconJournal, IconImmersive, IconPoem, IconShuffle } from './icons'
 
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
@@ -22,7 +22,8 @@ export default function Dock({
       <div className="dock__transport">
         <button className={`ctrl ctrl--sm shuffle ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
           title={shuffle ? 'Trộn ngẫu nhiên: BẬT' : 'Trộn ngẫu nhiên: tắt'}
-          aria-pressed={shuffle} disabled={queue.length < 2}>🔀</button>
+          aria-label={shuffle ? 'Tắt phát ngẫu nhiên' : 'Bật phát ngẫu nhiên'}
+          aria-pressed={shuffle} disabled={queue.length < 2}><IconShuffle /></button>
         <button className="ctrl" onClick={onPrev} title="Bài trước" disabled={!queue.length}>⏮</button>
         <button className="ctrl ctrl--main" onClick={yt.toggle} title="Phát/Dừng" disabled={!yt.current}>
           {yt.playing ? '❚❚' : '►'}

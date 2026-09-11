@@ -17,3 +17,11 @@ export const IconImmersive = (p) => (
 export const IconPoem = (p) => (
   <svg {...base} {...p}><path d="M12 21s-7-4.35-7-10a4 4 0 017-2.65A4 4 0 0119 11c0 5.65-7 10-7 10z" /><path d="M9 10h4M9 13h6" /></svg>
 )
+export const IconShuffle = (p) => (
+  <svg {...base} {...p}>
+    <path d="M4 7h2.5c5 0 5 10 10 10H21" />
+    <path d="m18 14 3 3-3 3" />
+    <path d="M4 17h2.5c5 0 5-10 10-10H21" />
+    <path d="m18 4 3 3-3 3" />
+  </svg>
+)
