@@ -22,6 +22,7 @@ export class LeafSimulation {
     this.max = max
     this.mode = 'leaves'
     this.sizeScale = 1
+    this.flutterScale = 1
     this.emitter = new LeafEmitter()
     this.activeCount = 0
 
@@ -43,6 +44,7 @@ export class LeafSimulation {
 
   setMode(mode) { this.mode = mode }
   setSizeScale(v) { this.sizeScale = v }
+  setFlutterScale(v) { this.flutterScale = Math.max(0, Number(v) || 0) }
   setBounds(camZ, fovRad, aspect) { this.camZ = camZ; this.tanHalf = Math.tan(fovRad / 2); this.aspect = aspect }
   halfH(z) { return this.tanHalf * (this.camZ - z) }
 
@@ -68,7 +70,7 @@ export class LeafSimulation {
     l.size = rand(cfg.size[0], cfg.size[1]) * (near ? cfg.nearScale : 1) * this.sizeScale
     l.drag = rand(cfg.drag[0], cfg.drag[1])
     l.spin = rand(cfg.spin[0], cfg.spin[1])
-    l.flutter = rand(cfg.flutter[0], cfg.flutter[1])
+    l.flutter = rand(cfg.flutter[0], cfg.flutter[1]) * this.flutterScale
     l.axis.set(rand(-1, 1), rand(-1, 1), rand(-1, 1)).normalize()
     l.quat.setFromEuler(new THREE.Euler(rand(0, 6.28), rand(0, 6.28), rand(0, 6.28)))
     l.tile = this.tileForMode()

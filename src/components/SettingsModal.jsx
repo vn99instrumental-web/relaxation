@@ -14,6 +14,7 @@ export default function SettingsModal({
   supaConfig, setSupaConfig, supaStatus, supaError,
   admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay,
   fx, setFx, fxSpeed, setFxSpeed, fxDensity, setFxDensity, fxSize, setFxSize, fxPreset, setFxPreset,
+  fxWindDir, setFxWindDir, fxSwirl, setFxSwirl,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -99,6 +100,19 @@ export default function SettingsModal({
                     ))}
                   </div>
                 </div>
+                <div className="fx-preset">
+                  <span className="muted">Hướng gió</span>
+                  <div className="fx-preset__row">
+                    {[
+                      { id: 'auto', label: 'Tự đổi' },
+                      { id: 'right', label: '→ Phải' },
+                      { id: 'left', label: '← Trái' },
+                    ].map((o) => (
+                      <button key={o.id} className={`preset-opt ${fxWindDir === o.id ? 'is-active' : ''}`}
+                        aria-pressed={fxWindDir === o.id} onClick={() => setFxWindDir(o.id)}>{o.label}</button>
+                    ))}
+                  </div>
+                </div>
                 <div className="fx-speed">
                   <span className="muted">Tốc độ rơi</span>
                   <div className="fx-speed__row">
@@ -106,6 +120,15 @@ export default function SettingsModal({
                     <input type="range" min="0" max="100" value={fxSpeed}
                       onChange={(e) => setFxSpeed(Number(e.target.value))} />
                     <span className="fx-speed__end">Nhanh</span>
+                  </div>
+                </div>
+                <div className="fx-speed">
+                  <span className="muted">Độ chao lượn</span>
+                  <div className="fx-speed__row">
+                    <span className="fx-speed__end">Rơi thẳng</span>
+                    <input type="range" min="0" max="100" value={fxSwirl}
+                      onChange={(e) => setFxSwirl(Number(e.target.value))} />
+                    <span className="fx-speed__end">Chao lượn</span>
                   </div>
                 </div>
                 <div className="fx-speed">

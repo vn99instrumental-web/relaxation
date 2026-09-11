@@ -9,7 +9,7 @@ import { LEAF_CONFIG } from './config'
 
 // Cảnh lá/cánh hoa: 1 InstancedMesh (1 lệnh vẽ), mỗi lá lấy 1 ô trong atlas.
 // Gió + vật lý cập nhật mỗi khung; ghi chỉ số ra `stats` cho Debug overlay.
-export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50, preset = 'breeze', maxLeaves = 120, stats }) {
+export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50, preset = 'breeze', windDir = 'auto', swirl = 50, maxLeaves = 120, stats }) {
   const { camera, size } = useThree()
   const atlas = LEAF_CONFIG.atlas
   const texUrl = `${import.meta.env.BASE_URL || '/'}${atlas.url}`
@@ -56,10 +56,16 @@ export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50,
   useEffect(() => { rig.sim.setMode(mode) }, [rig, mode])
   useEffect(() => { rig.wind.setStrength(speed) }, [rig, speed])
   useEffect(() => { rig.wind.setPreset(preset) }, [rig, preset])
+  useEffect(() => { rig.wind.setDirectionMode(windDir) }, [rig, windDir])
   useEffect(() => {
     const s = Math.min(100, Math.max(0, Number(sizeLevel) || 0)) / 100
     rig.sim.setSizeScale(0.6 + s * 0.8)   // 0.6 .. 1.4 (=1.0 tại 50)
   }, [rig, sizeLevel])
+  useEffect(() => {
+    const s = Math.min(100, Math.max(0, Number(swirl) || 0)) / 100
+    rig.wind.setTurbulenceScale(0.3 + s * 1.5)   // rơi thẳng .. chao lượn nhiều
+    rig.sim.setFlutterScale(0.4 + s * 1.4)
+  }, [rig, swirl])
 
   const tRef = useRef(0)
   const fpsRef = useRef(60)

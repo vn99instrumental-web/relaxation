@@ -17,6 +17,7 @@ export class WindController {
     // Tham số "tính cách" gió (preset ghi đè các giá trị này)
     this.baseWind = w.baseWind
     this.turbulence = w.turbulence
+    this.turbulenceScale = 1  // hệ số "độ chao lượn" từ UI (nhân thêm)
     this.gustRange = [w.gust.minStrength, w.gust.maxStrength]
     this.spawnScale = 1      // emitter đọc giá trị này (mật độ theo preset)
 
@@ -41,6 +42,13 @@ export class WindController {
   setBase(slider0to100) { this.setStrength(slider0to100) } // giữ tương thích tên cũ (Mưa gọi)
   setMusicIntensity(v) { this.music = Math.min(1, Math.max(0, Number(v) || 0)) }
   setDirection(deg) { this.dirOverride = (Number(deg) || 0) * Math.PI / 180 }
+  setTurbulenceScale(v) { this.turbulenceScale = Math.max(0, Number(v) || 0) }
+  // Chế độ hướng gió từ UI: 'auto' (tự đổi) | 'right' (sang phải) | 'left' (sang trái)
+  setDirectionMode(mode) {
+    if (mode === 'right') this.setDirection(0)
+    else if (mode === 'left') this.setDirection(180)
+    else this.dirOverride = null
+  }
   setPreset(name) {
     const p = WIND_PRESETS[name] || WIND_PRESETS.breeze
     this.baseWind = p.baseWind
@@ -100,7 +108,7 @@ export class WindController {
   force(x, y, z, out) {
     const cfg = LEAF_CONFIG.wind
     const s = this.speed
-    const turb = this.turbulence * (1 + this.music * 0.15)
+    const turb = this.turbulence * this.turbulenceScale * (1 + this.music * 0.15)
     const dirX = Math.cos(this.dir)
     // turbulence cục bộ theo vị trí + thời gian (2 lá gần nhau vẫn khác nhau)
     const nx = perlin3(x * 0.15, y * 0.15, this.t * 0.3)

@@ -14,8 +14,8 @@ export default function Player({
   const [tab, setTab] = useState('library')        // 'library' | 'add'
   const [input, setInput] = useState('')
   const [expanded, setExpanded] = useState(null)   // id playlist đang mở xem bài
-  const [showQueue, setShowQueue] = useState(true)
-  const [showPlaylists, setShowPlaylists] = useState(true)
+  const [showQueue, setShowQueue] = useState(true)          // mặc định mở danh sách bài
+  const [showPlaylists, setShowPlaylists] = useState(false) // mặc định thu gọn danh sách playlist
   const [note, setNote] = useState('')
   const [plName, setPlName] = useState('')
   const [target, setTarget] = useState('__queue__') // __queue__ | <playlistId> | __new__

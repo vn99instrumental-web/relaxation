@@ -98,6 +98,8 @@ export default function App() {
   const [fxDensity, setFxDensity] = useState(() => { const v = load('vibe.fxDensity', 50); return typeof v === 'number' ? v : 50 }) // 0 thưa .. 100 dày
   const [fxSize, setFxSize] = useState(() => { const v = load('vibe.fxSize', 50); return typeof v === 'number' ? v : 50 }) // 0 nhỏ .. 100 to
   const [fxPreset, setFxPreset] = useState(() => load('vibe.fxPreset', 'breeze')) // gió: calm|breeze|windy|storm
+  const [fxWindDir, setFxWindDir] = useState(() => load('vibe.fxWindDir', 'auto')) // auto|right|left
+  const [fxSwirl, setFxSwirl] = useState(() => { const v = load('vibe.fxSwirl', 50); return typeof v === 'number' ? v : 50 }) // độ chao lượn
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
@@ -154,6 +156,8 @@ export default function App() {
   useEffect(() => save('vibe.fxDensity', fxDensity), [fxDensity])
   useEffect(() => save('vibe.fxSize', fxSize), [fxSize])
   useEffect(() => save('vibe.fxPreset', fxPreset), [fxPreset])
+  useEffect(() => save('vibe.fxWindDir', fxWindDir), [fxWindDir])
+  useEffect(() => save('vibe.fxSwirl', fxSwirl), [fxSwirl])
 
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
@@ -530,7 +534,7 @@ export default function App() {
       <Scene scene={scene} photo={currentBg?.url || ''} />
       {webglOK && fx.length > 0 ? (
         <Suspense fallback={<FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />}>
-          <LeafEngine modes={fx} speed={fxSpeed} density={fxDensity} sizeLevel={fxSize} preset={fxPreset} />
+          <LeafEngine modes={fx} speed={fxSpeed} density={fxDensity} sizeLevel={fxSize} preset={fxPreset} windDir={fxWindDir} swirl={fxSwirl} />
         </Suspense>
       ) : (
         <FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />
@@ -656,6 +660,7 @@ export default function App() {
         fxDensity={fxDensity} setFxDensity={setFxDensity}
         fxSize={fxSize} setFxSize={setFxSize}
         fxPreset={fxPreset} setFxPreset={setFxPreset}
+        fxWindDir={fxWindDir} setFxWindDir={setFxWindDir} fxSwirl={fxSwirl} setFxSwirl={setFxSwirl}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
         shared={useShared} galleryError={gallery.error}

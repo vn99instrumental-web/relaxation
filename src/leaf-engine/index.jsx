@@ -9,7 +9,8 @@ import { pickProfile, prefersReducedMotion } from './quality'
 // Vẽ nhiều hiệu ứng cùng lúc (lá / cánh hoa / mưa). Tự chọn chất lượng theo
 // thiết bị, tạm dừng khi tab ẩn. Bật debug bằng ?fxdebug=1.
 export default function LeafEngine({
-  modes = ['leaves'], speed = 50, density = 50, sizeLevel = 50, preset = 'breeze', debug = false,
+  modes = ['leaves'], speed = 50, density = 50, sizeLevel = 50, preset = 'breeze',
+  windDir = 'auto', swirl = 50, debug = false,
 }) {
   const profile = useMemo(() => pickProfile(), [])
   const reduce = useMemo(() => prefersReducedMotion(), [])
@@ -53,8 +54,8 @@ export default function LeafEngine({
           camera={{ fov: 45, position: [0, 0, 14], near: 0.1, far: 60 }}
           style={{ background: 'transparent' }}
         >
-          {leafMode && <LeafField mode={leafMode} speed={speed} sizeLevel={sizeLevel} preset={preset} maxLeaves={maxLeaves} stats={stats} />}
-          {hasRain && <RainField speed={speed} sizeLevel={sizeLevel} preset={preset} maxDrops={maxDrops} stats={stats} />}
+          {leafMode && <LeafField mode={leafMode} speed={speed} sizeLevel={sizeLevel} preset={preset} windDir={windDir} swirl={swirl} maxLeaves={maxLeaves} stats={stats} />}
+          {hasRain && <RainField speed={speed} sizeLevel={sizeLevel} preset={preset} windDir={windDir} swirl={swirl} maxDrops={maxDrops} stats={stats} />}
         </Canvas>
       </div>
       {dbg && <DebugOverlay stats={stats} tier={profile.tier} />}
