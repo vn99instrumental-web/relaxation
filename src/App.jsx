@@ -69,6 +69,7 @@ export default function App() {
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
+  const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
@@ -76,6 +77,12 @@ export default function App() {
   const roomSettings = useRoomSettings(supaConfig, admin)
   const journal = supa.enabled ? supa.journal : gist
   const playlists = supa.enabled ? supa.playlists : localPlaylists
+
+  // Số tin chưa xem (của người kia, mới hơn mốc đã xem)
+  const unread = useMemo(() => {
+    const msgs = journal.messages || []
+    return msgs.filter((m) => m.user && m.user !== username && (m.ts || 0) > seenTs).length
+  }, [journal.messages, username, seenTs])
 
   // Ảnh nền: dùng thư viện Supabase (chung 2 người) khi có; không thì dùng local.
   const localBackgrounds = useMemo(
@@ -112,6 +119,7 @@ export default function App() {
   useEffect(() => save('vibe.sync', syncConfig), [syncConfig])
   useEffect(() => save('vibe.admin', admin), [admin])
   useEffect(() => save('vibe.keepAwake', keepAwake), [keepAwake])
+  useEffect(() => save('vibe.seenTs', seenTs), [seenTs])
 
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
@@ -123,6 +131,42 @@ export default function App() {
     document.addEventListener('pointerdown', close)
     return () => document.removeEventListener('pointerdown', close)
   }, [themeMenuOpen])
+
+  // Mở nhật ký -> đánh dấu đã xem hết; xin quyền thông báo (cần thao tác người dùng)
+  useEffect(() => {
+    if (!journalOpen) return
+    const msgs = journal.messages || []
+    if (msgs.length) setSeenTs(msgs[msgs.length - 1].ts || Date.now())
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      try { Notification.requestPermission() } catch { /* ignore */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [journalOpen])
+
+  // Có tin MỚI: nếu đang xem -> đánh dấu đã xem; nếu không -> hiện thông báo hệ thống
+  const prevMsgLenRef = useRef((journal.messages || []).length)
+  useEffect(() => {
+    const msgs = journal.messages || []
+    const prev = prevMsgLenRef.current
+    prevMsgLenRef.current = msgs.length
+    if (msgs.length <= prev) return
+    const last = msgs[msgs.length - 1]
+    if (!last) return
+    if (last.user === username) { setSeenTs(last.ts || Date.now()); return }
+    const viewing = journalOpen && (typeof document === 'undefined' || document.visibilityState === 'visible')
+    if (viewing) { setSeenTs(last.ts || Date.now()); return }
+    // chỉ báo cho tin thực sự mới (tránh báo khi vừa tải trang)
+    if (Date.now() - (last.ts || 0) > 60000) return
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try { new Notification('Hiên Mưa 💌', { body: `${last.user}: ${last.text}`, tag: 'hienmua-chat', renotify: true }) } catch { /* ignore */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [journal.messages, journalOpen, username])
+
+  // Nhắc số tin chưa xem ngay trên tiêu đề tab
+  useEffect(() => {
+    document.title = unread > 0 ? `(${unread}) Hiên Mưa` : 'Hiên Mưa — Đà Lạt trong sương'
+  }, [unread])
 
   const playAt = useCallback((i) => {
     setQueue((q) => {
@@ -192,6 +236,32 @@ export default function App() {
     const merged = [...pl.tracks, ...tracksFromParsed(parsedList)]
     if (supaRef.current.enabled) supaRef.current.updatePlaylistRow(playlistId, merged)
     else setLocalPlaylists((list) => list.map((p) => (p.id === playlistId ? { ...p, tracks: merged } : p)))
+  }, [])
+
+  // Chuyển 1 bài từ playlist này sang playlist khác (hoặc ra Hàng chờ)
+  const moveTrack = useCallback((fromId, index, toId) => {
+    const from = playlistsRef.current.find((p) => p.id === fromId)
+    if (!from) return
+    const track = from.tracks[index]
+    if (!track || fromId === toId) return
+    const remaining = from.tracks.filter((_, i) => i !== index)
+    if (toId === '__queue__') {
+      setQueue((q) => [...q, { key: nextKey(), ...track }])
+      if (supaRef.current.enabled) supaRef.current.updatePlaylistRow(fromId, remaining)
+      else setLocalPlaylists((list) => list.map((p) => (p.id === fromId ? { ...p, tracks: remaining } : p)))
+      return
+    }
+    const to = playlistsRef.current.find((p) => p.id === toId)
+    if (!to) return
+    const toTracks = [...to.tracks, track]
+    if (supaRef.current.enabled) {
+      supaRef.current.updatePlaylistRow(fromId, remaining)
+      supaRef.current.updatePlaylistRow(toId, toTracks)
+    } else {
+      setLocalPlaylists((list) => list.map((p) => (
+        p.id === fromId ? { ...p, tracks: remaining } : p.id === toId ? { ...p, tracks: toTracks } : p
+      )))
+    }
   }, [])
 
   // Tạo playlist mới từ link
@@ -468,6 +538,7 @@ export default function App() {
                 playlists={playlists} onSavePlaylist={savePlaylist}
                 onLoadPlaylist={loadPlaylist} onDeletePlaylist={deletePlaylist}
                 onAddToPlaylist={addToPlaylist} onCreatePlaylist={createPlaylistWith}
+                onMoveTrack={moveTrack}
               />
             ) : (
               <AmbientMixer ambient={ambient} />
@@ -492,6 +563,7 @@ export default function App() {
         yt={yt} queue={queue} index={index}
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
         shuffle={shuffle} onToggleShuffle={onToggleShuffle}
+        unread={unread}
         leftTab={leftTab} onToggleLeft={toggleLeft}
         journalOpen={journalOpen} onToggleJournal={() => setJournalOpen((v) => !v)}
         onHideUI={() => setUiHidden(true)}
@@ -516,7 +588,6 @@ export default function App() {
         admin={admin} setAdmin={setAdmin}
         keepAwake={keepAwake} setKeepAwake={setKeepAwake}
         autoplay={autoplay} setAutoplay={setAutoplay}
-        scene={scene} setScene={setScene}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
         shared={useShared} galleryError={gallery.error}

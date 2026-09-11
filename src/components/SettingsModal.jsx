@@ -7,7 +7,7 @@ const isUserImg = (id) => id.startsWith('u') || id.includes('__u')
 // Cửa sổ cài đặt: thời tiết cảnh, THƯ VIỆN ẢNH NỀN (chọn/thêm/xóa),
 // và đồng bộ nhật ký qua GitHub Gist.
 export default function SettingsModal({
-  open, onClose, config, setConfig, scene, setScene,
+  open, onClose, config, setConfig,
   backgrounds, bgId, setBgId, onAddImage, onRemoveImage, hiddenCount, onRestoreBg,
   shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
@@ -67,20 +67,6 @@ export default function SettingsModal({
         </header>
 
         <div className="modal__body">
-          <section className="settings-block">
-            <h3>🌦️ Thời tiết</h3>
-            <div className="scene-picker">
-              {[
-                { id: 'fog', label: 'Sương mù' },
-                { id: 'rain', label: 'Mưa phùn' },
-                { id: 'ray', label: 'Tia nắng (ray)' },
-              ].map((s) => (
-                <button key={s.id} className={`scene-opt ${scene === s.id ? 'is-active' : ''}`}
-                  onClick={() => setScene(s.id)}>{s.label}</button>
-              ))}
-            </div>
-          </section>
-
           <section className="settings-block">
             <h3>🖼️ Ảnh nền ({backgrounds.length}){shared ? ' · chung 2 người' : ''}</h3>
             {galleryError && <p className="form-note">{galleryError}</p>}

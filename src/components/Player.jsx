@@ -7,9 +7,10 @@ export default function Player({
   queue, index, onAddMany, onSelect, onRemove, onClear,
   showVideo, onToggleVideo, shuffle, onToggleShuffle,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
-  onAddToPlaylist, onCreatePlaylist,
+  onAddToPlaylist, onCreatePlaylist, onMoveTrack,
 }) {
   const [input, setInput] = useState('')
+  const [expanded, setExpanded] = useState(null) // id playlist đang mở xem bài
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [plName, setPlName] = useState('')
@@ -118,13 +119,37 @@ export default function Player({
           <div className="queue__head"><span className="muted">Playlist đã lưu · {playlists.length}</span></div>
           <ul className="pl-list">
             {playlists.map((p) => (
-              <li key={p.id} className="pl-item">
-                <button className="pl-item__main" onClick={() => onLoadPlaylist(p.id, 'replace')} title="Mở playlist này">
-                  <span className="pl-item__name">♫ {p.name}</span>
-                  <span className="pl-item__count">{p.tracks.length} bài</span>
-                </button>
-                <button className="link-btn" onClick={() => onLoadPlaylist(p.id, 'append')} title="Thêm vào hàng chờ">＋</button>
-                <button className="queue__remove" onClick={() => onDeletePlaylist(p.id)} title="Xóa playlist">✕</button>
+              <li key={p.id} className="pl-group">
+                <div className="pl-item">
+                  <button className="pl-expand" onClick={() => setExpanded((e) => (e === p.id ? null : p.id))}
+                    title="Xem các bài trong playlist">{expanded === p.id ? '▾' : '▸'}</button>
+                  <button className="pl-item__main" onClick={() => onLoadPlaylist(p.id, 'replace')} title="Mở playlist này">
+                    <span className="pl-item__name">♫ {p.name}</span>
+                    <span className="pl-item__count">{p.tracks.length} bài</span>
+                  </button>
+                  <button className="link-btn" onClick={() => onLoadPlaylist(p.id, 'append')} title="Thêm vào hàng chờ">＋</button>
+                  <button className="queue__remove" onClick={() => onDeletePlaylist(p.id)} title="Xóa playlist">✕</button>
+                </div>
+                {expanded === p.id && (
+                  <ul className="pl-tracks">
+                    {p.tracks.length === 0 && <li className="pl-track pl-track--empty">Playlist trống.</li>}
+                    {p.tracks.map((t, i) => (
+                      <li key={i} className="pl-track">
+                        <span className="pl-track__name">{t.kind === 'playlist' ? '≡ ' : ''}{t.title || 'Video'}</span>
+                        {onMoveTrack && (
+                          <select className="pl-move" value="" title="Chuyển bài này sang…"
+                            onChange={(e) => { if (e.target.value) { onMoveTrack(p.id, i, e.target.value); e.target.value = '' } }}>
+                            <option value="">⇄ Chuyển…</option>
+                            <option value="__queue__">▶ Hàng chờ</option>
+                            {playlists.filter((x) => x.id !== p.id).map((x) => (
+                              <option key={x.id} value={x.id}>♫ {x.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>
