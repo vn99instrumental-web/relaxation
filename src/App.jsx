@@ -381,11 +381,6 @@ export default function App() {
     return () => { set('play', null); set('pause', null); set('previoustrack', null); set('nexttrack', null) }
   }, [yt, onNext, onPrev])
 
-  const rainDensity = useMemo(() => {
-    const base = scene === 'rain' ? 0.55 : scene === 'ray' ? 0.12 : 0.28
-    return Math.min(1, base + ambient.levels.rain * 0.6)
-  }, [scene, ambient.levels.rain])
-
   // ---- Đồng bộ cài đặt phòng: admin đổi -> mọi người theo (realtime) ----
   const syncRef = useRef({ scene: null, bgId: null, theme: null, queueSig: null })
   const queueSig = (arr) => (arr || []).map((t) => t.videoId || t.playlistId || '').join('|')
@@ -480,7 +475,7 @@ export default function App() {
 
   return (
     <div className={`app ${uiHidden ? 'is-immersive' : ''}`} data-theme={theme}>
-      <Scene scene={scene} rain={rainDensity} photo={currentBg?.url || ''} />
+      <Scene scene={scene} photo={currentBg?.url || ''} />
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
       <VideoPip showVideo={showVideo && !uiHidden} onClose={() => setShowVideo(false)} />

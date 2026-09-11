@@ -107,7 +107,7 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
               return (
                 <div className={`bubble ${mine ? 'bubble--mine' : ''}`} key={m.id}>
                   <div className="bubble__meta">
-                    <span className="bubble__user">{m.user}</span>
+                    {!mine && <span className="bubble__user">{m.user}</span>}
                     <span className="bubble__time">
                       {formatTime(m.ts)}{m.edited ? ' · đã sửa' : ''}
                     </span>

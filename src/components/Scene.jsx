@@ -9,11 +9,7 @@ const clamp = (v) => Math.min(100, Math.max(0, v))
 // hạt phim + vignette cho cảm giác một tấm ảnh cũ đã ngả màu.
 //
 // props: scene 'fog'|'rain'|'ray', rain 0..1, photo URL (tùy chọn)
-export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
-  const canvasRef = useRef(null)
-  const rainRef = useRef(rain)
-  rainRef.current = rain
-
+export default function Scene({ scene = 'fog', photo = '' }) {
   // Nếu ảnh lỗi (chặn mạng, sai URL) thì quay về tranh vẽ vector.
   const [failed, setFailed] = useState(false)
   useEffect(() => { setFailed(false) }, [photo])
@@ -43,60 +39,6 @@ export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
     try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* ignore */ }
   }
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    let raf, drops = [], w = 0, h = 0
-    const DPR = Math.min(window.devicePixelRatio || 1, 2)
-
-    const resize = () => {
-      w = canvas.width = canvas.offsetWidth * DPR
-      h = canvas.height = canvas.offsetHeight * DPR
-      const count = Math.floor((w * h) / 22000)
-      drops = new Array(count).fill(0).map(() => newDrop(true))
-    }
-    // z: 0 = xa (nhỏ, chậm, mờ), 1 = gần (to, nhanh, rõ) -> tạo chiều sâu
-    function newDrop(init) {
-      const z = Math.random()
-      return {
-        x: Math.random() * w,
-        y: init ? Math.random() * h : -40 * DPR,
-        len: (10 + z * 26) * DPR,
-        speed: (3 + z * 9) * DPR,
-        drift: (-0.7 - z * 0.9) * DPR, // gió thổi nghiêng nhẹ
-        alpha: 0.05 + z * 0.22,
-        width: (0.6 + z * 1.2) * DPR,
-      }
-    }
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h)
-      const density = rainRef.current
-      const visible = Math.floor(drops.length * Math.min(1, density * 1.25 + 0.05))
-      ctx.lineCap = 'round'
-      for (let i = 0; i < visible; i++) {
-        const d = drops[i]
-        const x2 = d.x + d.drift * (d.len / 10)
-        const y2 = d.y + d.len
-        const g = ctx.createLinearGradient(d.x, d.y, x2, y2) // vệt mưa mờ dần ở đầu
-        g.addColorStop(0, 'rgba(210, 224, 230, 0)')
-        g.addColorStop(1, `rgba(210, 224, 230, ${d.alpha})`)
-        ctx.strokeStyle = g
-        ctx.lineWidth = d.width
-        ctx.beginPath()
-        ctx.moveTo(d.x, d.y)
-        ctx.lineTo(x2, y2)
-        ctx.stroke()
-        d.y += d.speed * (0.7 + density)
-        d.x += d.drift
-        if (d.y > h) Object.assign(d, newDrop(false))
-      }
-      raf = requestAnimationFrame(draw)
-    }
-    resize(); draw()
-    window.addEventListener('resize', resize)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
-  }, [])
-
   return (
     <div
       className={`scene scene--${scene} ${usePhoto ? 'scene--draggable' : ''}`}
@@ -125,9 +67,6 @@ export default function Scene({ scene = 'fog', rain = 0.4, photo = '' }) {
         <div className="fog fog--1" /><div className="fog fog--2" /><div className="fog fog--3" />
         <div className="fog fog--ground" />
       </div>
-
-      {/* Mưa phùn */}
-      <canvas ref={canvasRef} className="scene__rain" />
 
       {/* Chất phim nhẹ */}
       <div className="scene__grain" />
