@@ -7,10 +7,12 @@ export default function Player({
   queue, index, onAddMany, onSelect, onRemove, onClear,
   showVideo, onToggleVideo, shuffle, onToggleShuffle,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
-  onAddToPlaylist, onCreatePlaylist, onMoveTrack,
+  onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist,
 }) {
   const [input, setInput] = useState('')
   const [expanded, setExpanded] = useState(null) // id playlist đang mở xem bài
+  const [showQueue, setShowQueue] = useState(true)
+  const [showPlaylists, setShowPlaylists] = useState(true)
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [plName, setPlName] = useState('')
@@ -78,7 +80,9 @@ export default function Player({
       {note && <div className="form-note">{note}</div>}
 
       <div className="queue__head">
-        <span className="muted">Hàng chờ · {queue.length}</span>
+        <button className="pl-collapse" onClick={() => setShowQueue((v) => !v)} title="Ẩn/hiện hàng chờ">
+          <span className="pl-collapse__caret">{showQueue ? '▾' : '▸'}</span> Hàng chờ · {queue.length}
+        </button>
         <div className="queue__head-actions">
           {queue.length > 1 && (
             <button className={`link-btn ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
@@ -97,26 +101,33 @@ export default function Player({
         </form>
       )}
 
-      <ul className="queue">
-        {queue.map((t, i) => (
-          <li key={t.key} className={`queue__item ${i === index ? 'is-current' : ''}`}>
-            <button className="queue__play" onClick={() => onSelect(i)}>
-              {t.kind === 'playlist'
-                ? <span className="queue__thumb queue__thumb--list">≡</span>
-                : <img className="queue__thumb" src={videoThumb(t.videoId, 'default')} alt="" loading="lazy" />}
-              <span className="queue__label">
-                <span className="queue__name">{t.title || (t.kind === 'playlist' ? 'Playlist' : 'Video')}</span>
-              </span>
-            </button>
-            <button className="queue__remove" onClick={() => onRemove(i)} title="Xóa">✕</button>
-          </li>
-        ))}
-        {queue.length === 0 && <li className="queue__empty">Hàng chờ trống — dán link hoặc mở playlist đã lưu.</li>}
-      </ul>
+      {showQueue && (
+        <ul className="queue">
+          {queue.map((t, i) => (
+            <li key={t.key} className={`queue__item ${i === index ? 'is-current' : ''}`}>
+              <button className="queue__play" onClick={() => onSelect(i)}>
+                {t.kind === 'playlist'
+                  ? <span className="queue__thumb queue__thumb--list">≡</span>
+                  : <img className="queue__thumb" src={videoThumb(t.videoId, 'default')} alt="" loading="lazy" />}
+                <span className="queue__label">
+                  <span className="queue__name">{t.title || (t.kind === 'playlist' ? 'Playlist' : 'Video')}</span>
+                </span>
+              </button>
+              <button className="queue__remove" onClick={() => onRemove(i)} title="Xóa">✕</button>
+            </li>
+          ))}
+          {queue.length === 0 && <li className="queue__empty">Hàng chờ trống — dán link hoặc mở playlist đã lưu.</li>}
+        </ul>
+      )}
 
       {playlists?.length > 0 && (
         <div className="pl-saved">
-          <div className="queue__head"><span className="muted">Playlist đã lưu · {playlists.length}</span></div>
+          <div className="queue__head">
+            <button className="pl-collapse" onClick={() => setShowPlaylists((v) => !v)} title="Ẩn/hiện playlist">
+              <span className="pl-collapse__caret">{showPlaylists ? '▾' : '▸'}</span> Playlist đã lưu · {playlists.length}
+            </button>
+          </div>
+          {showPlaylists && (
           <ul className="pl-list">
             {playlists.map((p) => (
               <li key={p.id} className="pl-group">
@@ -146,6 +157,9 @@ export default function Player({
                             ))}
                           </select>
                         )}
+                        {onRemoveFromPlaylist && (
+                          <button className="queue__remove" onClick={() => onRemoveFromPlaylist(p.id, i)} title="Xoá khỏi playlist">✕</button>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -153,6 +167,7 @@ export default function Player({
               </li>
             ))}
           </ul>
+          )}
         </div>
       )}
     </div>

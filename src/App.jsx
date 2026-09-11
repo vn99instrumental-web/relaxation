@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import Scene from './components/Scene'
+import FallingFx from './components/FallingFx'
 import Player from './components/Player'
 import AmbientMixer from './components/AmbientMixer'
 import Journal from './components/Journal'
@@ -77,6 +78,7 @@ export default function App() {
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
+  const [fx, setFx] = useState(() => load('vibe.fx', 'leaves')) // hiệu ứng rơi: none|leaves|petals|both
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
@@ -128,6 +130,7 @@ export default function App() {
   useEffect(() => save('vibe.admin', admin), [admin])
   useEffect(() => save('vibe.keepAwake', keepAwake), [keepAwake])
   useEffect(() => save('vibe.seenTs', seenTs), [seenTs])
+  useEffect(() => save('vibe.fx', fx), [fx])
 
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
@@ -277,6 +280,15 @@ export default function App() {
         p.id === fromId ? { ...p, tracks: remaining } : p.id === toId ? { ...p, tracks: toTracks } : p
       )))
     }
+  }, [])
+
+  // Xoá 1 bài khỏi playlist
+  const removeFromPlaylist = useCallback((playlistId, index) => {
+    const pl = playlistsRef.current.find((p) => p.id === playlistId)
+    if (!pl) return
+    const tracks = pl.tracks.filter((_, i) => i !== index)
+    if (supaRef.current.enabled) supaRef.current.updatePlaylistRow(playlistId, tracks)
+    else setLocalPlaylists((list) => list.map((p) => (p.id === playlistId ? { ...p, tracks } : p)))
   }, [])
 
   // Tạo playlist mới từ link
@@ -491,6 +503,7 @@ export default function App() {
   return (
     <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
+      <FallingFx mode={fx} />
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
       <VideoPip showVideo={showVideo && !uiHidden} onClose={() => setShowVideo(false)} />
@@ -548,7 +561,7 @@ export default function App() {
                 playlists={playlists} onSavePlaylist={savePlaylist}
                 onLoadPlaylist={loadPlaylist} onDeletePlaylist={deletePlaylist}
                 onAddToPlaylist={addToPlaylist} onCreatePlaylist={createPlaylistWith}
-                onMoveTrack={moveTrack}
+                onMoveTrack={moveTrack} onRemoveFromPlaylist={removeFromPlaylist}
               />
             ) : (
               <AmbientMixer ambient={ambient} />
@@ -608,6 +621,7 @@ export default function App() {
         admin={admin} setAdmin={setAdmin}
         keepAwake={keepAwake} setKeepAwake={setKeepAwake}
         autoplay={autoplay} setAutoplay={setAutoplay}
+        fx={fx} setFx={setFx}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
         shared={useShared} galleryError={gallery.error}

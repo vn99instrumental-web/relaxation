@@ -11,7 +11,7 @@ export default function SettingsModal({
   backgrounds, bgId, setBgId, onAddImage, onRemoveImage, hiddenCount, onRestoreBg,
   shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
-  admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay,
+  admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay, fx, setFx,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -67,6 +67,21 @@ export default function SettingsModal({
         </header>
 
         <div className="modal__body">
+          <section className="settings-block">
+            <h3>🍂 Hiệu ứng rơi</h3>
+            <div className="scene-picker">
+              {[
+                { id: 'none', label: 'Không' },
+                { id: 'leaves', label: 'Lá rơi' },
+                { id: 'petals', label: 'Cánh hoa' },
+                { id: 'both', label: 'Cả hai' },
+              ].map((o) => (
+                <button key={o.id} className={`scene-opt ${fx === o.id ? 'is-active' : ''}`}
+                  onClick={() => setFx(o.id)}>{o.label}</button>
+              ))}
+            </div>
+          </section>
+
           <section className="settings-block">
             <h3>🖼️ Ảnh nền ({backgrounds.length}){shared ? ' · chung 2 người' : ''}</h3>
             {galleryError && <p className="form-note">{galleryError}</p>}

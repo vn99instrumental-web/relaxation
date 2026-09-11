@@ -54,23 +54,6 @@ export default function Scene({ scene = 'fog', photo = '' }) {
       ) : (
         <DalatSVG />
       )}
-
-      {/* Quầng nắng ấm + tia nắng xuyên sương */}
-      <div className="scene__bloom" />
-      <div className="scene__rays"><span /><span /><span /><span /><span /></div>
-      <div className="scene__dust">
-        {Array.from({ length: 16 }).map((_, i) => <i key={i} />)}
-      </div>
-
-      {/* Sương trôi + sương là đà mặt đất */}
-      <div className="scene__fog">
-        <div className="fog fog--1" /><div className="fog fog--2" /><div className="fog fog--3" />
-        <div className="fog fog--ground" />
-      </div>
-
-      {/* Chất phim nhẹ */}
-      <div className="scene__grain" />
-      <div className="scene__vignette" />
     </div>
   )
 }
