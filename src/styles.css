@@ -145,6 +145,10 @@ input, textarea { font-family: inherit; }
 }
 .fx-svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.18)); }
 @media (prefers-reduced-motion: reduce) { .fx { display: none; } }
+
+/* ---- Lớp lá 3D (LeafEngine, WebGL) — sau giao diện, không chặn chuột ---- */
+.leaf-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+.leaf-canvas canvas { display: block; pointer-events: none !important; background: transparent; }
 .scene__svg, .scene__photo {
   position: absolute; inset: -2%;
   width: 104%; height: 104%;

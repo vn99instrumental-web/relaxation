@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef, lazy, Suspense } from 'react'
 import Scene from './components/Scene'
 import FallingFx from './components/FallingFx'
+import { hasWebGL } from './leaf-engine/quality'
 import Player from './components/Player'
 import AmbientMixer from './components/AmbientMixer'
 import Journal from './components/Journal'
@@ -21,6 +22,10 @@ import { load, save } from './lib/storage'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, BUILTIN_SCENES } from './lib/backgrounds'
 import { pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
+
+// Tải LeafEngine (Three.js) theo yêu cầu — không nằm trong gói khởi động, nên
+// không ảnh hưởng tốc độ mở trang hay trình phát nhạc.
+const LeafEngine = lazy(() => import('./leaf-engine'))
 
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
@@ -500,12 +505,20 @@ export default function App() {
     else removeBackground(id)
   }, [removeBackground])
 
+  // Máy có WebGL -> dùng LeafEngine (3D); không thì rơi về hiệu ứng CSS.
+  const webglOK = useMemo(() => hasWebGL(), [])
   const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
 
   return (
     <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
-      <FallingFx mode={fx} speed={fxSpeed} />
+      {webglOK && fx !== 'none' ? (
+        <Suspense fallback={<FallingFx mode={fx} speed={fxSpeed} />}>
+          <LeafEngine mode={fx} speed={fxSpeed} />
+        </Suspense>
+      ) : (
+        <FallingFx mode={fx} speed={fxSpeed} />
+      )}
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
       <VideoPip showVideo={showVideo && !uiHidden} onClose={() => setShowVideo(false)} />
