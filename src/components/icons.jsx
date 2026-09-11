@@ -17,6 +17,20 @@ export const IconImmersive = (p) => (
 export const IconPoem = (p) => (
   <svg {...base} {...p}><path d="M12 21s-7-4.35-7-10a4 4 0 017-2.65A4 4 0 0119 11c0 5.65-7 10-7 10z" /><path d="M9 10h4M9 13h6" /></svg>
 )
+// Điều khiển phát nhạc (dạng đặc, currentColor -> theo theme)
+export const IconPlay = (p) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M8 5.5v13a1 1 0 001.52.85l10.5-6.5a1 1 0 000-1.7L9.52 4.65A1 1 0 008 5.5z" /></svg>
+)
+export const IconPause = (p) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...p}><rect x="6.5" y="5" width="4" height="14" rx="1.3" /><rect x="13.5" y="5" width="4" height="14" rx="1.3" /></svg>
+)
+export const IconPrev = (p) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...p}><rect x="6" y="5.5" width="2.4" height="13" rx="1.2" /><path d="M18 6.2v11.6a1 1 0 01-1.53.85l-8.8-5.8a1 1 0 010-1.7l8.8-5.8A1 1 0 0118 6.2z" /></svg>
+)
+export const IconNext = (p) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M6 6.2v11.6a1 1 0 001.53.85l8.8-5.8a1 1 0 000-1.7L7.53 5.35A1 1 0 006 6.2z" /><rect x="15.6" y="5.5" width="2.4" height="13" rx="1.2" /></svg>
+)
+
 export const IconShuffle = (p) => (
   <svg {...base} {...p}>
     <path d="M4 7h2.5c5 0 5 10 10 10H21" />

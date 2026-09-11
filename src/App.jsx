@@ -9,7 +9,7 @@ import Poems from './components/Poems'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
 import VideoPip from './components/VideoPip'
-import { IconMusic, IconAmbient } from './components/icons'
+import { IconMusic, IconAmbient, IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useWakeLock } from './hooks/useWakeLock'
@@ -704,11 +704,12 @@ export default function App() {
       {/* Chế độ ngắm cảnh: chỉ còn vài toggle cần thiết */}
       {uiHidden && (
         <div className="immersive-bar">
-          <button className="ctrl" onClick={onPrev} title="Bài trước" disabled={!queue.length}>⏮</button>
-          <button className="ctrl ctrl--main" onClick={yt.toggle} title="Phát/Dừng" disabled={!yt.current}>
-            {yt.playing ? '❚❚' : '►'}
+          <button className="ctrl" onClick={onPrev} title="Bài trước" disabled={!queue.length} aria-label="Bài trước"><IconPrev /></button>
+          <button className="ctrl ctrl--main" onClick={yt.toggle} title="Phát / Dừng" disabled={!yt.current}
+            aria-label={yt.playing ? 'Dừng' : 'Phát'}>
+            {yt.playing ? <IconPause /> : <IconPlay />}
           </button>
-          <button className="ctrl" onClick={onNext} title="Bài sau" disabled={!queue.length}>⏭</button>
+          <button className="ctrl" onClick={onNext} title="Bài sau" disabled={!queue.length} aria-label="Bài sau"><IconNext /></button>
           <button className="ctrl" onClick={() => setUiHidden(false)} title="Hiện giao diện">◉</button>
         </div>
       )}

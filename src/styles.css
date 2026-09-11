@@ -473,6 +473,8 @@ input, textarea { font-family: inherit; }
 .ctrl--sm { width: 36px; height: 36px; font-size: 0.82rem; opacity: 0.75; }
 .ctrl--sm.is-on { opacity: 1; }
 .ctrl.shuffle svg { width: 17px; height: 17px; display: block; margin: auto; }
+.ctrl svg { width: 18px; height: 18px; display: block; margin: auto; }
+.ctrl--main svg { width: 22px; height: 22px; }
 .ctrl--main { width: 50px; height: 50px; background: linear-gradient(160deg, var(--gold-soft), var(--gold)); border-color: transparent; color: #2a1e0c; font-size: 1rem; box-shadow: 0 4px 14px rgba(201,154,78,0.3); }
 .ctrl--main:hover:not(:disabled) { filter: brightness(1.08); }
 .player__vol { margin-left: auto; display: flex; align-items: center; gap: 9px; font-size: 0.85rem; }
