@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { parseYouTube, videoThumb } from '../lib/youtube'
+import { IconShuffle } from './icons'
 
 // Panel "Nhạc": dán nhiều link (chọn thêm vào Hàng chờ / playlist đã tạo /
 // playlist mới), hàng chờ, và lưu/mở playlist.
@@ -85,8 +86,10 @@ export default function Player({
         </button>
         <div className="queue__head-actions">
           {queue.length > 1 && (
-            <button className={`link-btn ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
-              title="Phát ngẫu nhiên">🔀 Trộn</button>
+            <button className={`link-btn shuffle-link ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
+              title="Phát ngẫu nhiên" aria-pressed={shuffle}>
+              <IconShuffle /><span>Trộn</span>
+            </button>
           )}
           <button className="link-btn" onClick={onToggleVideo}>{showVideo ? 'Ẩn video' : 'Video'}</button>
           {queue.length > 0 && <button className="link-btn" onClick={() => setSaving((s) => !s)}>Lưu playlist</button>}
