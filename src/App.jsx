@@ -95,7 +95,10 @@ export default function App() {
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
   const [seenPoemTs, setSeenPoemTs] = useState(() => load('vibe.seenPoemTs', Date.now())) // mốc thơ đã xem
+  const [toast, setToast] = useState(null) // báo trong app: { id, kind:'chat'|'poem', title, body }
   const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // mảng: leaves|petals|rain
+  const lastFxRef = useRef(fx.length ? fx : ['leaves']) // nhớ lựa chọn để bật lại
+  const toggleFx = useCallback(() => setFx((cur) => (cur.length ? [] : (lastFxRef.current.length ? lastFxRef.current : ['leaves']))), [])
   const [fxSpeed, setFxSpeed] = useState(() => { const v = load('vibe.fxSpeed', 50); return typeof v === 'number' ? v : 50 }) // 0 chậm .. 100 nhanh
   const [fxDensity, setFxDensity] = useState(() => { const v = load('vibe.fxDensity', 50); return typeof v === 'number' ? v : 50 }) // 0 thưa .. 100 dày
   const [fxSize, setFxSize] = useState(() => { const v = load('vibe.fxSize', 50); return typeof v === 'number' ? v : 50 }) // 0 nhỏ .. 100 to
@@ -160,7 +163,7 @@ export default function App() {
   useEffect(() => save('vibe.keepAwake', keepAwake), [keepAwake])
   useEffect(() => save('vibe.seenTs', seenTs), [seenTs])
   useEffect(() => save('vibe.seenPoemTs', seenPoemTs), [seenPoemTs])
-  useEffect(() => save('vibe.fx', fx), [fx])
+  useEffect(() => { save('vibe.fx', fx); if (fx.length) lastFxRef.current = fx }, [fx])
   useEffect(() => save('vibe.fxSpeed', fxSpeed), [fxSpeed])
   useEffect(() => save('vibe.fxDensity', fxDensity), [fxDensity])
   useEffect(() => save('vibe.fxSize', fxSize), [fxSize])
@@ -211,6 +214,7 @@ export default function App() {
     if (viewing) { setSeenTs(last.ts || Date.now()); return }
     // chỉ báo cho tin thực sự mới (tránh báo khi vừa tải trang)
     if (Date.now() - (last.ts || 0) > 60000) return
+    setToast({ id: Date.now(), kind: 'chat', title: `💬 ${last.user}`, body: last.text })
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try { new Notification('Hiên Mưa 💌', { body: `${last.user}: ${last.text}`, tag: 'hienmua-chat', renotify: true }) } catch { /* ignore */ }
     }
@@ -241,6 +245,7 @@ export default function App() {
     const viewing = poemsOpen && (typeof document === 'undefined' || document.visibilityState === 'visible')
     if (viewing) { setSeenPoemTs(latest.ts || Date.now()); return }
     if (Date.now() - (latest.ts || 0) > 60000) return  // tránh báo dồn khi vừa tải trang
+    setToast({ id: Date.now(), kind: 'poem', title: `✍️ ${latest.author}`, body: latest.title || (latest.body || '').slice(0, 50) })
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try { new Notification('Hiên Mưa ✍️', { body: `${latest.author} vừa đăng thơ: ${latest.title || latest.body?.slice(0, 40) || ''}`, tag: 'hienmua-poem', renotify: true }) } catch { /* ignore */ }
     }
@@ -252,6 +257,13 @@ export default function App() {
     const total = unread + unreadPoems
     document.title = total > 0 ? `(${total}) Hiên Mưa` : 'Hiên Mưa — Đà Lạt trong sương'
   }, [unread, unreadPoems])
+
+  // Toast tự ẩn sau vài giây
+  useEffect(() => {
+    if (!toast) return undefined
+    const id = setTimeout(() => setToast(null), 6000)
+    return () => clearTimeout(id)
+  }, [toast])
 
   const playAt = useCallback((i) => {
     setQueue((q) => {
@@ -309,6 +321,11 @@ export default function App() {
   const deletePlaylist = useCallback((id) => {
     if (supaRef.current.enabled) supaRef.current.deletePlaylistRow(id)
     else setLocalPlaylists((list) => list.filter((p) => p.id !== id))
+  }, [])
+
+  const renamePlaylist = useCallback((id, name) => {
+    if (supaRef.current.enabled) supaRef.current.renamePlaylistRow(id, name)
+    else setLocalPlaylists((list) => list.map((p) => (p.id === id ? { ...p, name } : p)))
   }, [])
 
   const tracksFromParsed = (parsedList) =>
@@ -580,6 +597,15 @@ export default function App() {
         <FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />
       )}
 
+      {/* Báo trong app (hiện rõ trên điện thoại khi có tin nhắn / thơ mới) */}
+      {toast && (
+        <button className={`toast toast--${toast.kind}`}
+          onClick={() => { setRightTab(toast.kind === 'chat' ? 'journal' : 'poems'); setToast(null) }}>
+          <span className="toast__title">{toast.title}</span>
+          <span className="toast__body">{toast.body}</span>
+        </button>
+      )}
+
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
       <VideoPip showVideo={showVideo && !uiHidden} onClose={() => setShowVideo(false)} />
 
@@ -614,6 +640,10 @@ export default function App() {
                 </ul>
               )}
             </div>
+            <button className={`icon-btn ${fx.length ? '' : 'is-off'}`} onClick={toggleFx}
+              title={fx.length ? 'Tắt hiệu ứng lá/hoa/mưa' : 'Bật hiệu ứng lá/hoa/mưa'}>
+              {fx.length ? '🍃' : '🚫'}
+            </button>
             <button className="icon-btn" onClick={() => cycleBg(1)} title={`Ảnh: ${currentBg?.label || ''} — bấm để đổi`}>🖼</button>
             <button className="icon-btn" onClick={() => setSettingsOpen(true)} title="Cài đặt">⚙</button>
           </div>
@@ -636,7 +666,7 @@ export default function App() {
                 playlists={playlists} onSavePlaylist={savePlaylist}
                 onLoadPlaylist={loadPlaylist} onDeletePlaylist={deletePlaylist}
                 onAddToPlaylist={addToPlaylist} onCreatePlaylist={createPlaylistWith}
-                onMoveTrack={moveTrack} onRemoveFromPlaylist={removeFromPlaylist}
+                onMoveTrack={moveTrack} onRemoveFromPlaylist={removeFromPlaylist} onRenamePlaylist={renamePlaylist}
               />
             ) : (
               <AmbientMixer ambient={ambient} />

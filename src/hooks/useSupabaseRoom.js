@@ -3,7 +3,7 @@ import { makeClient } from '../lib/supabase'
 
 // Đồng bộ chat + playlist qua Supabase, có REALTIME (tin nhắn hiện ngay).
 // config: { url, key, room }. Khi thiếu -> enabled=false (app dùng cách khác).
-const mapMsg = (r) => ({ id: r.id, user: r.author, text: r.body, ts: new Date(r.created_at).getTime(), edited: !!r.edited_at, editedTs: r.edited_at ? new Date(r.edited_at).getTime() : null })
+const mapMsg = (r) => ({ id: r.id, user: r.author, text: r.body, ts: new Date(r.created_at).getTime(), edited: !!r.edited_at, editedTs: r.edited_at ? new Date(r.edited_at).getTime() : null, reactions: r.reactions && typeof r.reactions === 'object' ? r.reactions : {} })
 const mapPl = (r) => ({ id: r.id, name: r.name, tracks: Array.isArray(r.tracks) ? r.tracks : [], ts: new Date(r.created_at).getTime() })
 
 function mergeById(list, incoming) {
@@ -126,6 +126,15 @@ export function useSupabaseRoom(config, username) {
     // realtime sẽ đồng bộ cho người kia
   }, [])
 
+  // Thả cảm xúc (like/tim…) — lưu vào cột jsonb reactions: { '❤️': ['Mai'], … }
+  const reactMessage = useCallback(async (id, reactions) => {
+    const c = clientRef.current
+    if (!c) return
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, reactions } : m))) // lạc quan
+    try { await c.from('messages').update({ reactions }).eq('id', id) } catch (e) { setError(e.message || 'Thả cảm xúc lỗi') }
+    // realtime UPDATE sẽ đồng bộ cho người kia
+  }, [])
+
   const savePlaylistRow = useCallback(async (name, tracks) => {
     const c = clientRef.current
     if (!c) return
@@ -147,7 +156,15 @@ export function useSupabaseRoom(config, username) {
     reloadPlaylists()
   }, [reloadPlaylists])
 
-  const journal = { messages, status, error, sending, online: enabled && status === 'online', send, refresh, deleteMessage, editMessage, clearMessages }
+  const renamePlaylistRow = useCallback(async (id, name) => {
+    const c = clientRef.current
+    if (!c) return
+    setPlaylists((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p))) // đổi ngay trên máy mình
+    try { await c.from('playlists').update({ name, updated_at: new Date().toISOString() }).eq('id', id) } catch (e) { setError(e.message || 'Đổi tên playlist lỗi') }
+    reloadPlaylists()
+  }, [reloadPlaylists])
 
-  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, updatePlaylistRow, deleteMessage, editMessage, clearMessages }
+  const journal = { messages, status, error, sending, online: enabled && status === 'online', send, refresh, deleteMessage, editMessage, reactMessage, clearMessages }
+
+  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, updatePlaylistRow, renamePlaylistRow, deleteMessage, editMessage, reactMessage, clearMessages }
 }

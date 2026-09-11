@@ -9,9 +9,11 @@ export default function Player({
   queue, index, onAddMany, onSelect, onRemove, onClear,
   showVideo, onToggleVideo, shuffle, onToggleShuffle,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
-  onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist,
+  onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist, onRenamePlaylist,
 }) {
   const [tab, setTab] = useState('library')        // 'library' | 'add'
+  const [editPlId, setEditPlId] = useState(null)   // id playlist đang đổi tên
+  const [plRename, setPlRename] = useState('')
   const [input, setInput] = useState('')
   const [expanded, setExpanded] = useState(null)   // id playlist đang mở xem bài
   const [showQueue, setShowQueue] = useState(true)          // mặc định mở danh sách bài
@@ -55,6 +57,13 @@ export default function Player({
     onSavePlaylist(plName.trim() || `Playlist ${new Date().toLocaleDateString('vi-VN')}`)
     setPlName('')
     flash('Đã lưu hàng chờ thành playlist.')
+  }
+
+  const startRename = (p) => { setEditPlId(p.id); setPlRename(p.name) }
+  const saveRename = () => {
+    const n = plRename.trim()
+    if (n && onRenamePlaylist) onRenamePlaylist(editPlId, n)
+    setEditPlId(null); setPlRename('')
   }
 
   const targetValid = target === '__queue__' || target === '__new__' || playlists.some((p) => p.id === target)
@@ -155,12 +164,24 @@ export default function Player({
                       <div className="pl-item">
                         <button className="pl-expand" onClick={() => setExpanded((e) => (e === p.id ? null : p.id))}
                           title="Xem các bài trong playlist">{expanded === p.id ? '▾' : '▸'}</button>
-                        <button className="pl-item__main" onClick={() => onLoadPlaylist(p.id, 'replace')} title="Phát playlist này">
-                          <span className="pl-item__name">♫ {p.name}</span>
-                          <span className="pl-item__count">{p.tracks.length} bài</span>
-                        </button>
-                        <button className="link-btn" onClick={() => onLoadPlaylist(p.id, 'append')} title="Thêm vào hàng chờ">＋</button>
-                        <button className="queue__remove" onClick={() => onDeletePlaylist(p.id)} title="Xóa playlist">✕</button>
+                        {editPlId === p.id ? (
+                          <form className="pl-rename" onSubmit={(e) => { e.preventDefault(); saveRename() }}>
+                            <input autoFocus value={plRename} onChange={(e) => setPlRename(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Escape') { setEditPlId(null); setPlRename('') } }} />
+                            <button type="submit" title="Lưu tên">✓</button>
+                            <button type="button" className="queue__remove" onClick={() => { setEditPlId(null); setPlRename('') }} title="Hủy">✕</button>
+                          </form>
+                        ) : (
+                          <>
+                            <button className="pl-item__main" onClick={() => onLoadPlaylist(p.id, 'replace')} title="Phát playlist này">
+                              <span className="pl-item__name">♫ {p.name}</span>
+                              <span className="pl-item__count">{p.tracks.length} bài</span>
+                            </button>
+                            {onRenamePlaylist && <button className="link-btn" onClick={() => startRename(p)} title="Đổi tên playlist">✎</button>}
+                            <button className="link-btn" onClick={() => onLoadPlaylist(p.id, 'append')} title="Thêm vào hàng chờ">＋</button>
+                            <button className="queue__remove" onClick={() => onDeletePlaylist(p.id)} title="Xóa playlist">✕</button>
+                          </>
+                        )}
                       </div>
                       {expanded === p.id && (
                         <ul className="pl-tracks">

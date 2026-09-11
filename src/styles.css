@@ -586,7 +586,34 @@ input[type='range']:disabled { opacity: 0.4; }
 .bubble__edit:hover { color: var(--gold-soft); opacity: 1; }
 .bubble__del { background: none; border: none; color: var(--ink-dim); font-size: 0.68rem; padding: 0 2px; line-height: 1; opacity: 0.6; }
 .bubble__edit + .bubble__del { margin-left: 2px; }
+.bubble__edit + .bubble__edit { margin-left: 2px; }
 .bubble__del:hover { color: var(--rose); opacity: 1; }
+
+/* Thả cảm xúc trên tin nhắn */
+.react-picker { display: flex; gap: 2px; margin-top: 5px; background: var(--panel-solid); border: 1px solid var(--border-strong); border-radius: 999px; padding: 3px 5px; width: fit-content; box-shadow: var(--shadow); }
+.react-pick { background: none; border: none; font-size: 1.05rem; line-height: 1; padding: 2px 3px; border-radius: 50%; transition: 0.15s; }
+.react-pick:hover { transform: scale(1.25); }
+.bubble__reacts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.react-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--surface); border: 1px solid var(--border); color: var(--ink); border-radius: 999px; padding: 1px 7px 1px 5px; font-size: 0.78rem; line-height: 1.4; }
+.react-chip span { font-size: 0.68rem; color: var(--ink-dim); }
+.react-chip.is-mine { background: var(--sel); border-color: var(--border-strong); }
+.react-chip.is-mine span { color: var(--gold-soft); }
+
+/* Đổi tên playlist */
+.pl-rename { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; }
+.pl-rename input { flex: 1; min-width: 0; background: var(--field-bg); border: 1px solid var(--border-strong); color: var(--ink); padding: 5px 8px; border-radius: 8px; font-size: 0.8rem; }
+.pl-rename input:focus { outline: none; }
+.pl-rename button[type='submit'] { background: var(--pine-soft); border: none; color: var(--ink); padding: 5px 9px; border-radius: 8px; font-size: 0.8rem; }
+
+/* Nút tắt hiệu ứng (topbar) */
+.icon-btn.is-off { opacity: 0.55; }
+
+/* Toast báo trong app (tin nhắn / thơ mới) */
+.toast { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); z-index: 40; max-width: min(88vw, 420px); display: flex; flex-direction: column; gap: 1px; text-align: left; padding: 10px 15px; border-radius: 14px; border: 1px solid var(--border-strong); background: var(--panel-solid); box-shadow: var(--shadow); backdrop-filter: blur(8px); animation: toastIn 0.3s ease; }
+.toast--poem { border-color: var(--gold-soft); }
+.toast__title { font-size: 0.8rem; font-weight: 600; color: var(--gold-soft); }
+.toast__body { font-size: 0.82rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 /* Ô sửa nội dung tin */
 .bubble__edit-box { display: flex; flex-direction: column; gap: 6px; }
 .bubble__edit-box textarea {

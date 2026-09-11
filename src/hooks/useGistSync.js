@@ -115,5 +115,17 @@ export function useGistSync(config) {
     } catch { /* để lần đồng bộ sau */ }
   }, [online, token, gistId, roomName, persistLocal])
 
-  return { messages, status, error, sending, online, send, refresh, clearLocal, deleteMessage, editMessage, clearMessages }
+  const reactMessage = useCallback(async (id, reactions) => {
+    const next = messagesRef.current.map((m) => (m.id === id ? { ...m, reactions } : m))
+    setMessages(next); persistLocal(next)
+    if (!online) return
+    try {
+      const { messages: remote } = await readMessages(token, gistId)
+      const merged = mergeMessages(remote, next)
+      await writeMessages(token, gistId, merged, roomName)
+      setMessages(merged); persistLocal(merged)
+    } catch { /* để lần đồng bộ sau */ }
+  }, [online, token, gistId, roomName, persistLocal])
+
+  return { messages, status, error, sending, online, send, refresh, clearLocal, deleteMessage, editMessage, reactMessage, clearMessages }
 }

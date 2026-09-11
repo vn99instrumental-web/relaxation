@@ -9,11 +9,14 @@ const EMOJIS = [
   '🌼', '☕', '🍵', '🫖', '🎵', '🎶', '🎧', '📷', '🕯️', '🏔️',
 ]
 
+// Cảm xúc nhanh để "thả" lên từng tin
+const REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🔥']
+
 // Cuốn nhật ký chung 2 người. Hiển thị tin nhắn nhóm theo ngày,
 // ô nhập tên + ô soạn tin. Trạng thái kết nối Gist ở góc.
 // props: journal (hook useGistSync), username, setUsername, onOpenSettings
 export default function Journal({ journal, username, setUsername, onOpenSettings, onClose, admin }) {
-  const { messages, status, error, sending, online, send, refresh, deleteMessage, editMessage, clearMessages } = journal
+  const { messages, status, error, sending, online, send, refresh, deleteMessage, editMessage, reactMessage, clearMessages } = journal
 
   const removeOne = (id) => { if (deleteMessage) deleteMessage(id) }
   const clearAll = () => {
@@ -26,10 +29,23 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
   const [editingId, setEditingId] = useState(null)   // id tin đang sửa
   const [editText, setEditText] = useState('')
   const [emojiOpen, setEmojiOpen] = useState(false)
+  const [reactId, setReactId] = useState(null)       // id tin đang mở bảng thả cảm xúc
   const listRef = useRef(null)
   const inputRef = useRef(null)
 
   const addEmoji = (e) => { setDraft((d) => d + e); inputRef.current?.focus() }
+
+  // Thả cảm xúc: bật/tắt cảm xúc của mình trên 1 tin
+  const toggleReaction = (m, emoji) => {
+    if (!reactMessage) return
+    const u = username || 'Ẩn danh'
+    const cur = (m.reactions && m.reactions[emoji]) || []
+    const nextList = cur.includes(u) ? cur.filter((x) => x !== u) : [...cur, u]
+    const next = { ...(m.reactions || {}) }
+    if (nextList.length) next[emoji] = nextList; else delete next[emoji]
+    reactMessage(m.id, next)
+    setReactId(null)
+  }
 
   const startEdit = (m) => { setEditingId(m.id); setEditText(m.text) }
   const cancelEdit = () => { setEditingId(null); setEditText('') }
@@ -111,6 +127,9 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
                     <span className="bubble__time">
                       {formatTime(m.ts)}{m.edited ? ' · đã sửa' : ''}
                     </span>
+                    {!editing && reactMessage && (
+                      <button className="bubble__edit" onClick={() => setReactId(reactId === m.id ? null : m.id)} title="Thả cảm xúc">☺</button>
+                    )}
                     {!editing && canEdit && (
                       <button className="bubble__edit" onClick={() => startEdit(m)} title="Sửa tin này">✎</button>
                     )}
@@ -135,6 +154,24 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
                     </div>
                   ) : (
                     <div className="bubble__text">{m.text}</div>
+                  )}
+                  {reactId === m.id && (
+                    <div className="react-picker">
+                      {REACTIONS.map((e) => (
+                        <button key={e} type="button" className="react-pick" onClick={() => toggleReaction(m, e)}>{e}</button>
+                      ))}
+                    </div>
+                  )}
+                  {m.reactions && Object.keys(m.reactions).length > 0 && (
+                    <div className="bubble__reacts">
+                      {Object.entries(m.reactions).map(([e, users]) => (Array.isArray(users) && users.length > 0) && (
+                        <button key={e} type="button" title={users.join(', ')}
+                          className={`react-chip ${users.includes(username) ? 'is-mine' : ''}`}
+                          onClick={() => toggleReaction(m, e)}>
+                          {e}<span>{users.length}</span>
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               )
