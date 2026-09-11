@@ -3,6 +3,7 @@ import Scene from './components/Scene'
 import Player from './components/Player'
 import AmbientMixer from './components/AmbientMixer'
 import Journal from './components/Journal'
+import Poems from './components/Poems'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
 import VideoPip from './components/VideoPip'
@@ -14,8 +15,10 @@ import { useGistSync } from './hooks/useGistSync'
 import { useSupabaseRoom } from './hooks/useSupabaseRoom'
 import { useSupabaseGallery } from './hooks/useSupabaseGallery'
 import { useRoomSettings } from './hooks/useRoomSettings'
+import { usePoems } from './hooks/usePoems'
 import { load, save } from './lib/storage'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, BUILTIN_SCENES } from './lib/backgrounds'
+import { pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 
 let keySeed = 1
@@ -63,11 +66,14 @@ export default function App() {
 
   // Điều khiển hiển thị: mặc định đóng hết để thấy trọn khung cảnh
   const [leftTab, setLeftTab] = useState(null)   // null | 'music' | 'ambient'
-  const [journalOpen, setJournalOpen] = useState(false)
+  const [rightTab, setRightTab] = useState(null) // null | 'journal' | 'poems'
+  const journalOpen = rightTab === 'journal'
+  const toggleRight = (tab) => setRightTab((cur) => (cur === tab ? null : tab))
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
+  const [tagline, setTagline] = useState(() => pickTagline('dusk'))
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
@@ -76,6 +82,7 @@ export default function App() {
   const supa = useSupabaseRoom(supaConfig, username)
   const gallery = useSupabaseGallery(supaConfig)
   const roomSettings = useRoomSettings(supaConfig, admin)
+  const poemsApi = usePoems(supaConfig, username)
   const journal = supa.enabled ? supa.journal : gist
   const playlists = supa.enabled ? supa.playlists : localPlaylists
 
@@ -132,6 +139,13 @@ export default function App() {
     document.addEventListener('pointerdown', close)
     return () => document.removeEventListener('pointerdown', close)
   }, [themeMenuOpen])
+
+  // Tagline dưới tên: đổi theo theme (gợi ý thời tiết) + tự xoay vòng ngẫu nhiên
+  useEffect(() => {
+    setTagline(pickTagline(theme))
+    const id = setInterval(() => setTagline(pickTagline(theme)), 45000)
+    return () => clearInterval(id)
+  }, [theme])
 
   // Mở nhật ký -> đánh dấu đã xem hết; xin quyền thông báo (cần thao tác người dùng)
   useEffect(() => {
@@ -475,7 +489,7 @@ export default function App() {
   const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
 
   return (
-    <div className={`app ${uiHidden ? 'is-immersive' : ''}`} data-theme={theme}>
+    <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
@@ -487,7 +501,7 @@ export default function App() {
             <span className="brand__mark">☂</span>
             <div className="brand__name">
               <h1>Hiên Mưa</h1>
-              <p>nghe mưa, viết cho nhau</p>
+              <p>{tagline}</p>
             </div>
           </div>
           <div className="topbar__actions">
@@ -542,15 +556,24 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Drawer phải: Nhật ký (trượt từ cạnh phải) */}
-        <aside className={`drawer drawer--right ${journalOpen ? 'is-open' : ''}`}>
+        {/* Drawer phải: Nhật ký / Thơ (trượt từ cạnh phải) */}
+        <aside className={`drawer drawer--right ${rightTab ? 'is-open' : ''}`}>
           <div className="drawer__body drawer__body--flush">
-            <Journal
-              journal={journal} username={username} setUsername={setUsername}
-              onOpenSettings={() => setSettingsOpen(true)}
-              onClose={() => setJournalOpen(false)}
-              admin={admin}
-            />
+            {rightTab === 'poems' ? (
+              <Poems
+                poems={poemsApi.poems} username={username} admin={admin}
+                onAddPoem={poemsApi.addPoem} onDeletePoem={poemsApi.deletePoem}
+                onAddComment={poemsApi.addComment} onDeleteComment={poemsApi.deleteComment}
+                onClose={() => setRightTab(null)}
+              />
+            ) : (
+              <Journal
+                journal={journal} username={username} setUsername={setUsername}
+                onOpenSettings={() => setSettingsOpen(true)}
+                onClose={() => setRightTab(null)}
+                admin={admin}
+              />
+            )}
           </div>
         </aside>
       </div>
@@ -561,7 +584,8 @@ export default function App() {
         shuffle={shuffle} onToggleShuffle={onToggleShuffle}
         unread={unread}
         leftTab={leftTab} onToggleLeft={toggleLeft}
-        journalOpen={journalOpen} onToggleJournal={() => setJournalOpen((v) => !v)}
+        journalOpen={journalOpen} onToggleJournal={() => toggleRight('journal')}
+        poemsOpen={rightTab === 'poems'} onTogglePoems={() => toggleRight('poems')}
         onHideUI={() => setUiHidden(true)}
       />
 

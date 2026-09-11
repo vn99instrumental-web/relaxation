@@ -29,9 +29,11 @@ export function useAmbient() {
   const ctxRef = useRef(null)
   const nodesRef = useRef(null)
   const birdTimerRef = useRef(null)
+  const warbleTimerRef = useRef(null)
   const dropTimerRef = useRef(null)
   const [started, setStarted] = useState(false)
-  const [levels, setLevels] = useState({ master: 0.7, rain: 0.0, wind: 0.0, birds: 0.0, drops: 0.0 })
+  // master giữ cố định bên trong (không còn thanh "âm tổng")
+  const [levels, setLevels] = useState({ master: 0.85, rain: 0.0, stream: 0.0, wind: 0.0, birds: 0.0, warble: 0.0, drops: 0.0 })
   const levelsRef = useRef(levels)
   levelsRef.current = levels
 
@@ -111,12 +113,39 @@ export function useAmbient() {
     birdReverb.connect(birdGain)
     birdGain.connect(master)
 
+    // ---- SUỐI: noise sáng hơn mưa + bandpass "róc rách" quét chậm ----
+    const streamSrc = ctx.createBufferSource()
+    streamSrc.buffer = makeNoiseBuffer(ctx, 4, 'white')
+    streamSrc.loop = true
+    const streamHP = ctx.createBiquadFilter()
+    streamHP.type = 'highpass'; streamHP.frequency.value = 700
+    const streamLP = ctx.createBiquadFilter()
+    streamLP.type = 'lowpass'; streamLP.frequency.value = 3600; streamLP.Q.value = 0.5
+    const streamBP = ctx.createBiquadFilter() // tiếng "róc rách"
+    streamBP.type = 'bandpass'; streamBP.frequency.value = 1500; streamBP.Q.value = 1.4
+    const streamBPGain = ctx.createGain(); streamBPGain.gain.value = 0.6
+    const streamBabbleLFO = ctx.createOscillator(); streamBabbleLFO.frequency.value = 0.7
+    const streamBabbleGain = ctx.createGain(); streamBabbleGain.gain.value = 700
+    streamBabbleLFO.connect(streamBabbleGain); streamBabbleGain.connect(streamBP.frequency); streamBabbleLFO.start()
+    const streamGain = ctx.createGain(); streamGain.gain.value = 0
+    streamSrc.connect(streamHP); streamHP.connect(streamLP)
+    streamLP.connect(streamGain)                 // dòng chảy nền
+    streamLP.connect(streamBP); streamBP.connect(streamBPGain); streamBPGain.connect(streamGain) // róc rách
+    streamGain.connect(master)
+    streamSrc.start()
+
+    // ---- CHIM THÁNH THÓT: chuỗi nốt huýt trong trẻo ----
+    const warbleGain = ctx.createGain(); warbleGain.gain.value = 0
+    const warbleFilter = ctx.createBiquadFilter()
+    warbleFilter.type = 'lowpass'; warbleFilter.frequency.value = 8000
+    warbleFilter.connect(warbleGain); warbleGain.connect(master)
+
     // ---- DROPS: giọt nước riêng lẻ ----
     const dropGain = ctx.createGain()
     dropGain.gain.value = 0
     dropGain.connect(master)
 
-    nodesRef.current = { master, rainGain, windGain, birdGain, birdReverb, dropGain }
+    nodesRef.current = { master, rainGain, windGain, birdGain, birdReverb, streamGain, warbleGain, warbleFilter, dropGain }
 
     // Lập lịch chirp chim ngẫu nhiên
     const scheduleBird = () => {
@@ -125,6 +154,14 @@ export function useAmbient() {
       birdTimerRef.current = setTimeout(scheduleBird, 600 + Math.random() * 2600)
     }
     scheduleBird()
+
+    // Lập lịch tiếng chim thánh thót (chuỗi nốt du dương)
+    const scheduleWarble = () => {
+      const l = levelsRef.current.warble
+      if (l > 0.001) warble(ctx, nodesRef.current.warbleFilter, l)
+      warbleTimerRef.current = setTimeout(scheduleWarble, 1400 + Math.random() * 3600)
+    }
+    scheduleWarble()
 
     // Lập lịch giọt nước ngẫu nhiên
     const scheduleDrop = () => {
@@ -143,8 +180,10 @@ export function useAmbient() {
     const ramp = (param, val) => param.setTargetAtTime(val, t, 0.15)
     ramp(n.master.gain, next.master)
     ramp(n.rainGain.gain, next.rain * 0.9)
+    ramp(n.streamGain.gain, next.stream * 0.8)
     ramp(n.windGain.gain, next.wind * 0.8)
     ramp(n.birdGain.gain, next.birds * 0.9)
+    ramp(n.warbleGain.gain, next.warble * 0.9)
     ramp(n.dropGain.gain, next.drops)
   }, [])
 
@@ -171,6 +210,7 @@ export function useAmbient() {
   useEffect(() => {
     return () => {
       clearTimeout(birdTimerRef.current)
+      clearTimeout(warbleTimerRef.current)
       clearTimeout(dropTimerRef.current)
       try { ctxRef.current?.close() } catch { /* ignore */ }
     }
@@ -199,6 +239,29 @@ function chirp(ctx, dest, amp) {
     g.connect(dest)
     osc.start(start)
     osc.stop(start + 0.16)
+  }
+}
+
+// Tiếng chim thánh thót: chuỗi 3-5 nốt huýt trong trẻo, có rung nhẹ (vibrato).
+function warble(ctx, dest, amp) {
+  const scale = [1568, 1760, 1976, 2349, 2637, 3136] // G6 A6 B6 D7 E7 G7 (ngũ cung)
+  const n = 3 + Math.floor(Math.random() * 3)
+  let t = ctx.currentTime + 0.02
+  for (let i = 0; i < n; i++) {
+    const f = scale[Math.floor(Math.random() * scale.length)]
+    const dur = 0.11 + Math.random() * 0.08
+    const osc = ctx.createOscillator(); osc.type = 'triangle'
+    const g = ctx.createGain()
+    osc.frequency.setValueAtTime(f, t)
+    const vib = ctx.createOscillator(); vib.frequency.value = 22 + Math.random() * 10
+    const vibG = ctx.createGain(); vibG.gain.value = f * 0.012
+    vib.connect(vibG); vibG.connect(osc.frequency); vib.start(t); vib.stop(t + dur + 0.02)
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(0.14 * amp, t + 0.02)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
+    osc.connect(g); g.connect(dest)
+    osc.start(t); osc.stop(t + dur + 0.02)
+    t += dur * (0.8 + Math.random() * 0.5)
   }
 }
 

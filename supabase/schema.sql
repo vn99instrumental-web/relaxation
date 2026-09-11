@@ -106,3 +106,23 @@ create policy "anon room_settings" on public.room_settings for all to anon using
 grant select, insert, update, delete on public.room_settings to anon, authenticated;
 alter table public.room_settings replica identity full;
 do $$ begin begin execute 'alter publication supabase_realtime add table public.room_settings'; exception when duplicate_object then null; end; end $$;
+
+-- ============================================================
+-- THƠ (đăng thơ + bình luận trên từng bài; bình luận lưu jsonb)
+-- ============================================================
+create table if not exists public.poems (
+  id uuid primary key default gen_random_uuid(),
+  room_id text not null,
+  author text not null,
+  title text,
+  body text not null,
+  comments jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists poems_room_time_idx on public.poems (room_id, created_at desc);
+alter table public.poems enable row level security;
+drop policy if exists "anon poems" on public.poems;
+create policy "anon poems" on public.poems for all to anon using (true) with check (true);
+grant select, insert, update, delete on public.poems to anon, authenticated;
+alter table public.poems replica identity full;
+do $$ begin begin execute 'alter publication supabase_realtime add table public.poems'; exception when duplicate_object then null; end; end $$;

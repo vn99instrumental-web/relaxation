@@ -14,3 +14,6 @@ export const IconJournal = (p) => (
 export const IconImmersive = (p) => (
   <svg {...base} {...p}><path d="M8 3H5a2 2 0 00-2 2v3" /><path d="M16 3h3a2 2 0 012 2v3" /><path d="M21 16v3a2 2 0 01-2 2h-3" /><path d="M3 16v3a2 2 0 002 2h3" /></svg>
 )
+export const IconPoem = (p) => (
+  <svg {...base} {...p}><path d="M12 21s-7-4.35-7-10a4 4 0 017-2.65A4 4 0 0119 11c0 5.65-7 10-7 10z" /><path d="M9 10h4M9 13h6" /></svg>
+)

@@ -57,8 +57,8 @@ export default function Player({
   return (
     <div className="pane">
       <form className="player__add" onSubmit={submit}>
-        <textarea rows={2}
-          placeholder={'Dán link YouTube — mỗi dòng một link…'}
+        <textarea rows={1}
+          placeholder={'Dán link YouTube…'}
           value={input} onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(e) }}
         />
