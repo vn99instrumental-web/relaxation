@@ -670,7 +670,7 @@ export default function App() {
         yt={yt} queue={queue} index={index}
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
         shuffle={shuffle} onToggleShuffle={onToggleShuffle}
-        unread={unread}
+        unread={unread} unreadPoems={unreadPoems}
         leftTab={leftTab} onToggleLeft={toggleLeft}
         journalOpen={journalOpen} onToggleJournal={() => toggleRight('journal')}
         poemsOpen={rightTab === 'poems'} onTogglePoems={() => toggleRight('poems')}

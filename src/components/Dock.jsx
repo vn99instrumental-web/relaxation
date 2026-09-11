@@ -4,7 +4,7 @@ import { IconMusic, IconAmbient, IconJournal, IconImmersive, IconPoem, IconShuff
 
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
-  shuffle, onToggleShuffle, unread = 0,
+  shuffle, onToggleShuffle, unread = 0, unreadPoems = 0,
   leftTab, onToggleLeft, journalOpen, onToggleJournal, poemsOpen, onTogglePoems, onHideUI,
 }) {
   const title = yt.nowTitle || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
@@ -46,8 +46,9 @@ export default function Dock({
           <IconJournal /><span>Nhật ký</span>
           {unread > 0 && <span className="dock__badge">{unread > 9 ? '9+' : unread}</span>}
         </button>
-        <button className={`dock__btn ${poemsOpen ? 'is-active' : ''}`} onClick={onTogglePoems}>
+        <button className={`dock__btn dock__btn--journal ${poemsOpen ? 'is-active' : ''}`} onClick={onTogglePoems}>
           <IconPoem /><span>Thơ</span>
+          {unreadPoems > 0 && <span className="dock__badge">{unreadPoems > 9 ? '9+' : unreadPoems}</span>}
         </button>
         <button className="dock__btn dock__btn--icon" onClick={onHideUI} title="Ẩn giao diện — chỉ ngắm cảnh">
           <IconImmersive />
