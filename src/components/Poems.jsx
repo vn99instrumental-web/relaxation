@@ -40,7 +40,7 @@ export default function Poems({ poems, username, admin, onAddPoem, onDeletePoem,
               <div className="poem__head">
                 <span className="poem__author">{p.author}</span>
                 <span className="poem__time">{fmt(p.ts)}</span>
-                {canEdit(p.author) && <button className="poem__del" onClick={() => onDeletePoem(p.id)} title="Xoá bài thơ">✕</button>}
+                {canEdit(p.author) && <button className="poem__del" onClick={() => { if (window.confirm('Xoá bài thơ này? Không thể hoàn tác.')) onDeletePoem(p.id) }} title="Xoá bài thơ">✕</button>}
               </div>
               {p.title && <h3 className="poem__title">{p.title}</h3>}
               <div className="poem__body">{p.body}</div>
@@ -55,7 +55,7 @@ export default function Poems({ poems, username, admin, onAddPoem, onDeletePoem,
                         <span className="pcm__meta"><b>{c.author}</b> · {fmt(c.ts)}</span>
                         <span className="pcm__text">{c.text}</span>
                       </div>
-                      {canEdit(c.author) && <button className="pcm__del" onClick={() => onDeleteComment(p.id, c.id)} title="Xoá">✕</button>}
+                      {canEdit(c.author) && <button className="pcm__del" onClick={() => { if (window.confirm('Xoá bình luận này?')) onDeleteComment(p.id, c.id) }} title="Xoá">✕</button>}
                     </div>
                   ))}
                   <div className="pcm-add">

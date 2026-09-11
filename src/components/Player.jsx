@@ -125,7 +125,7 @@ export default function Player({
                 </button>
               )}
               <button className="link-btn" onClick={onToggleVideo}>{showVideo ? 'Ẩn video' : 'Video'}</button>
-              {queue.length > 0 && <button className="link-btn" onClick={onClear}>Xóa</button>}
+              {queue.length > 0 && <button className="link-btn" onClick={() => { if (window.confirm('Xoá toàn bộ hàng chờ?')) onClear() }}>Xóa</button>}
             </div>
           </div>
 
@@ -179,7 +179,7 @@ export default function Player({
                             </button>
                             {onRenamePlaylist && <button className="link-btn" onClick={() => startRename(p)} title="Đổi tên playlist">✎</button>}
                             <button className="link-btn" onClick={() => onLoadPlaylist(p.id, 'append')} title="Thêm vào hàng chờ">＋</button>
-                            <button className="queue__remove" onClick={() => onDeletePlaylist(p.id)} title="Xóa playlist">✕</button>
+                            <button className="queue__remove" onClick={() => { if (window.confirm(`Xoá playlist “${p.name}”? Không thể hoàn tác.`)) onDeletePlaylist(p.id) }} title="Xóa playlist">✕</button>
                           </>
                         )}
                       </div>
@@ -200,7 +200,7 @@ export default function Player({
                                 </select>
                               )}
                               {onRemoveFromPlaylist && (
-                                <button className="queue__remove" onClick={() => onRemoveFromPlaylist(p.id, i)} title="Xoá khỏi playlist">✕</button>
+                                <button className="queue__remove" onClick={() => { if (window.confirm('Xoá bài này khỏi playlist?')) onRemoveFromPlaylist(p.id, i) }} title="Xoá khỏi playlist">✕</button>
                               )}
                             </li>
                           ))}

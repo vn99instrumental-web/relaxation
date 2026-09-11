@@ -18,7 +18,7 @@ const REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🔥']
 export default function Journal({ journal, username, setUsername, onOpenSettings, onClose, admin }) {
   const { messages, status, error, sending, online, send, refresh, deleteMessage, editMessage, reactMessage, clearMessages } = journal
 
-  const removeOne = (id) => { if (deleteMessage) deleteMessage(id) }
+  const removeOne = (id) => { if (deleteMessage && window.confirm('Xoá tin nhắn này? Không thể hoàn tác.')) deleteMessage(id) }
   const clearAll = () => {
     if (!clearMessages) return
     if (window.confirm('Xóa toàn bộ nhật ký? Không thể hoàn tác.')) clearMessages()

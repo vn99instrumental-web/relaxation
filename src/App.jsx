@@ -543,12 +543,6 @@ export default function App() {
 
   const toggleLeft = (tab) => setLeftTab((cur) => (cur === tab ? null : tab))
 
-  const cycleBg = useCallback((dir) => {
-    const ids = backgrounds.map((b) => b.id)
-    const i = Math.max(0, ids.indexOf(bgId))
-    setBgId(ids[(i + dir + ids.length) % ids.length])
-  }, [backgrounds, bgId])
-
   const addUserBg = useCallback((label, url) => {
     const id = `u${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     setUserBgs((list) => [...list, { id, label: label || 'Ảnh của tôi', url, thumb: url }])
@@ -621,7 +615,7 @@ export default function App() {
           <div className="topbar__actions">
             <div className="theme-select-wrap">
               <button className="theme-select" onClick={() => setThemeMenuOpen((o) => !o)}
-                title="Đổi giao diện" aria-haspopup="listbox" aria-expanded={themeMenuOpen}>
+                title="Đổi tông màu giao diện (Hoàng hôn / Đêm mưa / Sáng sớm / Phim xưa)" aria-haspopup="listbox" aria-expanded={themeMenuOpen}>
                 <span className={`theme-dot theme-dot--${theme}`} />
                 <span className="theme-select__label">{THEMES.find((t) => t.id === theme)?.label || 'Giao diện'}</span>
                 <span className="theme-select__caret">▾</span>
@@ -641,11 +635,11 @@ export default function App() {
               )}
             </div>
             <button className={`icon-btn ${fx.length ? '' : 'is-off'}`} onClick={toggleFx}
-              title={fx.length ? 'Tắt hiệu ứng lá/hoa/mưa' : 'Bật hiệu ứng lá/hoa/mưa'}>
+              title={fx.length ? 'Tắt hiệu ứng rơi (lá / cánh hoa / mưa)' : 'Bật hiệu ứng rơi (lá / cánh hoa / mưa)'}>
               {fx.length ? '🍃' : '🚫'}
             </button>
-            <button className="icon-btn" onClick={() => cycleBg(1)} title={`Ảnh: ${currentBg?.label || ''} — bấm để đổi`}>🖼</button>
-            <button className="icon-btn" onClick={() => setSettingsOpen(true)} title="Cài đặt">⚙</button>
+            <button className="icon-btn" onClick={() => setSettingsOpen(true)}
+              title="Cài đặt — hiệu ứng, ảnh nền, nghe nhạc, đồng bộ chung">⚙</button>
           </div>
         </header>
 

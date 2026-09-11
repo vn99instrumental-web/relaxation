@@ -9,6 +9,29 @@ const GENERAL = [
   'cho những ngày bình yên',
   'ngồi yên nghe phố thở',
   'giữ lại một khoảng lặng',
+  'nơi mình trốn khỏi vội vàng',
+  'thương nhau qua từng con chữ',
+  'một tách trà, một bản nhạc',
+  'để lòng mình dịu lại',
+  'hiên nhỏ, mình cùng nhau',
+  'nghe lá rơi rất khẽ',
+  'thở đều, và mỉm cười',
+  'ở đây, thời gian đi chậm',
+  'chút bình yên gửi người thương',
+  'mưa ngoài hiên, ấm trong lòng',
+  'cứ để nỗi buồn trôi đi',
+  'nắm tay nhau qua ngày mưa',
+  'sương giăng, mình kể chuyện cũ',
+  'yêu thương những điều nhỏ bé',
+  'một góc nhỏ của riêng mình',
+  'nghe tim mình bớt vội',
+  'thương thành phố mù sương',
+  'ngồi đây nghe gió kể',
+  'giữ ấm cho nhau nhé',
+  'chậm mà thương, lâu mà nhớ',
+  'để hôm nay nhẹ tênh',
+  'một khoảng trời riêng hai đứa',
+  'bình yên là ở bên nhau',
 ]
 
 const BY_TIME = {
@@ -38,6 +61,8 @@ const BY_TIME = {
     'đêm sâu, thức cùng một bản buồn',
     'khuya nghe mưa rơi ngoài hiên',
     'để đêm trôi thật chậm',
+    'ngủ ngon nhé, người thương',
+    'khuya khoắt, lòng vẫn ấm',
   ],
 }
 
@@ -58,6 +83,8 @@ const BY_THEME = {
   film: [
     'một thước phim cũ, hai đứa mình',
     'ký ức ngả màu thời gian',
+    'tua chậm những ngày xưa cũ',
+    'Đà Lạt trong khung hình cũ',
   ],
 }
 

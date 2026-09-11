@@ -60,6 +60,7 @@ export default function AmbientMixer({ ambient }) {
     setTracks((t) => t.map((x) => (x.id === id ? { ...x, playing } : x)))
   }
   const removeTrack = (id) => {
+    if (!window.confirm('Xoá âm thanh này?')) return
     const a = audiosRef.current.get(id)
     if (a) { try { a.pause(); URL.revokeObjectURL(a.src) } catch { /* ignore */ } }
     audiosRef.current.delete(id)

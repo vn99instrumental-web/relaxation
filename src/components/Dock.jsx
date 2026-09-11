@@ -36,17 +36,21 @@ export default function Dock({
       </div>
 
       <div className="dock__tabs">
-        <button className={`dock__btn ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => onToggleLeft('music')}>
+        <button className={`dock__btn ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => onToggleLeft('music')}
+          title="Nhạc — danh sách bài hát & playlist (thêm link YouTube)">
           <IconMusic /><span>Nhạc</span>
         </button>
-        <button className={`dock__btn ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => onToggleLeft('ambient')}>
+        <button className={`dock__btn ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => onToggleLeft('ambient')}
+          title="Không gian — âm thanh nền: mưa, gió, suối, chim">
           <IconAmbient /><span>Không gian</span>
         </button>
-        <button className={`dock__btn dock__btn--journal ${journalOpen ? 'is-active' : ''}`} onClick={onToggleJournal}>
+        <button className={`dock__btn dock__btn--journal ${journalOpen ? 'is-active' : ''}`} onClick={onToggleJournal}
+          title="Nhật ký chung — nhắn tin cho nhau">
           <IconJournal /><span>Nhật ký</span>
           {unread > 0 && <span className="dock__badge">{unread > 9 ? '9+' : unread}</span>}
         </button>
-        <button className={`dock__btn dock__btn--journal ${poemsOpen ? 'is-active' : ''}`} onClick={onTogglePoems}>
+        <button className={`dock__btn dock__btn--journal ${poemsOpen ? 'is-active' : ''}`} onClick={onTogglePoems}
+          title="Góc Thơ — đăng thơ & bình luận cùng nhau">
           <IconPoem /><span>Thơ</span>
           {unreadPoems > 0 && <span className="dock__badge">{unreadPoems > 9 ? '9+' : unreadPoems}</span>}
         </button>

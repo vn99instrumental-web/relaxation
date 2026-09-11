@@ -140,6 +140,15 @@ export function useAmbient() {
     warbleFilter.type = 'lowpass'; warbleFilter.frequency.value = 8000
     warbleFilter.connect(warbleGain); warbleGain.connect(master)
 
+    // ---- Không gian rừng: vọng nhẹ có phản hồi (đặt tiếng chim vào chiều sâu) ----
+    const birdEcho = ctx.createDelay(0.6); birdEcho.delayTime.value = 0.21
+    const birdEchoLP = ctx.createBiquadFilter(); birdEchoLP.type = 'lowpass'; birdEchoLP.frequency.value = 3000
+    const birdEchoFb = ctx.createGain(); birdEchoFb.gain.value = 0.3
+    const birdEchoWet = ctx.createGain(); birdEchoWet.gain.value = 0.32
+    birdEcho.connect(birdEchoLP); birdEchoLP.connect(birdEchoFb); birdEchoFb.connect(birdEcho)
+    birdEchoLP.connect(birdEchoWet); birdEchoWet.connect(master)
+    birdReverb.connect(birdEcho); warbleFilter.connect(birdEcho) // gửi cả 2 kênh chim vào vọng
+
     // ---- DROPS: giọt nước riêng lẻ ----
     const dropGain = ctx.createGain()
     dropGain.gain.value = 0
@@ -219,49 +228,70 @@ export function useAmbient() {
   return { started, levels, setLevel, start, stop }
 }
 
-// Một tiếng chim hót: 1-3 nốt quét tần số nhanh.
+// Một "âm tiết" chim: sóng mang + điều tần (FM) tạo độ líu ríu đặc trưng,
+// cao độ luyến theo đường cong, bao biên độ đánh nhanh–tắt mềm, lọc formant.
+function birdSyllable(ctx, dest, t, f0, dur, amp, opts = {}) {
+  const osc = ctx.createOscillator(); osc.type = opts.type || 'triangle'
+  const g = ctx.createGain()
+  const f = osc.frequency
+  // FM: bộ điều tần nhanh -> tạo rung/líu như cổ họng chim
+  const mod = ctx.createOscillator(); mod.type = 'sine'
+  mod.frequency.value = opts.trill || (60 + Math.random() * 80)
+  const modG = ctx.createGain(); modG.gain.value = f0 * (opts.trillDepth ?? 0.05)
+  mod.connect(modG); modG.connect(f)
+  // đường cong cao độ (contour) — chim thật hiếm khi giữ 1 nốt phẳng
+  const c = opts.contour || 'updown'
+  f.setValueAtTime(f0, t)
+  if (c === 'up') f.exponentialRampToValueAtTime(f0 * 1.6, t + dur)
+  else if (c === 'down') f.exponentialRampToValueAtTime(f0 * 0.6, t + dur)
+  else if (c === 'updown') { f.exponentialRampToValueAtTime(f0 * 1.5, t + dur * 0.4); f.exponentialRampToValueAtTime(f0 * 0.82, t + dur) }
+  else if (c === 'downup') { f.exponentialRampToValueAtTime(f0 * 0.68, t + dur * 0.5); f.exponentialRampToValueAtTime(f0 * 1.2, t + dur) }
+  // bao biên độ
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.exponentialRampToValueAtTime(amp, t + 0.008)
+  g.gain.setTargetAtTime(0.0001, t + dur * 0.55, dur * 0.28)
+  // lọc formant nhẹ cho ấm, bớt "điện tử"
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f0 * 1.5; bp.Q.value = 0.9
+  osc.connect(bp); bp.connect(g); g.connect(dest)
+  const end = t + dur + 0.06
+  mod.start(t); osc.start(t); mod.stop(end); osc.stop(end)
+}
+
+// Tiếng chíp ngắn: 1-4 âm tiết, cao độ luyến ngẫu nhiên, có lúc "chíp chíp".
 function chirp(ctx, dest, amp) {
-  const t0 = ctx.currentTime + 0.01
-  const notes = 1 + Math.floor(Math.random() * 3)
-  for (let i = 0; i < notes; i++) {
-    const start = t0 + i * (0.06 + Math.random() * 0.05)
-    const osc = ctx.createOscillator()
-    osc.type = 'sine'
-    const g = ctx.createGain()
-    const base = 2200 + Math.random() * 1800
-    osc.frequency.setValueAtTime(base, start)
-    osc.frequency.exponentialRampToValueAtTime(base * (1.3 + Math.random() * 0.5), start + 0.05)
-    osc.frequency.exponentialRampToValueAtTime(base * 0.9, start + 0.11)
-    g.gain.setValueAtTime(0.0001, start)
-    g.gain.exponentialRampToValueAtTime(0.12 * amp, start + 0.02)
-    g.gain.exponentialRampToValueAtTime(0.0001, start + 0.14)
-    osc.connect(g)
-    g.connect(dest)
-    osc.start(start)
-    osc.stop(start + 0.16)
+  const base = 1900 + Math.random() * 1700
+  const n = 1 + Math.floor(Math.random() * 4)
+  const contours = ['up', 'updown', 'down', 'downup']
+  let t = ctx.currentTime + 0.02
+  for (let i = 0; i < n; i++) {
+    const f0 = base * (0.9 + Math.random() * 0.35)
+    const dur = 0.05 + Math.random() * 0.06
+    birdSyllable(ctx, dest, t, f0, dur, 0.12 * amp, {
+      contour: contours[(Math.random() * contours.length) | 0],
+      trill: 70 + Math.random() * 90, trillDepth: 0.04 + Math.random() * 0.05,
+    })
+    t += dur + 0.02 + Math.random() * 0.05
   }
 }
 
-// Tiếng chim thánh thót: chuỗi 3-5 nốt huýt trong trẻo, có rung nhẹ (vibrato).
+// Tiếng chim thánh thót: một CÂU du dương 4-8 nốt, đi lên/xuống theo bậc,
+// nốt dài thì ngân (trill chậm), có lúc ngắt nhịp — nghe như đang "hót".
 function warble(ctx, dest, amp) {
-  const scale = [1568, 1760, 1976, 2349, 2637, 3136] // G6 A6 B6 D7 E7 G7 (ngũ cung)
-  const n = 3 + Math.floor(Math.random() * 3)
-  let t = ctx.currentTime + 0.02
+  const scale = [1568, 1760, 1976, 2349, 2637, 3136, 3520] // G6..A7
+  const n = 4 + Math.floor(Math.random() * 5)
+  let t = ctx.currentTime + 0.03
+  let idx = Math.floor(Math.random() * scale.length)
   for (let i = 0; i < n; i++) {
-    const f = scale[Math.floor(Math.random() * scale.length)]
-    const dur = 0.11 + Math.random() * 0.08
-    const osc = ctx.createOscillator(); osc.type = 'triangle'
-    const g = ctx.createGain()
-    osc.frequency.setValueAtTime(f, t)
-    const vib = ctx.createOscillator(); vib.frequency.value = 22 + Math.random() * 10
-    const vibG = ctx.createGain(); vibG.gain.value = f * 0.012
-    vib.connect(vibG); vibG.connect(osc.frequency); vib.start(t); vib.stop(t + dur + 0.02)
-    g.gain.setValueAtTime(0.0001, t)
-    g.gain.exponentialRampToValueAtTime(0.14 * amp, t + 0.02)
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
-    osc.connect(g); g.connect(dest)
-    osc.start(t); osc.stop(t + dur + 0.02)
-    t += dur * (0.8 + Math.random() * 0.5)
+    idx = Math.max(0, Math.min(scale.length - 1, idx + (Math.floor(Math.random() * 3) - 1))) // bước ±1 bậc
+    const f0 = scale[idx]
+    const long = Math.random() < 0.4
+    const dur = (0.09 + Math.random() * 0.09) * (long ? 1.6 : 1)
+    birdSyllable(ctx, dest, t, f0, dur, 0.13 * amp, {
+      contour: long ? 'updown' : ['up', 'down', 'downup'][(Math.random() * 3) | 0],
+      trill: long ? 22 + Math.random() * 16 : 90 + Math.random() * 60,
+      trillDepth: long ? 0.03 : 0.02,
+    })
+    t += dur * (0.75 + Math.random() * 0.5) + (Math.random() < 0.2 ? 0.12 : 0) // đôi lúc lấy hơi
   }
 }
 
