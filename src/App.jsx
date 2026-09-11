@@ -6,6 +6,7 @@ import Journal from './components/Journal'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
 import VideoPip from './components/VideoPip'
+import { IconMusic, IconAmbient } from './components/icons'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useWakeLock } from './hooks/useWakeLock'
@@ -519,8 +520,8 @@ export default function App() {
         {/* Drawer trái: Nhạc / Không gian (trượt từ cạnh trái) */}
         <aside className={`drawer drawer--left ${leftTab ? 'is-open' : ''}`}>
           <div className="drawer__tabs">
-            <button className={`drawer__tab ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => setLeftTab('music')}>♫ Nhạc</button>
-            <button className={`drawer__tab ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => setLeftTab('ambient')}>☔ Không gian</button>
+            <button className={`drawer__tab ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => setLeftTab('music')}><IconMusic width="16" height="16" /> Nhạc</button>
+            <button className={`drawer__tab ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => setLeftTab('ambient')}><IconAmbient width="16" height="16" /> Không gian</button>
             <button className="drawer__close" onClick={() => setLeftTab(null)} title="Đóng">✕</button>
           </div>
           <div className="drawer__body">

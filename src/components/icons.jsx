@@ -1,0 +1,16 @@
+// Bộ icon vẽ tay dùng chung (dock + tab ngăn kéo). Dùng currentColor nên tự
+// đổi màu theo theme. Giữ nét mảnh, phong cách đồng nhất.
+const base = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' }
+
+export const IconMusic = (p) => (
+  <svg {...base} {...p}><path d="M9 17V4l10-2v13" /><circle cx="6" cy="17" r="3" /><circle cx="16" cy="15" r="3" /></svg>
+)
+export const IconAmbient = (p) => (
+  <svg {...base} {...p}><path d="M7 16a3.5 3.5 0 010-7 4.5 4.5 0 018.7-1.5A3.2 3.2 0 0116.5 16z" /><path d="M9 20l-.6 1.2M13 20l-.6 1.2M17 20l-.6 1.2" /></svg>
+)
+export const IconJournal = (p) => (
+  <svg {...base} {...p}><path d="M6 3h13a1 1 0 011 1v16a1 1 0 01-1 1H6a2 2 0 01-2-2V5a2 2 0 012-2z" /><path d="M9 3v18" /><path d="M13 8h3M13 12h3" /></svg>
+)
+export const IconImmersive = (p) => (
+  <svg {...base} {...p}><path d="M8 3H5a2 2 0 00-2 2v3" /><path d="M16 3h3a2 2 0 012 2v3" /><path d="M21 16v3a2 2 0 01-2 2h-3" /><path d="M3 16v3a2 2 0 002 2h3" /></svg>
+)
