@@ -5,14 +5,16 @@ import { WindController } from './WindController'
 import { LeafSimulation } from './LeafSimulation'
 import { createLeafMaterial } from './leafMaterial'
 import { makeAdaptive } from './quality'
+import { LEAF_CONFIG } from './config'
 
-// Cảnh 3D chứa toàn bộ lá/cánh hoa: 1 InstancedMesh duy nhất (1 lệnh vẽ),
-// mỗi lá là 1 tấm phẳng lấy 1 ô trong atlas. Gió + vật lý cập nhật mỗi khung.
-export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50, maxLeaves = 120 }) {
+// Cảnh lá/cánh hoa: 1 InstancedMesh (1 lệnh vẽ), mỗi lá lấy 1 ô trong atlas.
+// Gió + vật lý cập nhật mỗi khung; ghi chỉ số ra `stats` cho Debug overlay.
+export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50, preset = 'breeze', maxLeaves = 120, stats }) {
   const { camera, size } = useThree()
-  const texture = useLoader(THREE.TextureLoader, `${import.meta.env.BASE_URL || '/'}leaves/leaf-atlas.webp`)
+  const atlas = LEAF_CONFIG.atlas
+  const texUrl = `${import.meta.env.BASE_URL || '/'}${atlas.url}`
+  const texture = useLoader(THREE.TextureLoader, texUrl)
 
-  // Chuẩn bị texture 1 lần
   useEffect(() => {
     texture.colorSpace = THREE.SRGBColorSpace
     texture.minFilter = THREE.LinearMipmapLinearFilter
@@ -21,10 +23,9 @@ export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50,
     texture.needsUpdate = true
   }, [texture])
 
-  // Dựng mesh + thuộc tính instance + gió + mô phỏng (chỉ 1 lần theo maxLeaves)
   const rig = useMemo(() => {
     const geom = new THREE.PlaneGeometry(1, 1)
-    const material = createLeafMaterial(texture)
+    const material = createLeafMaterial(texture, [1 / atlas.cols, 1 / atlas.rows])
     const mesh = new THREE.InstancedMesh(geom, material, maxLeaves)
     mesh.frustumCulled = false
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
@@ -38,7 +39,6 @@ export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50,
     geom.setAttribute('instanceUvOffset', uvAttr)
     geom.setAttribute('instanceAlpha', alphaAttr)
 
-    // ẩn hết lúc đầu (matrix scale 0)
     const zero = new THREE.Matrix4().makeScale(0, 0, 0)
     for (let i = 0; i < maxLeaves; i++) mesh.setMatrixAt(i, zero)
     mesh.instanceMatrix.needsUpdate = true
@@ -47,40 +47,49 @@ export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50,
     const sim = new LeafSimulation({ mesh, uvArray, alphaArray, wind, max: maxLeaves })
     const adaptive = makeAdaptive(maxLeaves)
     return { geom, material, mesh, uvAttr, alphaAttr, wind, sim, adaptive }
-  }, [texture, maxLeaves])
+  }, [texture, maxLeaves, atlas.cols, atlas.rows])
 
-  // Dọn dẹp khi tháo
   useEffect(() => () => {
     rig.geom.dispose(); rig.material.dispose(); rig.mesh.dispose()
   }, [rig])
 
-  // Cập nhật chế độ (lá / cánh hoa / cả hai), tốc độ gió, và kích thước lá
   useEffect(() => { rig.sim.setMode(mode) }, [rig, mode])
-  useEffect(() => { rig.wind.setBase(speed) }, [rig, speed])
+  useEffect(() => { rig.wind.setStrength(speed) }, [rig, speed])
+  useEffect(() => { rig.wind.setPreset(preset) }, [rig, preset])
   useEffect(() => {
     const s = Math.min(100, Math.max(0, Number(sizeLevel) || 0)) / 100
     rig.sim.setSizeScale(0.6 + s * 0.8)   // 0.6 .. 1.4 (=1.0 tại 50)
   }, [rig, sizeLevel])
 
   const tRef = useRef(0)
+  const fpsRef = useRef(60)
 
   useFrame((_, delta) => {
-    const dt = Math.min(0.05, delta)   // chặn bước nhảy lớn khi tab vừa hiện lại
+    const dt = Math.min(0.05, delta)
     tRef.current += dt
     const { wind, sim, adaptive, uvAttr, alphaAttr } = rig
 
     wind.update(dt)
-
-    // Biên khung nhìn theo camera hiện tại (để lá phủ kín màn hình)
     const fov = (camera.fov * Math.PI) / 180
     const aspect = size.width / Math.max(1, size.height)
     sim.setBounds(camera.position.z, fov, aspect)
-
     sim.update(dt, adaptive.cap, tRef.current)
     uvAttr.needsUpdate = true
     alphaAttr.needsUpdate = true
-
     adaptive.tick(delta * 1000)
+
+    if (stats) {
+      fpsRef.current = fpsRef.current * 0.9 + (1 / Math.max(1e-3, delta)) * 0.1
+      const s = stats.current
+      s.fps = fpsRef.current
+      s.leaves = sim.activeCount
+      s.cap = adaptive.cap
+      s.spawnRate = sim.emitter.lastLambda
+      s.availability = sim.emitter.availability
+      s.windSpeed = wind.windSpeed
+      s.windDir = wind.windDirectionDeg
+      s.gust = wind.gust
+    }
   })
 
   return <primitive object={rig.mesh} />

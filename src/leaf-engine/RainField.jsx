@@ -7,7 +7,7 @@ import { createRainMaterial } from './rainMaterial'
 import { makeAdaptive } from './quality'
 
 // Cảnh mưa: 1 InstancedMesh các vệt mảnh (1 lệnh vẽ). Gió + vật lý mỗi khung.
-export default function RainField({ speed = 50, sizeLevel = 50, maxDrops = 280 }) {
+export default function RainField({ speed = 50, sizeLevel = 50, preset = 'breeze', maxDrops = 280, stats }) {
   const { camera, size } = useThree()
 
   const rig = useMemo(() => {
@@ -46,6 +46,7 @@ export default function RainField({ speed = 50, sizeLevel = 50, maxDrops = 280 }
     const s = Math.min(100, Math.max(0, Number(sizeLevel) || 0)) / 100
     rig.sim.setSizeScale(0.6 + s * 0.8)   // 0.6 .. 1.4 (=1.0 tại 50)
   }, [rig, sizeLevel])
+  useEffect(() => { rig.wind.setPreset(preset) }, [rig, preset]) // hướng/độ nhiễu theo preset
 
   const tRef = useRef(0)
 
@@ -63,6 +64,7 @@ export default function RainField({ speed = 50, sizeLevel = 50, maxDrops = 280 }
     alphaAttr.needsUpdate = true
 
     adaptive.tick(delta * 1000)
+    if (stats) stats.current.drops = sim.drops.filter((d) => d.active).length
   })
 
   return <primitive object={rig.mesh} />

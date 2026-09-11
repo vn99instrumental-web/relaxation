@@ -1,3 +1,5 @@
+import { LEAF_CONFIG } from './config'
+
 // Dò khả năng thiết bị -> hồ sơ chất lượng cho LeafEngine.
 export function hasWebGL() {
   try {
@@ -19,15 +21,14 @@ export function pickProfile() {
   const dpr = window.devicePixelRatio || 1
 
   let tier = 'high'
-  if (touch || small) tier = 'mid'
+  if (touch || small) tier = 'medium'
   if (mem <= 3 || cores <= 4 || (touch && small)) tier = 'low'
 
-  const P = {
-    high: { maxLeaves: 140, dpr: Math.min(2, dpr), antialias: true, blur: true },
-    mid: { maxLeaves: 70, dpr: Math.min(1.5, dpr), antialias: true, blur: false },
-    low: { maxLeaves: 34, dpr: Math.min(1.25, dpr), antialias: false, blur: false },
-  }
-  return { tier, ...P[tier] }
+  const perf = LEAF_CONFIG.performance
+  const base = perf[tier]
+  let maxLeaves = base.maxLeaves
+  if (touch && small) maxLeaves = Math.round(maxLeaves * perf.mobileScale) // mobile nhỏ -> giảm thêm
+  return { tier, maxLeaves, dpr: Math.min(base.dpr, dpr), antialias: base.antialias }
 }
 
 // Bộ tự điều tiết: theo dõi thời gian khung, giảm/khôi phục số lá hoạt động.

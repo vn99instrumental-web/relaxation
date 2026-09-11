@@ -147,8 +147,9 @@ input, textarea { font-family: inherit; }
 @media (prefers-reduced-motion: reduce) { .fx { display: none; } }
 
 /* ---- Lớp lá 3D (LeafEngine, WebGL) — sau giao diện, không chặn chuột ---- */
-.leaf-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-.leaf-canvas canvas { display: block; pointer-events: none !important; background: transparent; }
+.leaf-canvas { position: fixed; inset: 0; z-index: 1; }
+.leaf-canvas, .leaf-canvas * { pointer-events: none !important; }
+.leaf-canvas canvas { display: block; background: transparent; }
 
 /* ---- Mưa (bản dự phòng CSS): vệt mảnh, rơi nhanh ---- */
 .fx-drop--rain { width: 2px; }
@@ -682,6 +683,11 @@ input[type='range']:disabled { opacity: 0.4; }
 
 .scene-picker { display: flex; gap: 8px; margin-bottom: 8px; }
 .fx-hint { margin: 0 0 12px; font-style: italic; font-size: 0.74rem; }
+.fx-preset { margin: 6px 0 8px; }
+.fx-preset .muted { display: block; margin-bottom: 8px; }
+.fx-preset__row { display: flex; gap: 6px; }
+.preset-opt { flex: 1; border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); padding: 7px 6px; border-radius: 9px; font-size: 0.76rem; transition: 0.2s; }
+.preset-opt.is-active { background: var(--sel); color: var(--ink); border-color: var(--border-strong); }
 .fx-speed { margin: 6px 0 4px; }
 .fx-speed .muted { display: block; margin-bottom: 8px; }
 .fx-speed__row { display: flex; align-items: center; gap: 10px; }

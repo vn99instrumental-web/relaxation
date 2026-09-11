@@ -97,6 +97,7 @@ export default function App() {
   const [fxSpeed, setFxSpeed] = useState(() => { const v = load('vibe.fxSpeed', 50); return typeof v === 'number' ? v : 50 }) // 0 chậm .. 100 nhanh
   const [fxDensity, setFxDensity] = useState(() => { const v = load('vibe.fxDensity', 50); return typeof v === 'number' ? v : 50 }) // 0 thưa .. 100 dày
   const [fxSize, setFxSize] = useState(() => { const v = load('vibe.fxSize', 50); return typeof v === 'number' ? v : 50 }) // 0 nhỏ .. 100 to
+  const [fxPreset, setFxPreset] = useState(() => load('vibe.fxPreset', 'breeze')) // gió: calm|breeze|windy|storm
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
@@ -152,6 +153,7 @@ export default function App() {
   useEffect(() => save('vibe.fxSpeed', fxSpeed), [fxSpeed])
   useEffect(() => save('vibe.fxDensity', fxDensity), [fxDensity])
   useEffect(() => save('vibe.fxSize', fxSize), [fxSize])
+  useEffect(() => save('vibe.fxPreset', fxPreset), [fxPreset])
 
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
@@ -528,7 +530,7 @@ export default function App() {
       <Scene scene={scene} photo={currentBg?.url || ''} />
       {webglOK && fx.length > 0 ? (
         <Suspense fallback={<FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />}>
-          <LeafEngine modes={fx} speed={fxSpeed} density={fxDensity} sizeLevel={fxSize} />
+          <LeafEngine modes={fx} speed={fxSpeed} density={fxDensity} sizeLevel={fxSize} preset={fxPreset} />
         </Suspense>
       ) : (
         <FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />
@@ -653,6 +655,7 @@ export default function App() {
         fx={fx} setFx={setFx} fxSpeed={fxSpeed} setFxSpeed={setFxSpeed}
         fxDensity={fxDensity} setFxDensity={setFxDensity}
         fxSize={fxSize} setFxSize={setFxSize}
+        fxPreset={fxPreset} setFxPreset={setFxPreset}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
         shared={useShared} galleryError={gallery.error}

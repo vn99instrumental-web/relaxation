@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { createGist } from '../lib/gist'
+import { WIND_PRESETS, PRESET_ORDER } from '../leaf-engine/config'
 
 const isVector = (id) => id === 'vector' || id.endsWith('__vector')
 const isUserImg = (id) => id.startsWith('u') || id.includes('__u')
@@ -12,7 +13,7 @@ export default function SettingsModal({
   shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
   admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay,
-  fx, setFx, fxSpeed, setFxSpeed, fxDensity, setFxDensity, fxSize, setFxSize,
+  fx, setFx, fxSpeed, setFxSpeed, fxDensity, setFxDensity, fxSize, setFxSize, fxPreset, setFxPreset,
 }) {
   const [token, setToken] = useState(config.token || '')
   const [gistId, setGistId] = useState(config.gistId || '')
@@ -87,6 +88,17 @@ export default function SettingsModal({
             <p className="muted fx-hint">Có thể chọn nhiều loại cùng lúc. Bỏ chọn hết để tắt.</p>
             {Array.isArray(fx) && fx.length > 0 && (
               <>
+                <div className="fx-preset">
+                  <span className="muted">Kiểu gió</span>
+                  <div className="fx-preset__row">
+                    {PRESET_ORDER.map((id) => (
+                      <button key={id} className={`preset-opt ${fxPreset === id ? 'is-active' : ''}`}
+                        aria-pressed={fxPreset === id} onClick={() => setFxPreset(id)}>
+                        {WIND_PRESETS[id].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="fx-speed">
                   <span className="muted">Tốc độ rơi</span>
                   <div className="fx-speed__row">

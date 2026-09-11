@@ -1,18 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import LeafField from './LeafField'
 import RainField from './RainField'
+import DebugOverlay from './DebugOverlay'
 import { pickProfile, prefersReducedMotion } from './quality'
 
-// LeafEngine: lớp canvas WebGL nằm SAU toàn bộ giao diện, nền trong suốt,
-// không chặn chuột. Vẽ nhiều hiệu ứng cùng lúc (lá / cánh hoa / mưa) — chọn
-// nhiều tuỳ ý. Tự chọn hồ sơ chất lượng và tạm dừng khi tab bị ẩn.
-export default function LeafEngine({ modes = ['leaves'], speed = 50, density = 50, sizeLevel = 50 }) {
+// LeafEngine: lớp canvas WebGL SAU giao diện, nền trong suốt, không chặn chuột.
+// Vẽ nhiều hiệu ứng cùng lúc (lá / cánh hoa / mưa). Tự chọn chất lượng theo
+// thiết bị, tạm dừng khi tab ẩn. Bật debug bằng ?fxdebug=1.
+export default function LeafEngine({
+  modes = ['leaves'], speed = 50, density = 50, sizeLevel = 50, preset = 'breeze', debug = false,
+}) {
   const profile = useMemo(() => pickProfile(), [])
   const reduce = useMemo(() => prefersReducedMotion(), [])
+  const stats = useRef({ fps: 60, leaves: 0, drops: 0, cap: 0, spawnRate: 0, availability: 1, windSpeed: 0, windDir: 0, gust: 0 })
   const [visible, setVisible] = useState(
     typeof document === 'undefined' ? true : document.visibilityState === 'visible',
   )
+  const dbg = useMemo(() => {
+    if (debug) return true
+    try { return new URLSearchParams(window.location.search).has('fxdebug') } catch { return false }
+  }, [debug])
 
   useEffect(() => {
     const onVis = () => setVisible(document.visibilityState === 'visible')
@@ -27,7 +35,6 @@ export default function LeafEngine({ modes = ['leaves'], speed = 50, density = 5
 
   if (reduce || (!hasLeaves && !hasPetals && !hasRain)) return null
 
-  // Lá + cánh hoa dùng chung 1 InstancedMesh (LeafField). Mưa dùng mesh riêng.
   const leafMode = hasLeaves && hasPetals ? 'both' : hasLeaves ? 'leaves' : hasPetals ? 'petals' : null
 
   // Thanh mật độ 0..100 -> hệ số 0.35..1.65 (=1.0 tại 50)
@@ -37,17 +44,20 @@ export default function LeafEngine({ modes = ['leaves'], speed = 50, density = 5
   const maxDrops = Math.max(20, Math.round(profile.maxLeaves * 2.2 * factor))
 
   return (
-    <div className="leaf-canvas" aria-hidden="true">
-      <Canvas
-        frameloop={visible ? 'always' : 'never'}
-        dpr={profile.dpr}
-        gl={{ antialias: profile.antialias, alpha: true, powerPreference: 'low-power' }}
-        camera={{ fov: 45, position: [0, 0, 14], near: 0.1, far: 60 }}
-        style={{ background: 'transparent' }}
-      >
-        {leafMode && <LeafField mode={leafMode} speed={speed} sizeLevel={sizeLevel} maxLeaves={maxLeaves} />}
-        {hasRain && <RainField speed={speed} sizeLevel={sizeLevel} maxDrops={maxDrops} />}
-      </Canvas>
-    </div>
+    <>
+      <div className="leaf-canvas" aria-hidden="true">
+        <Canvas
+          frameloop={visible ? 'always' : 'never'}
+          dpr={profile.dpr}
+          gl={{ antialias: profile.antialias, alpha: true, powerPreference: 'low-power' }}
+          camera={{ fov: 45, position: [0, 0, 14], near: 0.1, far: 60 }}
+          style={{ background: 'transparent' }}
+        >
+          {leafMode && <LeafField mode={leafMode} speed={speed} sizeLevel={sizeLevel} preset={preset} maxLeaves={maxLeaves} stats={stats} />}
+          {hasRain && <RainField speed={speed} sizeLevel={sizeLevel} preset={preset} maxDrops={maxDrops} stats={stats} />}
+        </Canvas>
+      </div>
+      {dbg && <DebugOverlay stats={stats} tier={profile.tier} />}
+    </>
   )
 }
