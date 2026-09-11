@@ -392,12 +392,12 @@ input, textarea { font-family: inherit; }
 .dock__vol { display: flex; align-items: center; gap: 7px; margin-left: 4px; }
 .dock__vol input { width: 82px; }
 .dock__tabs { display: flex; align-items: center; gap: 6px; padding-left: 12px; border-left: 1px solid var(--border); }
-.dock__btn { display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); padding: 8px 12px; border-radius: 10px; font-size: 0.82rem; transition: 0.2s; }
-.dock__btn:not(.dock__btn--icon) { min-width: 124px; } /* các nút chính bằng nhau, 1 dòng */
+/* Cùng chiều cao (36px), chiều rộng tự vừa theo chữ */
+.dock__btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; white-space: nowrap; border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); padding: 0 13px; border-radius: 10px; font-size: 0.82rem; transition: 0.2s; }
 .dock__btn:hover { color: var(--ink); border-color: var(--border-strong); }
 .dock__btn.is-active { background: var(--sel-strong); color: var(--ink); border-color: var(--border-strong); }
 .dock__btn svg { width: 17px; height: 17px; flex-shrink: 0; }
-.dock__btn--icon { padding: 9px; }
+.dock__btn--icon { width: 36px; padding: 0; }
 .dock__btn--journal { position: relative; }
 .dock__badge {
   position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px;
@@ -659,9 +659,11 @@ input[type='range']:disabled { opacity: 0.4; }
 .btn:disabled { opacity: 0.5; }
 
 .scene-picker { display: flex; gap: 8px; margin-bottom: 14px; }
-.fx-speed { margin: 4px 0 6px; }
-.fx-speed .muted { display: block; margin-bottom: 6px; }
-.fx-speed .scene-picker { margin-bottom: 0; }
+.fx-speed { margin: 6px 0 4px; }
+.fx-speed .muted { display: block; margin-bottom: 8px; }
+.fx-speed__row { display: flex; align-items: center; gap: 10px; }
+.fx-speed__row input { flex: 1; min-width: 0; }
+.fx-speed__end { font-size: 0.72rem; color: var(--ink-dim); white-space: nowrap; }
 .scene-opt { flex: 1; border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); padding: 10px; border-radius: 10px; font-size: 0.82rem; transition: 0.2s; }
 .scene-opt.is-active { background: var(--sel); color: var(--ink); border-color: var(--border-strong); }
 

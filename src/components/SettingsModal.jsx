@@ -83,15 +83,11 @@ export default function SettingsModal({
             {fx !== 'none' && (
               <div className="fx-speed">
                 <span className="muted">Tốc độ rơi</span>
-                <div className="scene-picker">
-                  {[
-                    { id: 'slow', label: 'Chậm' },
-                    { id: 'normal', label: 'Vừa' },
-                    { id: 'fast', label: 'Nhanh' },
-                  ].map((o) => (
-                    <button key={o.id} className={`scene-opt ${fxSpeed === o.id ? 'is-active' : ''}`}
-                      onClick={() => setFxSpeed(o.id)}>{o.label}</button>
-                  ))}
+                <div className="fx-speed__row">
+                  <span className="fx-speed__end">Chậm</span>
+                  <input type="range" min="0" max="100" value={fxSpeed}
+                    onChange={(e) => setFxSpeed(Number(e.target.value))} />
+                  <span className="fx-speed__end">Nhanh</span>
                 </div>
               </div>
             )}

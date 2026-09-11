@@ -5,9 +5,10 @@ import { useEffect, useMemo, useState } from 'react'
 // đổi hướng theo thời gian. Chỉ CSS animation nên nhẹ máy.
 const LEAF_COLORS = ['#c98a3e', '#b56b39', '#9c7a3c', '#a85f2e', '#7f7a3a']
 const PETAL_COLORS = ['#f0b9c6', '#f6d0da', '#eec7bb', '#f4dbd4', '#e4b7bd']
-const SPEED = { slow: 1.8, normal: 1, fast: 0.55 }
 const rand = (a, b) => a + Math.random() * (b - a)
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
+// speed 0..100 (0 chậm, 100 nhanh) -> hệ số nhân thời gian rơi (2.0 .. 0.4)
+const speedMult = (s) => 2.0 - (Math.min(100, Math.max(0, Number(s) || 0)) / 100) * 1.6
 
 // Lá: thon dài, nhọn hai đầu, có gân giữa + gân phụ + cuống
 function LeafSVG({ c }) {
@@ -28,8 +29,8 @@ function PetalSVG({ c }) {
   )
 }
 
-export default function FallingFx({ mode = 'none', speed = 'normal' }) {
-  const mult = SPEED[speed] || 1
+export default function FallingFx({ mode = 'none', speed = 50 }) {
+  const mult = speedMult(speed)
   const count = { leaves: 10, petals: 12, both: 14 }[mode] || 0
 
   const particles = useMemo(() => {
