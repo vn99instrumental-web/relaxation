@@ -121,7 +121,7 @@ export default function Player({
       )}
 
       {playlists?.length > 0 && (
-        <div className="pl-saved">
+        <div className={`pl-saved ${!showPlaylists ? 'is-collapsed' : ''}`}>
           <div className="queue__head">
             <button className="pl-collapse" onClick={() => setShowPlaylists((v) => !v)} title="Ẩn/hiện playlist">
               <span className="pl-collapse__caret">{showPlaylists ? '▾' : '▸'}</span> Playlist đã lưu · {playlists.length}

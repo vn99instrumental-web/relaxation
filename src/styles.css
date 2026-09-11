@@ -137,6 +137,7 @@ input, textarea { font-family: inherit; }
   90% { opacity: 1; }
   100% { transform: translate3d(var(--drift, 0px), 112vh, 0); opacity: 0; }
 }
+.fx-wind { display: block; width: 100%; height: 100%; transform: translateX(var(--wind-x, 0px)); transition: transform 5s ease-in-out; }
 .fx-sway { display: block; width: 100%; height: 100%; animation-name: fxsway; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; will-change: transform; }
 @keyframes fxsway {
   from { transform: translateX(-9px) rotate(0deg); }
@@ -494,6 +495,8 @@ input, textarea { font-family: inherit; }
 .queue { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1 1 auto; min-height: 44px; display: flex; flex-direction: column; gap: 1px; }
 /* Khi có "Playlist đã lưu": hàng chờ co lại (cap), nhường chỗ cho danh sách playlist */
 .pane:has(.pl-saved) .queue { flex: 0 1 auto; max-height: 40%; }
+/* Ẩn danh sách playlist -> hàng chờ mở rộng chiếm hết chỗ */
+.pane:has(.pl-saved.is-collapsed) .queue { flex: 1 1 auto; max-height: none; }
 .queue__item { display: flex; align-items: center; gap: 4px; border-radius: 8px; padding: 3px; transition: 0.2s; }
 .queue__item:hover { background: var(--surface); }
 .queue__item.is-current { background: var(--sel); }
