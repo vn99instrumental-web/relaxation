@@ -612,12 +612,12 @@ input[type='range']:disabled { opacity: 0.4; }
 
 /* Toast báo trong app (tin nhắn / thơ mới) */
 /* Thanh báo cố định (tin nhắn / thơ mới) — hiện khi còn chưa xem, rõ trên điện thoại */
-.notif-bar { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); z-index: 40; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 92vw; }
-.notif-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--panel-solid); border: 1px solid var(--gold-soft); color: var(--ink); border-radius: 999px; padding: 9px 16px; font-size: 0.84rem; font-weight: 500; box-shadow: var(--shadow); backdrop-filter: blur(8px); animation: notifIn 0.3s ease; }
-.notif-pill:hover { border-color: var(--gold); }
-.notif-pill--poem { border-color: var(--gold); }
-@keyframes notifIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-@media (max-width: 480px) { .notif-bar { top: 62px; } .notif-pill { font-size: 0.8rem; padding: 8px 14px; } }
+/* Báo tin/thơ mới NỔI ngay trên nút Nhật ký / Thơ ở dock (có mũi chỉ xuống) */
+.dock__notif { position: absolute; bottom: calc(100% + 9px); left: 50%; white-space: nowrap; z-index: 9;
+  background: var(--panel-solid); color: var(--ink); border: 1px solid var(--gold-soft); border-radius: 999px;
+  padding: 4px 10px; font-size: 0.72rem; font-weight: 600; box-shadow: var(--shadow); animation: notifBob 1.8s ease-in-out infinite; }
+.dock__notif::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--gold-soft); }
+@keyframes notifBob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-3px); } }
 /* Ô sửa nội dung tin */
 .bubble__edit-box { display: flex; flex-direction: column; gap: 6px; }
 .bubble__edit-box textarea {

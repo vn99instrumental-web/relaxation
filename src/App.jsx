@@ -431,17 +431,37 @@ export default function App() {
   const pendingAutoRef = useRef(false)
   useEffect(() => {
     if (autoStartedRef.current || !autoplay || !yt.ready) return
-    autoStartedRef.current = true
-    setQueue((q) => {
-      if (!q.length) return q
-      const i = Math.floor(Math.random() * q.length)
-      setIndex(i)
-      pendingAutoRef.current = true
-      setTimeout(() => ytLiveRef.current.playTrack(q[i]), 0)
-      return q
-    })
+    let cancelled = false
+    const startAuto = () => {
+      if (autoStartedRef.current || cancelled) return
+      // Ưu tiên: chọn NGẪU NHIÊN 1 playlist (có bài) rồi phát 1 bài ngẫu nhiên trong đó
+      const pls = (playlistsRef.current || []).filter((pl) => pl.tracks && pl.tracks.length)
+      if (pls.length) {
+        autoStartedRef.current = true
+        const pl = pls[Math.floor(Math.random() * pls.length)]
+        const tracks = pl.tracks.map((t) => ({ key: nextKey(), ...t }))
+        const i = Math.floor(Math.random() * tracks.length)
+        setQueue(tracks); setIndex(i)
+        pendingAutoRef.current = true
+        setTimeout(() => ytLiveRef.current.playTrack(tracks[i]), 0)
+        return
+      }
+      // Không có playlist -> phát ngẫu nhiên trong hàng chờ hiện có (nếu có)
+      setQueue((q) => {
+        if (!q.length) return q
+        autoStartedRef.current = true
+        const i = Math.floor(Math.random() * q.length)
+        setIndex(i)
+        pendingAutoRef.current = true
+        setTimeout(() => ytLiveRef.current.playTrack(q[i]), 0)
+        return q
+      })
+    }
+    // Có playlist sẵn -> chạy ngay; chưa có (đang tải Supabase) -> chờ tối đa 1.5s
+    if ((playlists || []).some((pl) => pl.tracks && pl.tracks.length)) startAuto()
+    else { const timer = setTimeout(startAuto, 1500); return () => { cancelled = true; clearTimeout(timer) } }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [yt.ready, autoplay])
+  }, [yt.ready, autoplay, playlists])
   useEffect(() => {
     const kick = () => {
       const y = ytLiveRef.current
@@ -581,22 +601,6 @@ export default function App() {
         <FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />
       )}
 
-      {/* Báo CỐ ĐỊNH trong app: còn tin/thơ chưa xem là hiện (rõ trên điện thoại),
-          chạm để mở khung tương ứng; tự ẩn khi đã xem. */}
-      {(unread > 0 || unreadPoems > 0) && !journalOpen && !poemsOpen && (
-        <div className="notif-bar" role="status" aria-live="polite">
-          {unread > 0 && (
-            <button className="notif-pill" onClick={() => setRightTab('journal')}>
-              💬 {unread} tin nhắn mới
-            </button>
-          )}
-          {unreadPoems > 0 && (
-            <button className="notif-pill notif-pill--poem" onClick={() => setRightTab('poems')}>
-              ✍️ {unreadPoems} bài thơ mới
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
       <VideoPip showVideo={showVideo && !uiHidden} onClose={() => setShowVideo(false)} />

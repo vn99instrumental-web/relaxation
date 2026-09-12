@@ -48,12 +48,12 @@ export default function Dock({
         <button className={`dock__btn dock__btn--journal ${journalOpen ? 'is-active' : ''}`} onClick={onToggleJournal}
           title="Nhật ký chung — nhắn tin cho nhau">
           <IconJournal /><span>Nhật ký</span>
-          {unread > 0 && <span className="dock__badge">{unread > 9 ? '9+' : unread}</span>}
+          {!journalOpen && unread > 0 && <span className="dock__notif">💬 {unread > 9 ? '9+' : unread} mới</span>}
         </button>
         <button className={`dock__btn dock__btn--journal ${poemsOpen ? 'is-active' : ''}`} onClick={onTogglePoems}
           title="Góc Thơ — đăng thơ & bình luận cùng nhau">
           <IconPoem /><span>Thơ</span>
-          {unreadPoems > 0 && <span className="dock__badge">{unreadPoems > 9 ? '9+' : unreadPoems}</span>}
+          {!poemsOpen && unreadPoems > 0 && <span className="dock__notif">✍️ {unreadPoems > 9 ? '9+' : unreadPoems} mới</span>}
         </button>
         <button className="dock__btn dock__btn--icon" onClick={onHideUI} title="Ẩn giao diện — chỉ ngắm cảnh">
           <IconImmersive />
