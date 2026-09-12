@@ -155,6 +155,10 @@ input, textarea { font-family: inherit; }
 .fx-drop--rain { width: 2px; }
 .fx-rainline { display: block; width: 1.5px; height: 100%; margin: 0 auto; border-radius: 1px;
   background: linear-gradient(to bottom, rgba(200,220,255,0), rgba(205,224,255,0.85)); }
+/* Mưa phùn (bản dự phòng CSS): hạt li ti, mảnh & mờ như màn sương */
+.fx-drop--mist { width: 1px; }
+.fx-drop--mist .fx-rainline { width: 1px;
+  background: linear-gradient(to bottom, rgba(214,228,255,0), rgba(220,231,255,0.6)); }
 .scene__svg, .scene__photo {
   position: absolute; inset: -2%;
   width: 104%; height: 104%;
@@ -614,9 +618,9 @@ input[type='range']:disabled { opacity: 0.4; }
 /* Thanh báo cố định (tin nhắn / thơ mới) — hiện khi còn chưa xem, rõ trên điện thoại */
 /* Báo tin/thơ mới NỔI ngay trên nút Nhật ký / Thơ ở dock (có mũi chỉ xuống) */
 .dock__notif { position: absolute; bottom: calc(100% + 9px); left: 50%; white-space: nowrap; z-index: 9;
-  background: var(--panel-solid); color: var(--ink); border: 1px solid var(--gold-soft); border-radius: 999px;
-  padding: 4px 10px; font-size: 0.72rem; font-weight: 600; box-shadow: var(--shadow); animation: notifBob 1.8s ease-in-out infinite; }
-.dock__notif::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--gold-soft); }
+  background: #d63a34; color: #fff; border: 1px solid #b22b26; border-radius: 999px;
+  padding: 4px 10px; font-size: 0.72rem; font-weight: 700; box-shadow: 0 4px 12px rgba(190,40,34,0.45); animation: notifBob 1.8s ease-in-out infinite; }
+.dock__notif::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #d63a34; }
 @keyframes notifBob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-3px); } }
 /* Ô sửa nội dung tin */
 .bubble__edit-box { display: flex; flex-direction: column; gap: 6px; }
@@ -735,6 +739,20 @@ input[type='range']:disabled { opacity: 0.4; }
 .bg-tile__label { position: relative; z-index: 1; width: 100%; padding: 4px 6px; font-size: 0.68rem; line-height: 1.2; background: linear-gradient(transparent, rgba(0,0,0,0.7)); text-align: left; }
 .bg-tile__del { position: absolute; top: 3px; right: 3px; z-index: 2; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); border-radius: 50%; font-size: 0.62rem; color: var(--ink); }
 .bg-tile__del:hover { background: var(--rose); }
+/* Chọn nhiều ảnh để xóa cùng lúc */
+.bg-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bg-head h3 { margin: 0; }
+.bg-selbtn { border: 1px solid var(--border); background: var(--surface); color: var(--ink); padding: 5px 11px; border-radius: 999px; font-size: 0.74rem; white-space: nowrap; transition: 0.2s; }
+.bg-selbtn:hover { border-color: var(--gold-soft); }
+.bg-selbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 8px 0 10px; }
+.btn--sm { padding: 6px 11px; font-size: 0.76rem; border-radius: 999px; }
+.btn--danger { background: #d1493f; border-color: #b23a30; color: #fff; }
+.btn--danger:hover:not(:disabled) { background: #c03a30; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.bg-tile.is-selected { border-color: #d1493f; box-shadow: 0 0 0 2px rgba(209,73,63,0.5); }
+.bg-tile.is-locked { opacity: 0.4; }
+.bg-tile__check { position: absolute; top: 4px; right: 4px; z-index: 2; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.72rem; font-weight: 800; color: #fff; background: rgba(0,0,0,0.5); border: 1.5px solid rgba(255,255,255,0.85); }
+.bg-tile__check.is-on { background: #d1493f; border-color: #fff; }
 .bg-add { display: flex; gap: 8px; align-items: center; }
 .bg-add input { flex: 1; min-width: 0; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 9px 11px; border-radius: 10px; font-size: 0.84rem; }
 .bg-add input:focus { outline: none; border-color: var(--border-strong); }

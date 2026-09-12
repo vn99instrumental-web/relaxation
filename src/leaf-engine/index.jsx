@@ -33,8 +33,9 @@ export default function LeafEngine({
   const hasLeaves = set.includes('leaves')
   const hasPetals = set.includes('petals')
   const hasRain = set.includes('rain')
+  const hasDrizzle = set.includes('drizzle')
 
-  if (reduce || (!hasLeaves && !hasPetals && !hasRain)) return null
+  if (reduce || (!hasLeaves && !hasPetals && !hasRain && !hasDrizzle)) return null
 
   const leafMode = hasLeaves && hasPetals ? 'both' : hasLeaves ? 'leaves' : hasPetals ? 'petals' : null
 
@@ -43,6 +44,8 @@ export default function LeafEngine({
   const factor = 0.35 + d * 1.3
   const maxLeaves = Math.max(8, Math.round(profile.maxLeaves * (leafMode === 'both' ? 0.85 : 1) * factor))
   const maxDrops = Math.max(20, Math.round(profile.maxLeaves * 2.2 * factor))
+  // mưa phùn: hạt li ti nên cần nhiều hơn để thành màn sương
+  const maxMist = Math.max(40, Math.round(profile.maxLeaves * 3.4 * factor))
 
   return (
     <>
@@ -55,7 +58,8 @@ export default function LeafEngine({
           style={{ background: 'transparent' }}
         >
           {leafMode && <LeafField mode={leafMode} speed={speed} sizeLevel={sizeLevel} preset={preset} windDir={windDir} swirl={swirl} maxLeaves={maxLeaves} stats={stats} />}
-          {hasRain && <RainField speed={speed} sizeLevel={sizeLevel} preset={preset} windDir={windDir} swirl={swirl} maxDrops={maxDrops} stats={stats} />}
+          {hasRain && <RainField variant="rain" speed={speed} sizeLevel={sizeLevel} preset={preset} windDir={windDir} swirl={swirl} maxDrops={maxDrops} stats={stats} />}
+          {hasDrizzle && <RainField variant="drizzle" speed={speed} sizeLevel={sizeLevel} preset={preset} windDir={windDir} swirl={swirl} maxDrops={maxMist} stats={stats} />}
         </Canvas>
       </div>
       {dbg && <DebugOverlay stats={stats} tier={profile.tier} />}

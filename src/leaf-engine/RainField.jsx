@@ -7,12 +7,12 @@ import { createRainMaterial } from './rainMaterial'
 import { makeAdaptive } from './quality'
 
 // Cảnh mưa: 1 InstancedMesh các vệt mảnh (1 lệnh vẽ). Gió + vật lý mỗi khung.
-export default function RainField({ speed = 50, sizeLevel = 50, preset = 'breeze', windDir = 'auto', swirl = 50, maxDrops = 280, stats }) {
+export default function RainField({ speed = 50, sizeLevel = 50, preset = 'breeze', windDir = 'auto', swirl = 50, maxDrops = 280, variant = 'rain', stats }) {
   const { camera, size } = useThree()
 
   const rig = useMemo(() => {
     const geom = new THREE.PlaneGeometry(1, 1)
-    const material = createRainMaterial()
+    const material = createRainMaterial(variant)
     const mesh = new THREE.InstancedMesh(geom, material, maxDrops)
     mesh.frustumCulled = false
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
@@ -27,10 +27,10 @@ export default function RainField({ speed = 50, sizeLevel = 50, preset = 'breeze
     mesh.instanceMatrix.needsUpdate = true
 
     const wind = new WindController()
-    const sim = new RainSimulation({ mesh, alphaArray, wind, max: maxDrops })
+    const sim = new RainSimulation({ mesh, alphaArray, wind, max: maxDrops, variant })
     const adaptive = makeAdaptive(maxDrops)
     return { geom, material, mesh, alphaAttr, wind, sim, adaptive }
-  }, [maxDrops])
+  }, [maxDrops, variant])
 
   useEffect(() => () => {
     rig.geom.dispose(); rig.material.dispose(); rig.mesh.dispose()

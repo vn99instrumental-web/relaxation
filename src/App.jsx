@@ -29,7 +29,7 @@ const LeafEngine = lazy(() => import('./leaf-engine'))
 
 // Hiệu ứng rơi giờ chọn NHIỀU loại cùng lúc -> lưu dạng mảng.
 // Chuyển đổi giá trị cũ (chuỗi 'none'|'leaves'|'petals'|'both'|'rain') sang mảng.
-const FX_ALL = ['leaves', 'petals', 'rain']
+const FX_ALL = ['leaves', 'petals', 'rain', 'drizzle']
 function normalizeFx(v) {
   if (Array.isArray(v)) return v.filter((x) => FX_ALL.includes(x))
   if (v === 'both') return ['leaves', 'petals']
@@ -134,10 +134,11 @@ export default function App() {
   // 3 chủ đề vintage LUÔN ghép sẵn ở đầu (asset nội bộ, không phụ thuộc Supabase).
   // Lọc trùng phòng khi thư viện Supabase còn dòng cũ trỏ /scenes/*.
   const backgrounds = useMemo(() => {
+    const builtins = BUILTIN_SCENES.filter((s) => !hiddenBg.includes(s.id)) // cho phép ẩn/xóa chủ đề dựng sẵn
     const rest = (useShared ? gallery.items : localBackgrounds)
       .filter((b) => !BUILTIN_SCENES.some((s) => s.id === b.id) && !(b.url || '').startsWith('/scenes/'))
-    return [...BUILTIN_SCENES, ...rest]
-  }, [useShared, gallery.items, localBackgrounds])
+    return [...builtins, ...rest]
+  }, [useShared, gallery.items, localBackgrounds, hiddenBg])
   const currentBg = backgrounds.find((b) => b.id === bgId) || backgrounds.find((b) => b.url) || backgrounds[0]
 
   const supaRef = useRef(supa); supaRef.current = supa
@@ -581,7 +582,11 @@ export default function App() {
   }, [addUserBg])
 
   const removeImage = useCallback((id) => {
-    if (BUILTIN_SCENES.some((s) => s.id === id)) return // chủ đề dựng sẵn: không xóa
+    if (BUILTIN_SCENES.some((s) => s.id === id)) { // chủ đề dựng sẵn -> ẩn cục bộ (có thể khôi phục)
+      setHiddenBg((h) => (h.includes(id) ? h : [...h, id]))
+      setBgId((cur) => (cur === id ? '' : cur))
+      return
+    }
     if (sharedRef.current) { galleryRef.current.removeImage(id); setBgId((cur) => (cur === id ? '' : cur)) }
     else removeBackground(id)
   }, [removeBackground])
@@ -731,7 +736,7 @@ export default function App() {
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage}
         shared={useShared} galleryError={gallery.error}
-        hiddenCount={useShared ? 0 : hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
+        hiddenCount={hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
       />
     </div>
   )

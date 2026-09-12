@@ -2,9 +2,13 @@ import * as THREE from 'three'
 
 // Vật liệu cho mưa: mỗi hạt là 1 vệt mảnh. Không dùng ảnh — vẽ thẳng bằng shader:
 // sáng ở giữa, mờ dần hai đầu (như vệt nước chuyển động). Độ mờ riêng từng hạt.
-export function createRainMaterial() {
+export function createRainMaterial(variant = 'rain') {
+  // Mưa phùn hơi xám-lam & mờ hơn để giống màn sương lất phất.
+  const color = variant === 'drizzle'
+    ? new THREE.Color(0.84, 0.89, 0.97)
+    : new THREE.Color(0.80, 0.86, 0.96)
   return new THREE.ShaderMaterial({
-    uniforms: { color: { value: new THREE.Color(0.80, 0.86, 0.96) } },
+    uniforms: { color: { value: color } },
     transparent: true,
     depthWrite: false,
     depthTest: true,

@@ -42,7 +42,8 @@ export default function FallingFx({ modes = [], speed = 50, density = 50, size =
   const nLeaf = set.includes('leaves') ? Math.round(10 * dens) : 0
   const nPetal = set.includes('petals') ? Math.round(12 * dens) : 0
   const nRain = set.includes('rain') ? Math.round(42 * dens) : 0
-  const total = nLeaf + nPetal + nRain
+  const nMist = set.includes('drizzle') ? Math.round(70 * dens) : 0
+  const total = nLeaf + nPetal + nRain + nMist
 
   const particles = useMemo(() => {
     const arr = []
@@ -76,9 +77,21 @@ export default function FallingFx({ modes = [], speed = 50, density = 50, size =
         opacity: rand(0.25, 0.6),
       })
     }
+    // mưa phùn: vệt rất ngắn, mảnh, mờ, rơi chậm & bay lất phất nhiều hơn
+    for (let i = 0; i < nMist; i++) {
+      arr.push({
+        id: id++, type: 'mist',
+        left: rand(-4, 100),
+        streak: rand(8, 18) * sz,
+        fall: rand(1.8, 3.2),
+        delay: -rand(0, 3),
+        drift: rand(-28, 28),
+        opacity: rand(0.12, 0.32),
+      })
+    }
     return arr
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nLeaf, nPetal, nRain, sz])
+  }, [nLeaf, nPetal, nRain, nMist, sz])
 
   // Gió: đổi hướng/độ mạnh chậm rãi
   const [wind, setWind] = useState(0)
@@ -98,8 +111,8 @@ export default function FallingFx({ modes = [], speed = 50, density = 50, size =
 
   return (
     <div className="fx" aria-hidden="true" style={{ '--wind-x': `${wind}px` }}>
-      {particles.map((p) => (p.type === 'rain' ? (
-        <span key={p.id} className="fx-drop fx-drop--rain" style={{
+      {particles.map((p) => (p.type === 'rain' || p.type === 'mist' ? (
+        <span key={p.id} className={`fx-drop fx-drop--rain ${p.type === 'mist' ? 'fx-drop--mist' : ''}`} style={{
           left: `${p.left}%`, height: p.streak,
           animationDuration: `${(p.fall * mult).toFixed(2)}s`, animationDelay: `${(p.delay * mult).toFixed(2)}s`,
           '--drift': `${p.drift}px`,

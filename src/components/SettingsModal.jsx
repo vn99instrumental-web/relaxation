@@ -23,6 +23,8 @@ export default function SettingsModal({
   const [msg, setMsg] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const fileRef = useRef(null)
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedBg, setSelectedBg] = useState([])
   const [sbUrl, setSbUrl] = useState(supaConfig?.url || '')
   const [sbKey, setSbKey] = useState(supaConfig?.key || '')
   const [sbRoom, setSbRoom] = useState(supaConfig?.room || '')
@@ -61,6 +63,19 @@ export default function SettingsModal({
     })
   }
 
+  // Ảnh nào được phép xóa: chủ đề dựng sẵn & ảnh tự thêm (ai cũng xóa được),
+  // ảnh mặc định chỉ khi bật quyền admin.
+  const canDelete = (b) => admin || isUserImg(b.id) || b.builtin
+  const deletable = backgrounds.filter(canDelete)
+  const exitSelect = () => { setSelectMode(false); setSelectedBg([]) }
+  const toggleSelect = (id) => setSelectedBg((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
+  const deleteSelected = () => {
+    if (!selectedBg.length) return
+    if (!window.confirm(`Xoá ${selectedBg.length} ảnh nền đã chọn?`)) return
+    selectedBg.forEach((id) => onRemoveImage(id))
+    exitSelect()
+  }
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -77,6 +92,7 @@ export default function SettingsModal({
                 { id: 'leaves', label: 'Lá rơi' },
                 { id: 'petals', label: 'Cánh hoa' },
                 { id: 'rain', label: 'Mưa' },
+                { id: 'drizzle', label: 'Mưa phùn' },
               ].map((o) => {
                 const on = Array.isArray(fx) && fx.includes(o.id)
                 return (
@@ -154,21 +170,44 @@ export default function SettingsModal({
           </section>
 
           <section className="settings-block">
-            <h3>🖼️ Ảnh nền ({backgrounds.length}){shared ? ' · chung 2 người' : ''}</h3>
+            <div className="bg-head">
+              <h3>🖼️ Ảnh nền ({backgrounds.length}){shared ? ' · chung 2 người' : ''}</h3>
+              {deletable.length > 0 && (
+                selectMode
+                  ? <button className="bg-selbtn" onClick={exitSelect}>Xong</button>
+                  : <button className="bg-selbtn" onClick={() => setSelectMode(true)}>Chọn để xóa</button>
+              )}
+            </div>
             {galleryError && <p className="form-note">{galleryError}</p>}
+            {selectMode && (
+              <div className="bg-selbar">
+                <span className="muted">Đã chọn {selectedBg.length}</span>
+                <button className="btn btn--sm" onClick={() => setSelectedBg(deletable.map((b) => b.id))}>Chọn tất cả</button>
+                <button className="btn btn--sm" onClick={() => setSelectedBg([])} disabled={!selectedBg.length}>Bỏ chọn</button>
+                <button className="btn btn--sm btn--danger" onClick={deleteSelected} disabled={!selectedBg.length}>Xóa {selectedBg.length || ''} ảnh</button>
+              </div>
+            )}
             <div className="bg-grid">
-              {backgrounds.map((b) => (
-                <button key={b.id} className={`bg-tile ${bgId === b.id ? 'is-active' : ''}`}
-                  onClick={() => setBgId(b.id)} title={b.label}>
-                  {isVector(b.id) || !b.url
-                    ? <span className="bg-tile__vector">✎ {b.label}</span>
-                    : <img src={b.thumb || b.url} alt="" loading="lazy" />}
-                  <span className="bg-tile__label">{b.label}</span>
-                  {(admin || isUserImg(b.id)) && !b.builtin && (
-                    <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); if (window.confirm(`Xoá ảnh nền “${b.label}”?`)) onRemoveImage(b.id) }} title="Xóa ảnh này">✕</span>
-                  )}
-                </button>
-              ))}
+              {backgrounds.map((b) => {
+                const selectable = selectMode && canDelete(b)
+                const checked = selectedBg.includes(b.id)
+                return (
+                  <button key={b.id}
+                    className={`bg-tile ${!selectMode && bgId === b.id ? 'is-active' : ''} ${checked ? 'is-selected' : ''} ${selectMode && !canDelete(b) ? 'is-locked' : ''}`}
+                    onClick={() => { if (selectMode) { if (selectable) toggleSelect(b.id) } else setBgId(b.id) }}
+                    title={selectMode ? (canDelete(b) ? 'Chạm để chọn/bỏ chọn' : 'Ảnh này không xóa được') : b.label}>
+                    {isVector(b.id) || !b.url
+                      ? <span className="bg-tile__vector">✎ {b.label}</span>
+                      : <img src={b.thumb || b.url} alt="" loading="lazy" />}
+                    <span className="bg-tile__label">{b.label}</span>
+                    {selectMode
+                      ? canDelete(b) && <span className={`bg-tile__check ${checked ? 'is-on' : ''}`}>{checked ? '✓' : ''}</span>
+                      : (admin || isUserImg(b.id) || b.builtin) && (
+                        <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); if (window.confirm(`Xoá ảnh nền “${b.label}”?`)) onRemoveImage(b.id) }} title="Xóa ảnh này">✕</span>
+                      )}
+                  </button>
+                )
+              })}
             </div>
             <div className="bg-add">
               <button className="btn" onClick={() => fileRef.current?.click()}>Tải ảnh lên</button>
@@ -179,7 +218,7 @@ export default function SettingsModal({
                 onKeyDown={(e) => { if (e.key === 'Enter') addByUrl() }} />
               <button className="btn" onClick={addByUrl}>Thêm</button>
             </div>
-            {admin && hiddenCount > 0 && (
+            {hiddenCount > 0 && (
               <div className="settings-actions">
                 <button className="btn btn--ghost" onClick={onRestoreBg}>Khôi phục {hiddenCount} ảnh đã ẩn</button>
               </div>
