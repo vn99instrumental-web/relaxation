@@ -95,7 +95,6 @@ export default function App() {
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
   const [seenPoemTs, setSeenPoemTs] = useState(() => load('vibe.seenPoemTs', Date.now())) // mốc thơ đã xem
-  const [toast, setToast] = useState(null) // báo trong app: { id, kind:'chat'|'poem', title, body }
   const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // mảng: leaves|petals|rain
   const lastFxRef = useRef(fx.length ? fx : ['leaves']) // nhớ lựa chọn để bật lại
   const toggleFx = useCallback(() => setFx((cur) => (cur.length ? [] : (lastFxRef.current.length ? lastFxRef.current : ['leaves']))), [])
@@ -214,7 +213,6 @@ export default function App() {
     if (viewing) { setSeenTs(last.ts || Date.now()); return }
     // chỉ báo cho tin thực sự mới (tránh báo khi vừa tải trang)
     if (Date.now() - (last.ts || 0) > 60000) return
-    setToast({ id: Date.now(), kind: 'chat', title: `💬 ${last.user}`, body: last.text })
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try { new Notification('Hiên Mưa 💌', { body: `${last.user}: ${last.text}`, tag: 'hienmua-chat', renotify: true }) } catch { /* ignore */ }
     }
@@ -245,7 +243,6 @@ export default function App() {
     const viewing = poemsOpen && (typeof document === 'undefined' || document.visibilityState === 'visible')
     if (viewing) { setSeenPoemTs(latest.ts || Date.now()); return }
     if (Date.now() - (latest.ts || 0) > 60000) return  // tránh báo dồn khi vừa tải trang
-    setToast({ id: Date.now(), kind: 'poem', title: `✍️ ${latest.author}`, body: latest.title || (latest.body || '').slice(0, 50) })
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try { new Notification('Hiên Mưa ✍️', { body: `${latest.author} vừa đăng thơ: ${latest.title || latest.body?.slice(0, 40) || ''}`, tag: 'hienmua-poem', renotify: true }) } catch { /* ignore */ }
     }
@@ -257,13 +254,6 @@ export default function App() {
     const total = unread + unreadPoems
     document.title = total > 0 ? `(${total}) Hiên Mưa` : 'Hiên Mưa — Đà Lạt trong sương'
   }, [unread, unreadPoems])
-
-  // Toast tự ẩn sau vài giây
-  useEffect(() => {
-    if (!toast) return undefined
-    const id = setTimeout(() => setToast(null), 6000)
-    return () => clearTimeout(id)
-  }, [toast])
 
   const playAt = useCallback((i) => {
     setQueue((q) => {
@@ -591,13 +581,21 @@ export default function App() {
         <FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />
       )}
 
-      {/* Báo trong app (hiện rõ trên điện thoại khi có tin nhắn / thơ mới) */}
-      {toast && (
-        <button className={`toast toast--${toast.kind}`}
-          onClick={() => { setRightTab(toast.kind === 'chat' ? 'journal' : 'poems'); setToast(null) }}>
-          <span className="toast__title">{toast.title}</span>
-          <span className="toast__body">{toast.body}</span>
-        </button>
+      {/* Báo CỐ ĐỊNH trong app: còn tin/thơ chưa xem là hiện (rõ trên điện thoại),
+          chạm để mở khung tương ứng; tự ẩn khi đã xem. */}
+      {(unread > 0 || unreadPoems > 0) && !journalOpen && !poemsOpen && (
+        <div className="notif-bar" role="status" aria-live="polite">
+          {unread > 0 && (
+            <button className="notif-pill" onClick={() => setRightTab('journal')}>
+              💬 {unread} tin nhắn mới
+            </button>
+          )}
+          {unreadPoems > 0 && (
+            <button className="notif-pill notif-pill--poem" onClick={() => setRightTab('poems')}>
+              ✍️ {unreadPoems} bài thơ mới
+            </button>
+          )}
+        </div>
       )}
 
       {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}

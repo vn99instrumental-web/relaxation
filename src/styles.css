@@ -611,11 +611,13 @@ input[type='range']:disabled { opacity: 0.4; }
 .icon-btn.is-off { opacity: 0.55; }
 
 /* Toast báo trong app (tin nhắn / thơ mới) */
-.toast { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); z-index: 40; max-width: min(88vw, 420px); display: flex; flex-direction: column; gap: 1px; text-align: left; padding: 10px 15px; border-radius: 14px; border: 1px solid var(--border-strong); background: var(--panel-solid); box-shadow: var(--shadow); backdrop-filter: blur(8px); animation: toastIn 0.3s ease; }
-.toast--poem { border-color: var(--gold-soft); }
-.toast__title { font-size: 0.8rem; font-weight: 600; color: var(--gold-soft); }
-.toast__body { font-size: 0.82rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-@keyframes toastIn { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+/* Thanh báo cố định (tin nhắn / thơ mới) — hiện khi còn chưa xem, rõ trên điện thoại */
+.notif-bar { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); z-index: 40; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 92vw; }
+.notif-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--panel-solid); border: 1px solid var(--gold-soft); color: var(--ink); border-radius: 999px; padding: 9px 16px; font-size: 0.84rem; font-weight: 500; box-shadow: var(--shadow); backdrop-filter: blur(8px); animation: notifIn 0.3s ease; }
+.notif-pill:hover { border-color: var(--gold); }
+.notif-pill--poem { border-color: var(--gold); }
+@keyframes notifIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 480px) { .notif-bar { top: 62px; } .notif-pill { font-size: 0.8rem; padding: 8px 14px; } }
 /* Ô sửa nội dung tin */
 .bubble__edit-box { display: flex; flex-direction: column; gap: 6px; }
 .bubble__edit-box textarea {
