@@ -3,13 +3,12 @@ import Scene from './components/Scene'
 import FallingFx from './components/FallingFx'
 import { hasWebGL } from './leaf-engine/quality'
 import Player from './components/Player'
-import AmbientMixer from './components/AmbientMixer'
 import Journal from './components/Journal'
 import Poems from './components/Poems'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
 import VideoPip from './components/VideoPip'
-import { IconMusic, IconAmbient, IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
+import { IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useWakeLock } from './hooks/useWakeLock'
@@ -46,7 +45,7 @@ function boundedSetting(value, fallback) {
 function queueSignature(arr) {
   return (arr || []).map((t) => [
     t.kind || '', t.videoId || t.playlistId || '', t.title || '',
-    t.sourcePlaylistId || '', t.sourceTrackIndex ?? '',
+    t.sourcePlaylistId || '', t.sourceTrackIndex ?? '', t.addedAt || '',
   ].join(':')).join('|')
 }
 
@@ -61,6 +60,14 @@ function sameTrack(a, b) {
   return a.kind === 'playlist' ? a.playlistId === b.playlistId : a.videoId === b.videoId
 }
 
+function recentQueueIndexes(queue, limit) {
+  return queue
+    .map((track, queueIndex) => ({ track, queueIndex }))
+    .sort((a, b) => (Number(b.track.addedAt) || b.queueIndex) - (Number(a.track.addedAt) || a.queueIndex))
+    .slice(0, limit)
+    .map(({ queueIndex }) => queueIndex)
+}
+
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
 
@@ -72,11 +79,11 @@ const THEMES = [
   { id: 'film', label: 'Phim xưa' },
 ]
 
-function trackFromParsed(p, title = '') {
+function trackFromParsed(p, title = '', addedAt = Date.now()) {
   if (p.type === 'playlist') {
-    return { key: nextKey(), kind: 'playlist', playlistId: p.playlistId, title: title || 'Playlist YouTube' }
+    return { key: nextKey(), kind: 'playlist', playlistId: p.playlistId, title: title || 'Playlist YouTube', addedAt }
   }
-  return { key: nextKey(), kind: 'video', videoId: p.videoId, title }
+  return { key: nextKey(), kind: 'video', videoId: p.videoId, title, addedAt }
 }
 
 export default function App() {
@@ -90,6 +97,7 @@ export default function App() {
   const [shuffle, setShuffle] = useState(() => load('vibe.shuffle', false))
   const [autoplay, setAutoplay] = useState(() => load('vibe.autoplay', true))
   const [defaultTrack, setDefaultTrack] = useState(() => load('vibe.defaultTrack', null))
+  const [recentLimit, setRecentLimit] = useState(() => load('vibe.recentLimit', 10))
 
   const [scene, setScene] = useState(() => load('vibe.scene', 'fog'))
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
@@ -107,7 +115,7 @@ export default function App() {
   )
 
   // Điều khiển hiển thị: mặc định đóng hết để thấy trọn khung cảnh
-  const [leftTab, setLeftTab] = useState(null)   // null | 'music' | 'ambient'
+  const [leftTab, setLeftTab] = useState(null)   // null | 'music'
   const [rightTab, setRightTab] = useState(null) // null | 'journal' | 'poems'
   const journalOpen = rightTab === 'journal'
   const poemsOpen = rightTab === 'poems'
@@ -115,6 +123,7 @@ export default function App() {
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
+  const [recentPlayback, setRecentPlayback] = useState(false)
   const [tagline, setTagline] = useState(() => pickTagline('dusk'))
   const [featuredPoemId, setFeaturedPoemId] = useState(null)
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
@@ -183,6 +192,7 @@ export default function App() {
   useEffect(() => save('vibe.shuffle', shuffle), [shuffle])
   useEffect(() => save('vibe.autoplay', autoplay), [autoplay])
   useEffect(() => save('vibe.defaultTrack', defaultTrack), [defaultTrack])
+  useEffect(() => save('vibe.recentLimit', recentLimit), [recentLimit])
   useEffect(() => save('vibe.supabase', supaConfig), [supaConfig])
   useEffect(() => save('vibe.ytVolume', ytVolume), [ytVolume])
   useEffect(() => save('vibe.scene', scene), [scene])
@@ -298,6 +308,7 @@ export default function App() {
   }, [unread, unreadPoems])
 
   const playAt = useCallback((i) => {
+    setRecentPlayback(false)
     setQueue((q) => {
       const t = q[i]
       if (t) { setIndex(i); yt.playTrack(t) }
@@ -305,13 +316,23 @@ export default function App() {
     })
   }, [yt])
 
-  const setOpeningTrack = useCallback((track) => setDefaultTrack(portableTrack(track)), [])
+  const playRecentAt = useCallback((i) => {
+    setRecentPlayback(true)
+    setQueue((q) => {
+      const track = q[i]
+      if (track) { setIndex(i); yt.playTrack(track) }
+      return q
+    })
+  }, [yt])
+
+  const setOpeningTrack = useCallback((track) => { setRecentPlayback(false); setDefaultTrack(portableTrack(track)) }, [])
   const clearOpeningTrack = useCallback(() => setDefaultTrack(null), [])
 
   const onAddMany = useCallback((parsedList) => {
     const list = Array.isArray(parsedList) ? parsedList : [parsedList]
     setQueue((q) => {
-      const newTracks = list.map((p) => trackFromParsed(p))
+      const stamp = Date.now()
+      const newTracks = list.map((p, offset) => trackFromParsed(p, '', stamp + offset))
       const nq = [...q, ...newTracks]
       if (q.length === 0 && newTracks.length) {
         setIndex(0)
@@ -464,14 +485,20 @@ export default function App() {
     setQueue((q) => {
       if (!q.length) return q
       let ni
-      if (shuffle && q.length > 1) {
+      const recent = recentPlayback && !defaultTrack ? recentQueueIndexes(q, recentLimit) : []
+      if (recent.length) {
+        const position = Math.max(0, recent.indexOf(index))
+        if (shuffle && recent.length > 1) {
+          do { ni = recent[Math.floor(Math.random() * recent.length)] } while (ni === index)
+        } else ni = recent[(position + 1) % recent.length]
+      } else if (shuffle && q.length > 1) {
         do { ni = Math.floor(Math.random() * q.length) } while (ni === index)
       } else {
         ni = (index + 1) % q.length
       }
       setIndex(ni); yt.playTrack(q[ni]); return q
     })
-  }, [index, yt, shuffle])
+  }, [index, yt, shuffle, recentPlayback, defaultTrack, recentLimit])
 
   // Trộn thứ tự hàng chờ ngay (giữ bài đang phát lên đầu để không ngắt nhạc)
   const shuffleNow = useCallback(() => {
@@ -499,10 +526,14 @@ export default function App() {
   const onPrev = useCallback(() => {
     setQueue((q) => {
       if (!q.length) return q
-      const pi = (index - 1 + q.length) % q.length
+      const recent = recentPlayback && !defaultTrack ? recentQueueIndexes(q, recentLimit) : []
+      const position = recent.indexOf(index)
+      const pi = recent.length
+        ? recent[(position <= 0 ? recent.length : position) - 1]
+        : (index - 1 + q.length) % q.length
       setIndex(pi); yt.playTrack(q[pi]); return q
     })
-  }, [index, yt])
+  }, [index, yt, recentPlayback, defaultTrack, recentLimit])
 
   useEffect(() => { yt.setOnEnded(onNext) }, [yt, onNext])
   useEffect(() => { yt.setOnError(onPlaybackError) }, [yt, onPlaybackError])
@@ -520,6 +551,7 @@ export default function App() {
     const prepareMusic = () => {
       if (autoStartedRef.current || cancelled) return
       if (defaultTrack) {
+        setRecentPlayback(false)
         const existingIndex = queue.findIndex((track) => sameTrack(track, defaultTrack))
         const selectedTrack = existingIndex >= 0 ? queue[existingIndex] : { key: nextKey(), ...defaultTrack }
         const selectedIndex = existingIndex >= 0 ? existingIndex : 0
@@ -534,8 +566,13 @@ export default function App() {
         return
       }
       if (queue.length) {
-        const selectedIndex = Math.max(0, Math.min(index, queue.length - 1))
+        const newest = queue
+          .map((track, queueIndex) => ({ track, queueIndex }))
+          .sort((a, b) => (Number(b.track.addedAt) || b.queueIndex) - (Number(a.track.addedAt) || a.queueIndex))
+          .slice(0, recentLimit)
+        const selectedIndex = newest[0]?.queueIndex ?? Math.max(0, Math.min(index, queue.length - 1))
         const track = queue[selectedIndex]
+        setRecentPlayback(true)
         autoStartedRef.current = true
         setIndex(selectedIndex)
         pendingAutoRef.current = autoplay
@@ -566,7 +603,7 @@ export default function App() {
     if (queue.length || (playlists || []).some((pl) => pl.tracks && pl.tracks.length)) prepareMusic()
     else { const timer = setTimeout(prepareMusic, 1500); return () => { cancelled = true; clearTimeout(timer) } }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [yt.ready, autoplay, defaultTrack, playlists, queue, index, roomHydrated, roomSettings.enabled])
+  }, [yt.ready, autoplay, defaultTrack, playlists, queue, index, recentLimit, roomHydrated, roomSettings.enabled])
   useEffect(() => {
     const kick = () => {
       const y = ytLiveRef.current
@@ -647,8 +684,8 @@ export default function App() {
     const nextAutoplay = typeof s.autoplay === 'boolean' ? s.autoplay : autoplay
     const nextDefaultTrack = Object.prototype.hasOwnProperty.call(s, 'default_track') ? portableTrack(s.default_track) : defaultTrack
     const storedQueue = Array.isArray(s.queue)
-      ? s.queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }))
-      : queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }))
+      ? s.queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }))
+      : queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }))
     const nextIndex = storedQueue.length
       ? Math.max(0, Math.min(Number.isInteger(s.q_index) ? s.q_index : 0, storedQueue.length - 1))
       : 0
@@ -702,7 +739,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedVisualSig, admin, roomSettings.enabled, roomSettings.ready, roomHydrated])
 
-  const sharedQueue = queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }))
+  const sharedQueue = queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }))
   const sharedMusicPayload = {
     queue: sharedQueue,
     q_index: sharedQueue.length ? Math.max(0, Math.min(index, sharedQueue.length - 1)) : 0,
@@ -783,8 +820,6 @@ export default function App() {
 
   // Máy có WebGL -> dùng LeafEngine (3D); không thì rơi về hiệu ứng CSS.
   const webglOK = useMemo(() => hasWebGL(), [])
-  const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
-
   return (
     <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''} ${rightTab ? 'is-right-open' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
@@ -821,18 +856,16 @@ export default function App() {
           </div>
         </header>
 
-        {/* Drawer trái: Nhạc / Không gian (trượt từ cạnh trái) */}
+        {/* Drawer trái: Nhạc (trượt từ cạnh trái) */}
         <aside className={`drawer drawer--left ${leftTab ? 'is-open' : ''}`}>
           <div className="drawer__tabs">
-            <button className={`drawer__tab ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => setLeftTab('music')}><IconMusic width="16" height="16" /> Nhạc</button>
-            <button className={`drawer__tab ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => setLeftTab('ambient')}><IconAmbient width="16" height="16" /> Không gian</button>
+            <strong className="drawer__title">Nhạc</strong>
             <button className="drawer__close" onClick={() => setLeftTab(null)} title="Đóng">✕</button>
           </div>
           <div className="drawer__body">
-            {leftKind === 'music' ? (
-              <Player
+            <Player
                 queue={queue} index={index} nowTitle={yt.nowTitle}
-                onAddMany={onAddMany} onSelect={playAt} onRemove={onRemove} onClear={onClear}
+                onAddMany={onAddMany} onSelect={playAt} onSelectRecent={playRecentAt} onRemove={onRemove} onClear={onClear}
                 showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
                 shuffle={shuffle} onToggleShuffle={onToggleShuffle}
                 playlists={playlists} onSavePlaylist={savePlaylist}
@@ -841,10 +874,8 @@ export default function App() {
                 onMoveTrack={moveTrack} onRemoveFromPlaylist={removeFromPlaylist} onRenamePlaylist={renamePlaylist}
                 admin={admin} defaultTrack={defaultTrack}
                 onSetDefaultTrack={setOpeningTrack} onClearDefaultTrack={clearOpeningTrack}
+                recentLimit={recentLimit} onRecentLimitChange={setRecentLimit}
               />
-            ) : (
-              <AmbientMixer ambient={ambient} />
-            )}
           </div>
         </aside>
 

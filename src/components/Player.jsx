@@ -2,17 +2,19 @@ import { useState } from 'react'
 import { parseYouTube, videoThumb } from '../lib/youtube'
 import { IconShuffle } from './icons'
 
-// Panel "Nhạc" — 2 tab con:
-//  • Thư viện: playlist đã lưu + hàng chờ (danh sách bài), gọn như app nghe nhạc.
+// Panel "Nhạc" — 3 tab con:
+//  • Mới đăng: các bài vừa được thêm gần nhất.
+//  • Thư viện: playlist đã lưu + hàng chờ (danh sách bài).
 //  • Thêm nhạc: dán link (vào hàng chờ / playlist có sẵn / playlist mới) + lưu playlist.
 export default function Player({
-  queue, index, onAddMany, onSelect, onRemove, onClear,
+  queue, index, onAddMany, onSelect, onSelectRecent, onRemove, onClear,
   showVideo, onToggleVideo, shuffle, onToggleShuffle,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
   onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist, onRenamePlaylist,
   admin, defaultTrack, onSetDefaultTrack, onClearDefaultTrack,
+  recentLimit, onRecentLimitChange,
 }) {
-  const [tab, setTab] = useState('library')        // 'library' | 'add'
+  const [tab, setTab] = useState('recent')         // 'recent' | 'library' | 'add'
   const [editPlId, setEditPlId] = useState(null)   // id playlist đang đổi tên
   const [plRename, setPlRename] = useState('')
   const [input, setInput] = useState('')
@@ -68,10 +70,17 @@ export default function Player({
   }
 
   const targetValid = target === '__queue__' || target === '__new__' || playlists.some((p) => p.id === target)
+  const recentTracks = queue
+    .map((track, queueIndex) => ({ track, queueIndex }))
+    .sort((a, b) => (Number(b.track.addedAt) || b.queueIndex) - (Number(a.track.addedAt) || a.queueIndex))
+    .slice(0, recentLimit)
 
   return (
     <div className="pane">
       <div className="player__tabs" role="tablist">
+        <button role="tab" aria-selected={tab === 'recent'}
+          className={`player__tab ${tab === 'recent' ? 'is-active' : ''}`}
+          onClick={() => setTab('recent')}>Mới đăng</button>
         <button role="tab" aria-selected={tab === 'library'}
           className={`player__tab ${tab === 'library' ? 'is-active' : ''}`}
           onClick={() => setTab('library')}>♫ Thư viện</button>
@@ -82,7 +91,41 @@ export default function Player({
 
       {note && <div className="form-note">{note}</div>}
 
-      {tab === 'add' ? (
+      {tab === 'recent' ? (
+        <div className="player__recent">
+          <div className="recent__head">
+            <div><strong>Bài mới nhất</strong><span>{recentTracks.length}/{queue.length} bài</span></div>
+            <label>Hiển thị
+              <select value={recentLimit} onChange={(event) => onRecentLimitChange(Number(event.target.value))}>
+                {[10, 15, 20, 25].map((value) => <option key={value} value={value}>{value}</option>)}
+              </select>
+            </label>
+          </div>
+          <p className="recent__hint">Khi chưa ghim bài mặc định, trang sẽ bắt đầu từ bài mới nhất trong danh sách này.</p>
+          <ul className="queue queue--recent">
+            {recentTracks.map(({ track, queueIndex }, rank) => (
+              <li key={track.key} className={`queue__item ${queueIndex === index ? 'is-current' : ''}`}>
+                <span className="recent__rank">{String(rank + 1).padStart(2, '0')}</span>
+                <button className="queue__play" onClick={() => onSelectRecent(queueIndex)}>
+                  {track.kind === 'playlist'
+                    ? <span className="queue__thumb queue__thumb--list">≡</span>
+                    : <img className="queue__thumb" src={videoThumb(track.videoId, 'default')} alt="" loading="lazy" />}
+                  <span className="queue__label"><span className="queue__name">{track.title || (track.kind === 'playlist' ? 'Playlist' : 'Video')}</span></span>
+                </button>
+                {admin && queueIndex === index && (
+                  <button className={`queue__default ${sameTrack(track, defaultTrack) ? 'is-on' : ''}`}
+                    onClick={() => sameTrack(track, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(track)}
+                    title={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}
+                    aria-label={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định' : 'Đặt bài hát mặc định'}>
+                    {sameTrack(track, defaultTrack) ? '★' : '☆'}
+                  </button>
+                )}
+              </li>
+            ))}
+            {!recentTracks.length && <li className="queue__empty">Chưa có bài nào được đăng.</li>}
+          </ul>
+        </div>
+      ) : tab === 'add' ? (
         <div className="player__addview">
           <form className="player__add" onSubmit={submit}>
             <textarea rows={2}
