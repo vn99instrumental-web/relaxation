@@ -682,10 +682,13 @@ input[type='range']:disabled { opacity: 0.4; }
 /* ============ GÓC THƠ ============ */
 .poems { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .poem-compose { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; flex-shrink: 0; }
+.poem-compose__hint { color: var(--gold-soft); font-family: var(--serif-body); font-size: 0.76rem; font-style: italic; }
 .poem-title { background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 9px; font-size: 0.8rem; font-family: var(--chat); font-weight: 600; }
 .poem-body { resize: vertical; min-height: 52px; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 9px; font-size: 0.82rem; line-height: 1.5; font-family: var(--chat); }
-.poem-title:focus, .poem-body:focus, .pcm-add input:focus { outline: none; border-color: var(--border-strong); }
-.poem-compose__bar { display: flex; justify-content: flex-end; }
+.poem-image-url { width: 100%; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 9px; font-size: 0.78rem; font-family: var(--ui); }
+.poem-title:focus, .poem-body:focus, .poem-image-url:focus, .pcm-add input:focus { outline: none; border-color: var(--border-strong); }
+.poem-compose__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.poem-compose__bar span { color: var(--ink-dim); font-size: 0.65rem; line-height: 1.25; }
 .poem-compose__bar button { background: var(--pine-soft); border: none; color: var(--ink); padding: 7px 16px; border-radius: 9px; font-size: 0.8rem; }
 .poem-compose__bar button:disabled { opacity: 0.5; }
 .poem-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
@@ -693,10 +696,23 @@ input[type='range']:disabled { opacity: 0.4; }
 .poem__head { display: flex; align-items: baseline; gap: 8px; }
 .poem__author { font-family: var(--ui); font-size: 0.74rem; font-weight: 600; color: var(--gold-soft); }
 .poem__time { font-size: 0.66rem; color: var(--ink-dim); }
-.poem__del { margin-left: auto; background: none; border: none; color: var(--ink-dim); font-size: 0.7rem; opacity: 0.6; }
+.poem__edit, .poem__del { background: none; border: none; color: var(--ink-dim); font-size: 0.7rem; opacity: 0.65; padding: 2px 4px; }
+.poem__edit { margin-left: auto; }
+.poem__edit:hover { color: var(--gold-soft); opacity: 1; }
 .poem__del:hover { color: var(--rose); opacity: 1; }
 .poem__title { font-family: var(--chat); font-weight: 700; font-size: 0.95rem; margin: 6px 0 4px; color: var(--gold-soft); letter-spacing: 0.01em; }
+.poem__image-wrap { position: relative; margin: 8px 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--field-bg); }
+.poem__image-wrap.is-preview { max-height: 130px; margin: 0; }
+.poem__image { display: block; width: 100%; max-height: 280px; object-fit: cover; }
+.poem__image-wrap.is-preview .poem__image { max-height: 130px; }
+.poem__image-error { display: none; padding: 12px; color: var(--rose); font-size: 0.72rem; text-align: center; }
+.poem__image-wrap.is-error .poem__image { display: none; }
+.poem__image-wrap.is-error .poem__image-error { display: block; }
 .poem__body { font-family: var(--chat); font-size: 0.83rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--ink); }
+.poem-edit-box { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; }
+.poem-edit-actions { display: flex; justify-content: flex-end; align-items: center; gap: 9px; }
+.poem-edit-save { border: none; background: var(--pine-soft); color: var(--ink); padding: 6px 12px; border-radius: 8px; font-size: 0.76rem; }
+.poem-edit-save:disabled { opacity: 0.5; }
 .poem__toggle { margin-top: 8px; background: none; border: none; color: var(--ink-dim); font-size: 0.74rem; padding: 2px 0; }
 .poem__toggle:hover { color: var(--gold-soft); }
 .poem__comments { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
@@ -803,6 +819,7 @@ input[type='range']:disabled { opacity: 0.4; }
   .dock__btn span { display: none; }
   .dock__btn:not(.dock__btn--icon) { min-width: 0; }
   .dock__vol { display: none; }
+  .app.is-right-open .dock__now { display: none; }
 }
 /* Mở panel trái (Nhạc/Không gian) trên màn hình rộng -> dời dock sang phải và
    thu gọn (ẩn "đang phát"), kéo dài panel trái xuống đáy để có thêm không gian. */
@@ -841,6 +858,11 @@ input[type='range']:disabled { opacity: 0.4; }
   .drawer--left { border-right: none; }
   .drawer--right { border-left: none; }
   .drawer__body { padding: 12px; }
+  .poem-compose { gap: 5px; margin-bottom: 8px; }
+  .poem-compose__hint { font-size: 0.7rem; }
+  .poem-title, .poem-body, .poem-image-url { font-size: 0.76rem; padding: 7px 9px; }
+  .poem-body { min-height: 46px; }
+  .poem-compose__bar span { font-size: 0.6rem; }
   .journal__compose, .journal__name { gap: 6px; }
   .journal__whoami { max-width: 64px; padding: 9px 7px; font-size: 0.72rem; }
   .journal__compose input { padding: 10px 11px; }

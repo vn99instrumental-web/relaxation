@@ -6,8 +6,16 @@ import { load, save } from '../lib/storage'
 // không thì lưu localStorage. Bình luận lưu trong cột jsonb của mỗi bài.
 const LOCAL_KEY = 'vibe.poems'
 const rid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+const cleanImageUrl = (value) => {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  try {
+    const url = new URL(raw)
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : ''
+  } catch { return '' }
+}
 const mapPoem = (r) => ({
-  id: r.id, author: r.author, title: r.title || '', body: r.body,
+  id: r.id, author: r.author, title: r.title || '', body: r.body, imageUrl: cleanImageUrl(r.image_url),
   comments: Array.isArray(r.comments) ? r.comments : [], ts: new Date(r.created_at).getTime(),
 })
 
@@ -37,17 +45,30 @@ export function usePoems(config, username) {
     return () => { cancelled = true; try { client.removeChannel(ch) } catch { /* ignore */ } }
   }, [enabled, url, key, room])
 
-  const addPoem = useCallback((title, body) => {
+  const addPoem = useCallback((title, body, imageUrl = '') => {
     const b = String(body || '').trim()
     if (!b) return
     const t = String(title || '').trim()
+    const image = cleanImageUrl(imageUrl)
     if (enabled && clientRef.current) {
-      clientRef.current.from('poems').insert({ room_id: room, author: username || 'Ẩn danh', title: t || null, body: b, comments: [] }).then(() => {}, () => {})
+      clientRef.current.from('poems').insert({ room_id: room, author: username || 'Ẩn danh', title: t || null, body: b, image_url: image || null, comments: [] }).then(() => {}, () => {})
     } else {
-      const next = [{ id: rid(), author: username || 'Ẩn danh', title: t, body: b, comments: [], ts: Date.now() }, ...poemsRef.current]
+      const next = [{ id: rid(), author: username || 'Ẩn danh', title: t, body: b, imageUrl: image, comments: [], ts: Date.now() }, ...poemsRef.current]
       setPoems(next); persistLocal(next)
     }
   }, [enabled, room, username, persistLocal])
+
+  const editPoem = useCallback((id, title, body, imageUrl = '') => {
+    const b = String(body || '').trim()
+    if (!b) return
+    const t = String(title || '').trim()
+    const image = cleanImageUrl(imageUrl)
+    const next = poemsRef.current.map((p) => (p.id === id ? { ...p, title: t, body: b, imageUrl: image } : p))
+    setPoems(next)
+    if (enabled && clientRef.current) {
+      clientRef.current.from('poems').update({ title: t || null, body: b, image_url: image || null }).eq('id', id).then(() => {}, () => {})
+    } else persistLocal(next)
+  }, [enabled, persistLocal])
 
   const deletePoem = useCallback((id) => {
     if (enabled && clientRef.current) clientRef.current.from('poems').delete().eq('id', id).then(() => {}, () => {})
@@ -78,5 +99,5 @@ export function usePoems(config, username) {
     writeComments(poemId, poem.comments.filter((c) => c.id !== commentId))
   }, [writeComments])
 
-  return { poems, addPoem, deletePoem, addComment, deleteComment, enabled }
+  return { poems, addPoem, editPoem, deletePoem, addComment, deleteComment, enabled }
 }

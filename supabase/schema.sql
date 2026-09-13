@@ -130,6 +130,7 @@ create table if not exists public.poems (
   author text not null,
   title text,
   body text not null,
+  image_url text,
   comments jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
 );

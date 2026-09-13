@@ -764,7 +764,7 @@ export default function App() {
   const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
 
   return (
-    <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''}`} data-theme={theme}>
+    <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''} ${rightTab ? 'is-right-open' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
       {webglOK && fx.length > 0 ? (
         <Suspense fallback={<FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />}>
@@ -858,7 +858,7 @@ export default function App() {
             {rightTab === 'poems' ? (
               <Poems
                 poems={poemsApi.poems} username={username} admin={admin}
-                onAddPoem={poemsApi.addPoem} onDeletePoem={poemsApi.deletePoem}
+                onAddPoem={poemsApi.addPoem} onEditPoem={poemsApi.editPoem} onDeletePoem={poemsApi.deletePoem}
                 onAddComment={poemsApi.addComment} onDeleteComment={poemsApi.deleteComment}
                 onClose={() => setRightTab(null)}
               />
