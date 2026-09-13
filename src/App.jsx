@@ -9,7 +9,7 @@ import Poems from './components/Poems'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
 import VideoPip from './components/VideoPip'
-import { IconMusic, IconAmbient, IconPrev, IconNext, IconPlay, IconPause, IconSettings } from './components/icons'
+import { IconMusic, IconAmbient, IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useWakeLock } from './hooks/useWakeLock'
@@ -803,11 +803,8 @@ export default function App() {
       <div className="stage">
         <header className="topbar">
           <div className="brand">
-            <div className="brand__pine-line" aria-hidden="true">
-              <img className="brand__pine-art" src="/brand-pine-branch.png" alt="" width="280" height="128" />
-            </div>
-            <div className="brand__cone" aria-hidden="true">
-              <img className="brand__pine-art" src="/brand-pine-branch.png" alt="" width="280" height="128" />
+            <div className="brand__pine" aria-hidden="true">
+              <img className="brand__pine-art" src="/brand-pine-header-v2.png" alt="" width="280" height="128" />
             </div>
             <div className="brand__name">
               <h1 className="brand__title">
@@ -821,10 +818,6 @@ export default function App() {
                 </article>
               )}
             </div>
-          </div>
-          <div className="topbar__actions">
-            <button className="icon-btn settings-trigger" onClick={() => setSettingsOpen(true)}
-              title="Cài đặt giao diện, hiệu ứng và nhạc" aria-label="Mở cài đặt"><IconSettings /></button>
           </div>
         </header>
 
@@ -868,7 +861,6 @@ export default function App() {
             ) : (
               <Journal
                 journal={journal} username={username} setUsername={setUsername}
-                onOpenSettings={() => setSettingsOpen(true)}
                 onClose={() => setRightTab(null)}
                 admin={admin}
               />
@@ -886,6 +878,7 @@ export default function App() {
         leftTab={leftTab} onToggleLeft={toggleLeft}
         journalOpen={journalOpen} onToggleJournal={() => toggleRight('journal')}
         poemsOpen={rightTab === 'poems'} onTogglePoems={() => toggleRight('poems')}
+        onOpenSettings={() => setSettingsOpen(true)}
         onHideUI={() => setUiHidden(true)}
       />
 

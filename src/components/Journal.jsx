@@ -14,8 +14,8 @@ const REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🔥']
 
 // Cuốn nhật ký chung 2 người. Hiển thị tin nhắn nhóm theo ngày,
 // ô nhập tên + ô soạn tin. Trạng thái kết nối Gist ở góc.
-// props: journal (hook useGistSync), username, setUsername, onOpenSettings
-export default function Journal({ journal, username, setUsername, onOpenSettings, onClose, admin }) {
+// props: journal (hook useGistSync), username, setUsername
+export default function Journal({ journal, username, setUsername, onClose, admin }) {
   const { messages, status, error, sending, online, send, refresh, deleteMessage, editMessage, reactMessage, clearMessages } = journal
 
   const removeOne = (id) => { if (deleteMessage && window.confirm('Xoá tin nhắn này? Không thể hoàn tác.')) deleteMessage(id) }
@@ -100,7 +100,6 @@ export default function Journal({ journal, username, setUsername, onOpenSettings
           {admin && messages.length > 0 && (
             <button className="link-btn" onClick={clearAll} title="Xóa toàn bộ nhật ký">🗑</button>
           )}
-          <button className="link-btn" onClick={onOpenSettings} title="Cài đặt đồng bộ">⚙</button>
           {onClose && <button className="link-btn" onClick={onClose} title="Đóng">✕</button>}
         </div>
       </header>

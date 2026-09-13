@@ -1,12 +1,12 @@
 // Thanh điều khiển mỏng ở đáy màn hình: thông tin bài đang phát + nút phát,
 // âm lượng, và các nút mở/đóng panel (Nhạc / Không gian / Nhật ký).
-import { IconMusic, IconJournal, IconImmersive, IconPoem, IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
+import { IconMusic, IconJournal, IconImmersive, IconPoem, IconSettings, IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
 
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
   playlistName = '',
   shuffle, onToggleShuffle, unread = 0, unreadPoems = 0,
-  leftTab, onToggleLeft, journalOpen, onToggleJournal, poemsOpen, onTogglePoems, onHideUI,
+  leftTab, onToggleLeft, journalOpen, onToggleJournal, poemsOpen, onTogglePoems, onOpenSettings, onHideUI,
 }) {
   const title = yt.nowTitle || queue[index]?.title || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
   const duration = Number(yt.duration) || 0
@@ -67,6 +67,10 @@ export default function Dock({
           title="Góc Thơ — đăng thơ & bình luận cùng nhau">
           <IconPoem /><span>Thơ</span>
           {!poemsOpen && unreadPoems > 0 && <span className="dock__notif">✍️ {unreadPoems > 9 ? '9+' : unreadPoems} mới</span>}
+        </button>
+        <button className="dock__btn dock__btn--icon dock__btn--settings" onClick={onOpenSettings}
+          title="Cài đặt giao diện, hiệu ứng và nhạc" aria-label="Mở cài đặt">
+          <IconSettings />
         </button>
         <button className="dock__btn dock__btn--icon" onClick={onHideUI} title="Ẩn giao diện — chỉ ngắm cảnh">
           <IconImmersive />
