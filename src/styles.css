@@ -287,16 +287,16 @@ input, textarea { font-family: inherit; }
 .stage > * { pointer-events: auto; }
 
 .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.brand { --brand-indent: 74px; min-width: 0; max-width: 100%; padding-left: calc(var(--brand-indent) - var(--stage-gutter)); }
-/* The branch enters from the scene edge. A clipped foreground copy lets a few
-   needles cross the lettering while the cone stays behind it. */
-.brand__mark { position: absolute; z-index: 0; left: calc(-1 * var(--brand-indent) - 6px); top: -8px; width: 146px; height: auto; transform: rotate(-8deg); transform-origin: 0 12%; pointer-events: none; transition: filter 0.45s ease; filter: drop-shadow(0 3px 7px rgba(0,0,0,0.58)); }
-.brand__mark--back { z-index: 0; }
-.brand__mark--front { z-index: 2; clip-path: polygon(48% 0, 100% 0, 100% 43%, 72% 40%, 48% 30%); opacity: 0.88; }
-.app[data-theme='dusk'] .brand__mark { filter: sepia(0.2) saturate(1.15) brightness(1.08) drop-shadow(0 3px 8px rgba(69,35,12,0.62)); }
-.app[data-theme='rain'] .brand__mark { filter: saturate(0.72) hue-rotate(12deg) brightness(0.9) contrast(1.08) drop-shadow(0 3px 9px rgba(5,24,35,0.72)); }
-.app[data-theme='morning'] .brand__mark { filter: saturate(0.82) brightness(1.18) contrast(0.94) drop-shadow(0 3px 7px rgba(72,67,42,0.3)); }
-.app[data-theme='film'] .brand__mark { filter: sepia(0.52) saturate(0.68) contrast(0.92) brightness(0.98) drop-shadow(0 3px 8px rgba(38,29,20,0.64)); }
+.brand { position: relative; width: min(460px, calc(100vw - 86px)); min-width: 0; padding-top: 42px; }
+.brand__pine-line { position: absolute; z-index: 0; top: -16px; left: calc(-1 * var(--stage-gutter)); width: calc(100% - 38px); height: 57px; overflow: hidden; pointer-events: none; }
+.brand__pine-line .brand__pine-art { position: absolute; top: 0; left: 0; width: 100%; height: auto; transform: scaleY(0.86); transform-origin: top left; }
+.brand__cone { position: absolute; z-index: 2; top: 0; right: 0; width: 58px; height: 82px; overflow: hidden; pointer-events: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,0.52)); }
+.brand__cone .brand__pine-art { position: absolute; top: -5px; left: -59px; width: 188px; max-width: none; height: auto; }
+.brand__pine-art { transition: filter 0.45s ease; filter: drop-shadow(0 3px 7px rgba(0,0,0,0.58)); }
+.app[data-theme='dusk'] .brand__pine-art { filter: sepia(0.2) saturate(1.15) brightness(1.08) drop-shadow(0 3px 8px rgba(69,35,12,0.62)); }
+.app[data-theme='rain'] .brand__pine-art { filter: saturate(0.72) hue-rotate(12deg) brightness(0.9) contrast(1.08) drop-shadow(0 3px 9px rgba(5,24,35,0.72)); }
+.app[data-theme='morning'] .brand__pine-art { filter: saturate(0.82) brightness(1.18) contrast(0.94) drop-shadow(0 3px 7px rgba(72,67,42,0.3)); }
+.app[data-theme='film'] .brand__pine-art { filter: sepia(0.52) saturate(0.68) contrast(0.92) brightness(0.98) drop-shadow(0 3px 8px rgba(38,29,20,0.64)); }
 .brand__name { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; max-width: 280px; line-height: 1.08; }
 .brand__title { position: relative; isolation: isolate; max-width: 100%; margin: 0; line-height: 0; }
 .brand__wordmark { position: relative; z-index: 1; display: block; width: clamp(176px, 20vw, 210px); max-width: 100%; height: auto; transform: translateX(-1.85%); transition: filter 0.45s ease; }
@@ -318,6 +318,8 @@ input, textarea { font-family: inherit; }
 .scene-tab.is-active { background: var(--sel); color: var(--ink); }
 .icon-btn { border: 1px solid var(--border); background: var(--panel); color: var(--ink); width: 40px; height: 40px; border-radius: 10px; font-size: 1.1rem; backdrop-filter: blur(8px); transition: 0.25s; }
 .icon-btn:hover { border-color: var(--border-strong); }
+.settings-trigger { display: grid; place-items: center; color: var(--gold-soft); background: linear-gradient(145deg, var(--surface-2), var(--panel)); box-shadow: 0 3px 12px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.04); }
+.settings-trigger svg { width: 20px; height: 20px; }
 
 /* Bộ chọn giao diện — nút dropdown + danh sách (độc lập với ảnh nền) */
 .theme-select-wrap { position: relative; }
@@ -558,6 +560,8 @@ input, textarea { font-family: inherit; }
 .queue__name { font-size: 0.78rem; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .queue__remove { background: none; border: none; color: var(--ink-dim); font-size: 0.78rem; padding: 5px; border-radius: 6px; }
 .queue__remove:hover { color: var(--rose); }
+.queue__default { width: 28px; height: 28px; flex: 0 0 28px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--gold-soft); font-size: 1rem; line-height: 1; }
+.queue__default:hover, .queue__default.is-on { border-color: var(--gold-soft); background: var(--sel); color: var(--gold); }
 .queue__empty { color: var(--ink-dim); font-size: 0.8rem; padding: 12px 6px; text-align: center; font-family: var(--serif-body); font-style: italic; }
 
 /* ============ KHÔNG GIAN (mixer) ============ */
@@ -681,7 +685,12 @@ input[type='range']:disabled { opacity: 0.4; }
 
 /* ============ GÓC THƠ ============ */
 .poems { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.poem-pane-head { padding-bottom: 8px; }
+.poem-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0 0 10px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--field-bg); flex-shrink: 0; }
+.poem-tabs button { border: 0; border-radius: 7px; padding: 7px 10px; background: transparent; color: var(--ink-dim); font-size: 0.76rem; }
+.poem-tabs button.is-active { background: var(--sel); color: var(--gold-soft); box-shadow: inset 0 0 0 1px var(--border); }
 .poem-compose { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; flex-shrink: 0; }
+.poem-compose--page { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
 .poem-compose__hint { color: var(--gold-soft); font-family: var(--serif-body); font-size: 0.76rem; font-style: italic; }
 .poem-title { background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 9px; font-size: 0.8rem; font-family: var(--chat); font-weight: 600; }
 .poem-body { resize: vertical; min-height: 52px; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 9px; font-size: 0.82rem; line-height: 1.5; font-family: var(--chat); }
@@ -691,16 +700,19 @@ input[type='range']:disabled { opacity: 0.4; }
 .poem-compose__bar span { color: var(--ink-dim); font-size: 0.65rem; line-height: 1.25; }
 .poem-compose__bar button { background: var(--pine-soft); border: none; color: var(--ink); padding: 7px 16px; border-radius: 9px; font-size: 0.8rem; }
 .poem-compose__bar button:disabled { opacity: 0.5; }
+.poem-compose__actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.poem-url-error { color: var(--rose); font-size: 0.7rem; }
 .poem-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
 .poem { border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: 12px 14px; }
+.poem--reading { position: relative; padding: 14px 15px 16px; }
+.poem__actions { position: absolute; z-index: 2; top: 8px; right: 9px; display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: color-mix(in srgb, var(--panel-solid) 78%, transparent); backdrop-filter: blur(5px); }
 .poem__head { display: flex; align-items: baseline; gap: 8px; }
 .poem__author { font-family: var(--ui); font-size: 0.74rem; font-weight: 600; color: var(--gold-soft); }
 .poem__time { font-size: 0.66rem; color: var(--ink-dim); }
 .poem__edit, .poem__del { background: none; border: none; color: var(--ink-dim); font-size: 0.7rem; opacity: 0.65; padding: 2px 4px; }
-.poem__edit { margin-left: auto; }
 .poem__edit:hover { color: var(--gold-soft); opacity: 1; }
 .poem__del:hover { color: var(--rose); opacity: 1; }
-.poem__title { font-family: var(--chat); font-weight: 700; font-size: 0.95rem; margin: 6px 0 4px; color: var(--gold-soft); letter-spacing: 0.01em; }
+.poem__title { font-family: var(--chat); font-weight: 700; font-size: 0.95rem; margin: 0 0 7px; padding-right: 48px; color: var(--gold-soft); letter-spacing: 0.01em; }
 .poem__image-wrap { position: relative; margin: 8px 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--field-bg); }
 .poem__image-wrap.is-preview { max-height: 130px; margin: 0; }
 .poem__image { display: block; width: 100%; max-height: 280px; object-fit: cover; }
@@ -732,12 +744,26 @@ input[type='range']:disabled { opacity: 0.4; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(10, 6, 3, 0.66); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; padding: 20px; }
 .modal { background: var(--panel-solid); border: 1px solid var(--border-strong); border-radius: 16px; width: min(560px, 100%); max-height: 88vh; display: flex; flex-direction: column; box-shadow: var(--shadow); }
 .modal__head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); }
-.modal__head h2 { font-family: var(--serif); font-size: 1.3rem; }
+.modal__head h2 { display: flex; align-items: center; gap: 8px; font-family: var(--serif); font-size: 1.3rem; }
+.modal__head h2 svg { width: 21px; height: 21px; color: var(--gold-soft); }
 .modal__close { background: none; border: none; color: var(--ink-dim); font-size: 1.1rem; }
 .modal__close:hover { color: var(--ink); }
 .modal__body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
 
-.settings-block h3 { font-family: var(--serif); font-size: 1.05rem; margin-bottom: 12px; }
+.settings-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--field-bg); }
+.settings-tab { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; padding: 8px 5px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--ink-dim); font-size: 0.75rem; }
+.settings-tab svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.settings-tab.is-active { color: var(--gold-soft); border-color: var(--border); background: var(--sel); }
+.settings-tabbody { min-height: 310px; }
+.settings-block h3 { display: flex; align-items: center; gap: 7px; font-family: var(--serif); font-size: 1.05rem; margin-bottom: 12px; }
+.settings-block h3 svg { width: 18px; height: 18px; color: var(--gold-soft); }
+.settings-subhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 22px; }
+.settings-subhead h3 { margin: 0; }
+.settings-switch { display: flex; align-items: center; gap: 6px; color: var(--ink-dim); font-size: 0.75rem; white-space: nowrap; }
+.settings-switch input { accent-color: var(--gold); }
+.theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.theme-card { display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; padding: 9px 6px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink-dim); font-size: 0.76rem; }
+.theme-card.is-active { border-color: var(--gold-soft); background: var(--sel); color: var(--ink); }
 .settings-note { font-size: 0.82rem; color: var(--ink-dim); line-height: 1.65; margin: 0 0 12px; font-family: var(--serif-body); }
 .settings-note code, .settings-steps code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; font-size: 0.8em; font-family: ui-monospace, monospace; }
 .settings-steps { font-size: 0.82rem; color: var(--ink-dim); line-height: 1.7; margin: 0 0 14px; padding-left: 18px; font-family: var(--serif-body); }
@@ -819,7 +845,7 @@ input[type='range']:disabled { opacity: 0.4; }
   .dock__btn span { display: none; }
   .dock__btn:not(.dock__btn--icon) { min-width: 0; }
   .dock__vol { display: none; }
-  .app.is-right-open .dock__now { display: none; }
+  .app.is-left-open .dock__now, .app.is-right-open .dock__now { display: none; }
 }
 /* Mở panel trái (Nhạc/Không gian) trên màn hình rộng -> dời dock sang phải và
    thu gọn (ẩn "đang phát"), kéo dài panel trái xuống đáy để có thêm không gian. */
@@ -840,15 +866,18 @@ input[type='range']:disabled { opacity: 0.4; }
   .stage { --stage-gutter: 12px; padding: 12px var(--stage-gutter); }
   .topbar { display: block; }
   .topbar__actions { position: absolute; top: 12px; right: 12px; }
-  .brand { --brand-indent: 56px; }
-  .brand__name { max-width: calc(100vw - 68px); }
-  .brand__tagline { display: block; max-width: min(180px, calc(100vw - 180px)); font-size: 0.58rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .brand__poem { width: calc(100vw - 68px); max-width: none; padding: 4px 6px 5px; }
+  .brand { width: calc(100vw - 68px); padding-top: 36px; }
+  .brand__pine-line { top: -12px; width: calc(100% - 29px); height: 48px; }
+  .brand__pine-line .brand__pine-art { width: 118%; }
+  .brand__cone { top: -1px; right: 0; width: 47px; height: 70px; }
+  .brand__cone .brand__pine-art { top: -4px; left: -51px; width: 164px; }
+  .brand__name { max-width: 100%; }
+  .brand__tagline { display: block; max-width: 100%; font-size: 0.58rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brand__poem { width: 100%; max-width: none; padding: 4px 6px 5px; }
   .brand__poem-head { font-size: 0.62rem; }
   .brand__poem-head strong { font-size: 0.65rem; }
   .brand__poem-body { display: block; overflow: visible; -webkit-line-clamp: unset; font-size: 0.61rem; line-height: 1.26; }
   .brand__wordmark { width: 138px; }
-  .brand__mark { width: 116px; top: -6px; }
   .topbar { gap: 10px; }
   .topbar__actions { gap: 7px; }
   .theme-select { padding: 7px 10px; gap: 6px; }
@@ -863,6 +892,14 @@ input[type='range']:disabled { opacity: 0.4; }
   .poem-title, .poem-body, .poem-image-url { font-size: 0.76rem; padding: 7px 9px; }
   .poem-body { min-height: 46px; }
   .poem-compose__bar span { font-size: 0.6rem; }
+  .poem-compose__bar { align-items: flex-end; }
+  .poem--reading { padding: 12px 12px 14px; }
+  .poem__image { max-height: 240px; }
+  .settings-tabs { gap: 2px; padding: 6px; }
+  .settings-tab { flex-direction: column; gap: 3px; padding: 6px 2px; font-size: 0.64rem; }
+  .settings-tab svg { width: 15px; height: 15px; }
+  .theme-grid { grid-template-columns: repeat(2, 1fr); }
+  .settings-modal .modal__body { padding: 15px; }
   .journal__compose, .journal__name { gap: 6px; }
   .journal__whoami { max-width: 64px; padding: 9px 7px; font-size: 0.72rem; }
   .journal__compose input { padding: 10px 11px; }

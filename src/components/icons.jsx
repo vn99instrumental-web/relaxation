@@ -39,3 +39,16 @@ export const IconShuffle = (p) => (
     <path d="m18 4 3 3-3 3" />
   </svg>
 )
+
+export const IconSettings = (p) => (
+  <svg {...base} {...p}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 00-1.88-.34 1.7 1.7 0 00-1.04 1.55V20h-3v-.09a1.7 1.7 0 00-1.04-1.55 1.7 1.7 0 00-1.88.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 007 14.7a1.7 1.7 0 00-1.55-1.04H5.3v-3h.09A1.7 1.7 0 006.94 9.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.12-2.12.06.06a1.7 1.7 0 001.88.34A1.7 1.7 0 0011.64 4.4V4.3h3v.09a1.7 1.7 0 001.04 1.55 1.7 1.7 0 001.88-.34l.06-.06 2.12 2.12-.06.06a1.7 1.7 0 00-.34 1.88 1.7 1.7 0 001.55 1.04H21v3h-.09A1.7 1.7 0 0019.4 15z" /></svg>
+)
+export const IconPalette = (p) => (
+  <svg {...base} {...p}><path d="M12 3a9 9 0 100 18h1.5a1.7 1.7 0 001.2-2.9 1.7 1.7 0 011.2-2.9H18A3 3 0 0021 12a9 9 0 00-9-9z" /><circle cx="7.5" cy="11" r=".8" fill="currentColor" /><circle cx="10" cy="7" r=".8" fill="currentColor" /><circle cx="15" cy="7.5" r=".8" fill="currentColor" /></svg>
+)
+export const IconImage = (p) => (
+  <svg {...base} {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9" r="1.5" /><path d="m4 17 5-5 3.5 3 2.5-2 5 4" /></svg>
+)
+export const IconShield = (p) => (
+  <svg {...base} {...p}><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6l-7-3z" /><path d="m9 12 2 2 4-4" /></svg>
+)

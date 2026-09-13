@@ -1,6 +1,6 @@
 // Thanh điều khiển mỏng ở đáy màn hình: thông tin bài đang phát + nút phát,
 // âm lượng, và các nút mở/đóng panel (Nhạc / Không gian / Nhật ký).
-import { IconMusic, IconAmbient, IconJournal, IconImmersive, IconPoem, IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
+import { IconMusic, IconJournal, IconImmersive, IconPoem, IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
 
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
@@ -57,10 +57,6 @@ export default function Dock({
         <button className={`dock__btn ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => onToggleLeft('music')}
           title="Nhạc — danh sách bài hát & playlist (thêm link YouTube)">
           <IconMusic /><span>Nhạc</span>
-        </button>
-        <button className={`dock__btn ${leftTab === 'ambient' ? 'is-active' : ''}`} onClick={() => onToggleLeft('ambient')}
-          title="Không gian — âm thanh nền: mưa, gió, suối, chim">
-          <IconAmbient /><span>Không gian</span>
         </button>
         <button className={`dock__btn dock__btn--journal ${journalOpen ? 'is-active' : ''}`} onClick={onToggleJournal}
           title="Nhật ký chung — nhắn tin cho nhau">

@@ -10,6 +10,7 @@ export default function Player({
   showVideo, onToggleVideo, shuffle, onToggleShuffle,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
   onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist, onRenamePlaylist,
+  admin, defaultTrack, onSetDefaultTrack, onClearDefaultTrack,
 }) {
   const [tab, setTab] = useState('library')        // 'library' | 'add'
   const [editPlId, setEditPlId] = useState(null)   // id playlist đang đổi tên
@@ -141,6 +142,14 @@ export default function Player({
                       <span className="queue__name">{t.title || (t.kind === 'playlist' ? 'Playlist' : 'Video')}</span>
                     </span>
                   </button>
+                  {admin && i === index && (
+                    <button className={`queue__default ${sameTrack(t, defaultTrack) ? 'is-on' : ''}`}
+                      onClick={() => sameTrack(t, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(t)}
+                      title={sameTrack(t, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}
+                      aria-label={sameTrack(t, defaultTrack) ? 'Bỏ bài hát mặc định' : 'Đặt bài hát mặc định'}>
+                      {sameTrack(t, defaultTrack) ? '★' : '☆'}
+                    </button>
+                  )}
                   <button className="queue__remove" onClick={() => onRemove(i)} title="Xóa">✕</button>
                 </li>
               ))}
@@ -216,4 +225,9 @@ export default function Player({
       )}
     </div>
   )
+}
+
+function sameTrack(a, b) {
+  if (!a || !b || a.kind !== b.kind) return false
+  return a.kind === 'playlist' ? a.playlistId === b.playlistId : a.videoId === b.videoId
 }

@@ -9,7 +9,7 @@ import Poems from './components/Poems'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
 import VideoPip from './components/VideoPip'
-import { IconMusic, IconAmbient, IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
+import { IconMusic, IconAmbient, IconPrev, IconNext, IconPlay, IconPause, IconSettings } from './components/icons'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useWakeLock } from './hooks/useWakeLock'
@@ -50,6 +50,17 @@ function queueSignature(arr) {
   ].join(':')).join('|')
 }
 
+function portableTrack(track) {
+  if (!track) return null
+  const { kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex } = track
+  return { kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }
+}
+
+function sameTrack(a, b) {
+  if (!a || !b || a.kind !== b.kind) return false
+  return a.kind === 'playlist' ? a.playlistId === b.playlistId : a.videoId === b.videoId
+}
+
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
 
@@ -78,6 +89,7 @@ export default function App() {
   const [localPlaylists, setLocalPlaylists] = useState(() => load('vibe.playlists', []))
   const [shuffle, setShuffle] = useState(() => load('vibe.shuffle', false))
   const [autoplay, setAutoplay] = useState(() => load('vibe.autoplay', true))
+  const [defaultTrack, setDefaultTrack] = useState(() => load('vibe.defaultTrack', null))
 
   const [scene, setScene] = useState(() => load('vibe.scene', 'fog'))
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
@@ -103,7 +115,6 @@ export default function App() {
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [tagline, setTagline] = useState(() => pickTagline('dusk'))
   const [featuredPoemId, setFeaturedPoemId] = useState(null)
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
@@ -111,8 +122,6 @@ export default function App() {
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
   const [seenPoemTs, setSeenPoemTs] = useState(() => load('vibe.seenPoemTs', Date.now())) // mốc thơ đã xem
   const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // mảng: leaves|petals|rain
-  const lastFxRef = useRef(fx.length ? fx : ['leaves']) // nhớ lựa chọn để bật lại
-  const toggleFx = useCallback(() => setFx((cur) => (cur.length ? [] : (lastFxRef.current.length ? lastFxRef.current : ['leaves']))), [])
   const [fxSpeed, setFxSpeed] = useState(() => { const v = load('vibe.fxSpeed', 50); return typeof v === 'number' ? v : 50 }) // 0 chậm .. 100 nhanh
   const [fxDensity, setFxDensity] = useState(() => { const v = load('vibe.fxDensity', 50); return typeof v === 'number' ? v : 50 }) // 0 thưa .. 100 dày
   const [fxSize, setFxSize] = useState(() => { const v = load('vibe.fxSize', 50); return typeof v === 'number' ? v : 50 }) // 0 nhỏ .. 100 to
@@ -173,6 +182,7 @@ export default function App() {
   useEffect(() => save('vibe.playlists', localPlaylists), [localPlaylists])
   useEffect(() => save('vibe.shuffle', shuffle), [shuffle])
   useEffect(() => save('vibe.autoplay', autoplay), [autoplay])
+  useEffect(() => save('vibe.defaultTrack', defaultTrack), [defaultTrack])
   useEffect(() => save('vibe.supabase', supaConfig), [supaConfig])
   useEffect(() => save('vibe.ytVolume', ytVolume), [ytVolume])
   useEffect(() => save('vibe.scene', scene), [scene])
@@ -187,7 +197,7 @@ export default function App() {
   useEffect(() => save('vibe.keepAwake', keepAwake), [keepAwake])
   useEffect(() => save('vibe.seenTs', seenTs), [seenTs])
   useEffect(() => save('vibe.seenPoemTs', seenPoemTs), [seenPoemTs])
-  useEffect(() => { save('vibe.fx', fx); if (fx.length) lastFxRef.current = fx }, [fx])
+  useEffect(() => save('vibe.fx', fx), [fx])
   useEffect(() => save('vibe.fxSpeed', fxSpeed), [fxSpeed])
   useEffect(() => save('vibe.fxDensity', fxDensity), [fxDensity])
   useEffect(() => save('vibe.fxSize', fxSize), [fxSize])
@@ -197,14 +207,6 @@ export default function App() {
 
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
-
-  // Đóng menu chọn giao diện khi bấm ra ngoài
-  useEffect(() => {
-    if (!themeMenuOpen) return
-    const close = (e) => { if (!e.target.closest?.('.theme-select-wrap')) setThemeMenuOpen(false) }
-    document.addEventListener('pointerdown', close)
-    return () => document.removeEventListener('pointerdown', close)
-  }, [themeMenuOpen])
 
   // Tagline dưới tên: đổi theo theme (gợi ý thời tiết) + tự xoay vòng ngẫu nhiên
   useEffect(() => {
@@ -302,6 +304,9 @@ export default function App() {
       return q
     })
   }, [yt])
+
+  const setOpeningTrack = useCallback((track) => setDefaultTrack(portableTrack(track)), [])
+  const clearOpeningTrack = useCallback(() => setDefaultTrack(null), [])
 
   const onAddMany = useCallback((parsedList) => {
     const list = Array.isArray(parsedList) ? parsedList : [parsedList]
@@ -514,6 +519,20 @@ export default function App() {
     let cancelled = false
     const prepareMusic = () => {
       if (autoStartedRef.current || cancelled) return
+      if (defaultTrack) {
+        const existingIndex = queue.findIndex((track) => sameTrack(track, defaultTrack))
+        const selectedTrack = existingIndex >= 0 ? queue[existingIndex] : { key: nextKey(), ...defaultTrack }
+        const selectedIndex = existingIndex >= 0 ? existingIndex : 0
+        if (existingIndex < 0) setQueue((q) => [selectedTrack, ...q])
+        autoStartedRef.current = true
+        setIndex(selectedIndex)
+        pendingAutoRef.current = autoplay
+        setTimeout(() => {
+          if (autoplay) ytLiveRef.current.playTrack(selectedTrack)
+          else ytLiveRef.current.cueTrack(selectedTrack)
+        }, 0)
+        return
+      }
       if (queue.length) {
         const selectedIndex = Math.max(0, Math.min(index, queue.length - 1))
         const track = queue[selectedIndex]
@@ -547,7 +566,7 @@ export default function App() {
     if (queue.length || (playlists || []).some((pl) => pl.tracks && pl.tracks.length)) prepareMusic()
     else { const timer = setTimeout(prepareMusic, 1500); return () => { cancelled = true; clearTimeout(timer) } }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [yt.ready, autoplay, playlists, queue, index, roomHydrated, roomSettings.enabled])
+  }, [yt.ready, autoplay, defaultTrack, playlists, queue, index, roomHydrated, roomSettings.enabled])
   useEffect(() => {
     const kick = () => {
       const y = ytLiveRef.current
@@ -626,6 +645,7 @@ export default function App() {
     const nextFxSwirl = boundedSetting(s.fx_swirl, fxSwirl)
     const nextVolume = boundedSetting(s.yt_volume, ytVolume)
     const nextAutoplay = typeof s.autoplay === 'boolean' ? s.autoplay : autoplay
+    const nextDefaultTrack = Object.prototype.hasOwnProperty.call(s, 'default_track') ? portableTrack(s.default_track) : defaultTrack
     const storedQueue = Array.isArray(s.queue)
       ? s.queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }))
       : queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }))
@@ -638,7 +658,7 @@ export default function App() {
       fx_speed: nextFxSpeed, fx_density: nextFxDensity, fx_size: nextFxSize,
       fx_preset: nextFxPreset, fx_wind_dir: nextFxWindDir, fx_swirl: nextFxSwirl,
     }
-    const musicPayload = { queue: storedQueue, q_index: nextIndex, yt_volume: nextVolume, autoplay: nextAutoplay }
+    const musicPayload = { queue: storedQueue, q_index: nextIndex, yt_volume: nextVolume, autoplay: nextAutoplay, default_track: nextDefaultTrack }
     sharedSettingsRef.current.visualSig = `${supaConfig.room}|${JSON.stringify(visualPayload)}`
     sharedSettingsRef.current.musicSig = `${supaConfig.room}|${JSON.stringify(musicPayload)}`
 
@@ -655,6 +675,7 @@ export default function App() {
     if (nextFxSwirl !== fxSwirl) setFxSwirl(nextFxSwirl)
     if (nextVolume !== ytVolume) setYtVolume(nextVolume)
     if (nextAutoplay !== autoplay) setAutoplay(nextAutoplay)
+    if (JSON.stringify(nextDefaultTrack) !== JSON.stringify(defaultTrack)) setDefaultTrack(nextDefaultTrack)
     if (queueSignature(storedQueue) !== queueSignature(queue)) {
       setQueue(storedQueue.map((track) => ({ key: nextKey(), ...track })))
     }
@@ -687,6 +708,7 @@ export default function App() {
     q_index: sharedQueue.length ? Math.max(0, Math.min(index, sharedQueue.length - 1)) : 0,
     yt_volume: ytVolume,
     autoplay,
+    default_track: portableTrack(defaultTrack),
   }
   const sharedMusicSig = `${supaConfig.room}|${JSON.stringify(sharedMusicPayload)}`
   useEffect(() => {
@@ -781,11 +803,15 @@ export default function App() {
       <div className="stage">
         <header className="topbar">
           <div className="brand">
+            <div className="brand__pine-line" aria-hidden="true">
+              <img className="brand__pine-art" src="/brand-pine-branch.png" alt="" width="280" height="128" />
+            </div>
+            <div className="brand__cone" aria-hidden="true">
+              <img className="brand__pine-art" src="/brand-pine-branch.png" alt="" width="280" height="128" />
+            </div>
             <div className="brand__name">
               <h1 className="brand__title">
-                <img className="brand__mark brand__mark--back" src="/brand-pine-branch.png" alt="" aria-hidden="true" width="280" height="128" />
                 <img className="brand__wordmark" src="/brand-wordmark-option4.png" alt="Dưới Tán Thông" width="600" height="133" />
-                <img className="brand__mark brand__mark--front" src="/brand-pine-branch.png" alt="" aria-hidden="true" width="280" height="128" />
               </h1>
               <p className="brand__tagline">{tagline}</p>
               {featuredPoem && (
@@ -797,33 +823,8 @@ export default function App() {
             </div>
           </div>
           <div className="topbar__actions">
-            <div className="theme-select-wrap">
-              <button className="theme-select" onClick={() => setThemeMenuOpen((o) => !o)}
-                title="Đổi tông màu giao diện (Hoàng hôn / Đêm mưa / Sáng sớm / Phim xưa)" aria-haspopup="listbox" aria-expanded={themeMenuOpen}>
-                <span className={`theme-dot theme-dot--${theme}`} />
-                <span className="theme-select__label">{THEMES.find((t) => t.id === theme)?.label || 'Giao diện'}</span>
-                <span className="theme-select__caret">▾</span>
-              </button>
-              {themeMenuOpen && (
-                <ul className="theme-menu" role="listbox">
-                  {THEMES.map((t) => (
-                    <li key={t.id} role="option" aria-selected={theme === t.id}>
-                      <button className={`theme-menu__item ${theme === t.id ? 'is-active' : ''}`}
-                        onClick={() => { setTheme(t.id); setThemeMenuOpen(false) }}>
-                        <span className={`theme-dot theme-dot--${t.id}`} />
-                        <span>{t.label}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <button className={`icon-btn ${fx.length ? '' : 'is-off'}`} onClick={toggleFx}
-              title={fx.length ? 'Tắt hiệu ứng rơi (lá / cánh hoa / mưa)' : 'Bật hiệu ứng rơi (lá / cánh hoa / mưa)'}>
-              {fx.length ? '🍃' : '🚫'}
-            </button>
-            <button className="icon-btn" onClick={() => setSettingsOpen(true)}
-              title="Cài đặt — hiệu ứng, ảnh nền, nghe nhạc, đồng bộ chung">⚙</button>
+            <button className="icon-btn settings-trigger" onClick={() => setSettingsOpen(true)}
+              title="Cài đặt giao diện, hiệu ứng và nhạc" aria-label="Mở cài đặt"><IconSettings /></button>
           </div>
         </header>
 
@@ -845,6 +846,8 @@ export default function App() {
                 onLoadPlaylist={loadPlaylist} onDeletePlaylist={deletePlaylist}
                 onAddToPlaylist={addToPlaylist} onCreatePlaylist={createPlaylistWith}
                 onMoveTrack={moveTrack} onRemoveFromPlaylist={removeFromPlaylist} onRenamePlaylist={renamePlaylist}
+                admin={admin} defaultTrack={defaultTrack}
+                onSetDefaultTrack={setOpeningTrack} onClearDefaultTrack={clearOpeningTrack}
               />
             ) : (
               <AmbientMixer ambient={ambient} />
@@ -901,9 +904,8 @@ export default function App() {
 
       <SettingsModal
         open={settingsOpen} onClose={() => setSettingsOpen(false)}
-        config={syncConfig} setConfig={setSyncConfig}
-        supaConfig={supaConfig} setSupaConfig={setSupaConfig} supaStatus={supa.status} supaError={supa.error || roomSettings.error}
         admin={admin} setAdmin={setAdmin}
+        theme={theme} setTheme={setTheme} themes={THEMES}
         keepAwake={keepAwake} setKeepAwake={setKeepAwake}
         autoplay={autoplay} setAutoplay={setAutoplay}
         fx={fx} setFx={setFx} fxSpeed={fxSpeed} setFxSpeed={setFxSpeed}
