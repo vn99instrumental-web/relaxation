@@ -853,9 +853,6 @@ export default function App() {
             <div className="brand__pine" aria-hidden="true">
               <img className="brand__pine-art" src="/brand-pine-header-v2.png" alt="" width="280" height="128" />
             </div>
-            <div className="brand__cone" aria-hidden="true">
-              <img className="brand__pine-art" src="/brand-pine-header-v2.png" alt="" width="280" height="128" />
-            </div>
             <div className="brand__name">
               <h1 className="brand__title">
                 <img className="brand__wordmark" src="/brand-wordmark-option4.png" alt="Dưới Tán Thông" width="600" height="133" />
