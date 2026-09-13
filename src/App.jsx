@@ -45,14 +45,14 @@ function boundedSetting(value, fallback) {
 function queueSignature(arr) {
   return (arr || []).map((t) => [
     t.kind || '', t.videoId || t.playlistId || '', t.title || '',
-    t.sourcePlaylistId || '', t.sourceTrackIndex ?? '', t.addedAt || '',
+    t.sourcePlaylistId || '', t.sourceTrackIndex ?? '', t.recordId || '', t.addedAt || '',
   ].join(':')).join('|')
 }
 
 function portableTrack(track) {
   if (!track) return null
-  const { kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex } = track
-  return { kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }
+  const { kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt } = track
+  return { kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt }
 }
 
 function sameTrack(a, b) {
@@ -70,6 +70,18 @@ function recentQueueIndexes(queue, limit) {
 
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
+const nextRecordId = () => globalThis.crypto?.randomUUID?.() || `music-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
+function normalizeQueueMetadata(tracks, updatedAt = Date.now()) {
+  const list = Array.isArray(tracks) ? tracks : []
+  const base = Number.isFinite(Date.parse(updatedAt)) ? Date.parse(updatedAt) : Date.now()
+  return list.map((track, index) => ({
+    ...track,
+    recordId: track.recordId || nextRecordId(),
+    // Dữ liệu cũ được backfill theo thứ tự đã thêm trong mảng: cuối mảng là mới nhất.
+    addedAt: Number(track.addedAt) || base - (list.length - 1 - index) * 1000,
+  }))
+}
 
 // Các giao diện (độc lập với ảnh nền) — bộ màu từ thiết kế Stitch
 const THEMES = [
@@ -81,16 +93,16 @@ const THEMES = [
 
 function trackFromParsed(p, title = '', addedAt = Date.now()) {
   if (p.type === 'playlist') {
-    return { key: nextKey(), kind: 'playlist', playlistId: p.playlistId, title: title || 'Playlist YouTube', addedAt }
+    return { key: nextKey(), recordId: nextRecordId(), kind: 'playlist', playlistId: p.playlistId, title: title || 'Playlist YouTube', addedAt }
   }
-  return { key: nextKey(), kind: 'video', videoId: p.videoId, title, addedAt }
+  return { key: nextKey(), recordId: nextRecordId(), kind: 'video', videoId: p.videoId, title, addedAt }
 }
 
 export default function App() {
   const yt = useYouTube('yt-frame')
   const ambient = useAmbient()
 
-  const [queue, setQueue] = useState(() => load('vibe.queue', []))
+  const [queue, setQueue] = useState(() => normalizeQueueMetadata(load('vibe.queue', [])))
   const [index, setIndex] = useState(0)
   const [ytVolume, setYtVolume] = useState(() => load('vibe.ytVolume', 70))
   const [localPlaylists, setLocalPlaylists] = useState(() => load('vibe.playlists', []))
@@ -158,7 +170,7 @@ export default function App() {
     return msgs.filter((m) => m.user && m.user !== username && (m.ts || 0) > seenTs).length
   }, [journal.messages, username, seenTs])
 
-  // Số bài thơ mới (của người kia, chưa xem)
+  // Số bài Hoài Niệm mới (của người kia, chưa xem)
   const unreadPoems = useMemo(() => {
     const list = poemsApi.poems || []
     return list.filter((p) => p.author && p.author !== username && (p.ts || 0) > seenPoemTs).length
@@ -225,7 +237,7 @@ export default function App() {
     return () => clearInterval(id)
   }, [theme])
 
-  // Mỗi lần mở/reload trang chọn một bài thơ từ Góc Thơ. Nếu có nhiều bài,
+  // Mỗi lần mở/reload trang chọn một đoạn từ Góc Hoài Niệm. Nếu có nhiều bài,
   // tránh lặp lại bài đã hiện ở lần truy cập ngay trước đó.
   const featuredPoemPickedRef = useRef(false)
   useEffect(() => {
@@ -271,7 +283,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [journal.messages, journalOpen, username])
 
-  // Mở Góc Thơ -> đánh dấu đã xem hết thơ (mốc = bài mới nhất)
+  // Mở Góc Hoài Niệm -> đánh dấu đã xem hết (mốc = bài mới nhất)
   useEffect(() => {
     if (!poemsOpen) return
     const list = poemsApi.poems || []
@@ -296,7 +308,7 @@ export default function App() {
     if (viewing) { setSeenPoemTs(latest.ts || Date.now()); return }
     if (Date.now() - (latest.ts || 0) > 60000) return  // tránh báo dồn khi vừa tải trang
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      try { new Notification('Dưới Tán Thông ✍️', { body: `${latest.author} vừa đăng thơ: ${latest.title || latest.body?.slice(0, 40) || ''}`, tag: 'hienmua-poem', renotify: true }) } catch { /* ignore */ }
+      try { new Notification('Dưới Tán Thông ✍️', { body: `Có một hoài niệm mới: ${latest.title || latest.body?.slice(0, 40) || ''}`, tag: 'hienmua-poem', renotify: true }) } catch { /* ignore */ }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poemsApi.poems, poemsOpen, username])
@@ -684,8 +696,8 @@ export default function App() {
     const nextAutoplay = typeof s.autoplay === 'boolean' ? s.autoplay : autoplay
     const nextDefaultTrack = Object.prototype.hasOwnProperty.call(s, 'default_track') ? portableTrack(s.default_track) : defaultTrack
     const storedQueue = Array.isArray(s.queue)
-      ? s.queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }))
-      : queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }))
+      ? normalizeQueueMetadata(s.queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt })), s.updated_at)
+      : normalizeQueueMetadata(queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt })))
     const nextIndex = storedQueue.length
       ? Math.max(0, Math.min(Number.isInteger(s.q_index) ? s.q_index : 0, storedQueue.length - 1))
       : 0
@@ -739,7 +751,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedVisualSig, admin, roomSettings.enabled, roomSettings.ready, roomHydrated])
 
-  const sharedQueue = queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, addedAt }))
+  const sharedQueue = queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt }))
   const sharedMusicPayload = {
     queue: sharedQueue,
     q_index: sharedQueue.length ? Math.max(0, Math.min(index, sharedQueue.length - 1)) : 0,
@@ -841,13 +853,16 @@ export default function App() {
             <div className="brand__pine" aria-hidden="true">
               <img className="brand__pine-art" src="/brand-pine-header-v2.png" alt="" width="280" height="128" />
             </div>
+            <div className="brand__cone" aria-hidden="true">
+              <img className="brand__pine-art" src="/brand-pine-header-v2.png" alt="" width="280" height="128" />
+            </div>
             <div className="brand__name">
               <h1 className="brand__title">
                 <img className="brand__wordmark" src="/brand-wordmark-option4.png" alt="Dưới Tán Thông" width="600" height="133" />
               </h1>
               <p className="brand__tagline">{tagline}</p>
               {featuredPoem && (
-                <article className="brand__poem" title="Một bài thơ ngẫu nhiên từ Góc Thơ">
+                <article className="brand__poem" title="Một đoạn ngẫu nhiên từ Góc Hoài Niệm">
                   {featuredPoem.title && <div className="brand__poem-head"><strong>{featuredPoem.title}</strong></div>}
                   <div className="brand__poem-body">{featuredPoem.body}</div>
                 </article>
@@ -879,7 +894,7 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Drawer phải: Nhật ký / Thơ (trượt từ cạnh phải) */}
+        {/* Drawer phải: Nhật ký / Hoài niệm (trượt từ cạnh phải) */}
         <aside className={`drawer drawer--right ${rightTab ? 'is-open' : ''}`}>
           <div className="drawer__body drawer__body--flush">
             {rightTab === 'poems' ? (

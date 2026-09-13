@@ -64,8 +64,8 @@ export default function Dock({
           {!journalOpen && unread > 0 && <span className="dock__notif">💬 {unread > 9 ? '9+' : unread} mới</span>}
         </button>
         <button className={`dock__btn dock__btn--journal ${poemsOpen ? 'is-active' : ''}`} onClick={onTogglePoems}
-          title="Góc Thơ — đăng thơ & bình luận cùng nhau">
-          <IconPoem /><span>Thơ</span>
+          title="Góc Hoài Niệm — thơ, câu văn và hình ảnh gợi suy tư">
+          <IconPoem /><span>Hoài niệm</span>
           {!poemsOpen && unreadPoems > 0 && <span className="dock__notif">✍️ {unreadPoems > 9 ? '9+' : unreadPoems} mới</span>}
         </button>
         <button className="dock__btn dock__btn--icon dock__btn--settings" onClick={onOpenSettings}

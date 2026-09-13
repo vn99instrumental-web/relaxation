@@ -94,7 +94,7 @@ export default function Player({
       {tab === 'recent' ? (
         <div className="player__recent">
           <div className="recent__head">
-            <div><strong>Bài mới nhất</strong><span>{recentTracks.length}/{queue.length} bài</span></div>
+            <div><strong>Bài mới nhất</strong><span>{recentTracks.length} bài</span></div>
             <label>Hiển thị
               <select value={recentLimit} onChange={(event) => onRecentLimitChange(Number(event.target.value))}>
                 {[10, 15, 20, 25].map((value) => <option key={value} value={value}>{value}</option>)}

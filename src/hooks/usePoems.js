@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { makeClient } from '../lib/supabase'
 import { load, save } from '../lib/storage'
 
-// Góc Thơ: đăng thơ + bình luận trên từng bài. Dùng Supabase (realtime) khi bật,
+// Góc Hoài Niệm: đăng thơ, tản văn và media. Dùng Supabase (realtime) khi bật,
 // không thì lưu localStorage. Bình luận lưu trong cột jsonb của mỗi bài.
 const LOCAL_KEY = 'vibe.poems'
 const rid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`

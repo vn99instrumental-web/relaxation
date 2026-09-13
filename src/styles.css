@@ -287,26 +287,28 @@ input, textarea { font-family: inherit; }
 .stage > * { pointer-events: auto; }
 
 .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.brand { position: relative; width: min(285px, calc(100vw - 36px)); min-width: 0; padding-top: 79px; }
-.brand__pine { position: absolute; z-index: 0; top: -10px; left: 88px; width: 202px; pointer-events: none; }
-.brand__pine .brand__pine-art { display: block; width: 100%; height: auto; }
+.brand { position: relative; width: min(720px, calc(100vw - 36px)); min-width: 0; padding-top: 70px; }
+.brand__pine { position: absolute; z-index: 0; top: -15px; left: calc(-1 * var(--stage-gutter)); width: min(720px, 72vw); height: 88px; overflow: hidden; pointer-events: none; }
+.brand__pine .brand__pine-art { display: block; width: 280px; max-width: none; height: 128px; transform: scaleX(2.58) scaleY(.72); transform-origin: top left; }
+.brand__cone { position: absolute; z-index: 1; top: 22px; left: 292px; width: 66px; height: 94px; overflow: hidden; pointer-events: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.48)); }
+.brand__cone .brand__pine-art { position: absolute; top: -2px; left: -72px; width: 184px; max-width: none; height: auto; }
 .brand__pine-art { transition: filter 0.45s ease; filter: drop-shadow(0 3px 7px rgba(0,0,0,0.58)); }
 .app[data-theme='dusk'] .brand__pine-art { filter: sepia(0.2) saturate(1.15) brightness(1.08) drop-shadow(0 3px 8px rgba(69,35,12,0.62)); }
 .app[data-theme='rain'] .brand__pine-art { filter: saturate(0.72) hue-rotate(12deg) brightness(0.9) contrast(1.08) drop-shadow(0 3px 9px rgba(5,24,35,0.72)); }
 .app[data-theme='morning'] .brand__pine-art { filter: saturate(0.82) brightness(1.18) contrast(0.94) drop-shadow(0 3px 7px rgba(72,67,42,0.3)); }
 .app[data-theme='film'] .brand__pine-art { filter: sepia(0.52) saturate(0.68) contrast(0.92) brightness(0.98) drop-shadow(0 3px 8px rgba(38,29,20,0.64)); }
-.brand__name { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; max-width: 250px; line-height: 1.08; }
+.brand__name { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; max-width: 470px; line-height: 1.08; }
 .brand__title { position: relative; z-index: 2; isolation: isolate; max-width: 100%; margin: 0; line-height: 0; }
-.brand__wordmark { position: relative; z-index: 1; display: block; width: clamp(158px, 18vw, 188px); max-width: 100%; height: auto; transform: translateX(-1.85%); transition: filter 0.45s ease; }
+.brand__wordmark { position: relative; z-index: 1; display: block; width: clamp(240px, 30vw, 340px); max-width: 100%; height: auto; transform: translateX(-1.85%); transition: filter 0.45s ease; }
 .app[data-theme='dusk'] .brand__wordmark { filter: sepia(0.08) saturate(1.06) brightness(1.08) drop-shadow(0 2px 3px rgba(49,25,10,0.62)); }
 .app[data-theme='rain'] .brand__wordmark { filter: saturate(0.48) hue-rotate(150deg) brightness(1.08) contrast(1.03) drop-shadow(0 2px 4px rgba(3,18,28,0.72)); }
 .app[data-theme='morning'] .brand__wordmark { filter: brightness(0.48) saturate(0.78) hue-rotate(28deg) contrast(1.2) drop-shadow(0 1px 2px rgba(255,255,255,0.25)); }
 .app[data-theme='film'] .brand__wordmark { filter: sepia(0.45) saturate(0.7) brightness(0.96) contrast(0.96) drop-shadow(0 2px 4px rgba(38,29,20,0.62)); }
-.brand__tagline { max-width: 100%; margin: 0; font-size: 0.61rem; line-height: 1.24; color: var(--ink); font-family: var(--serif-body); font-style: italic; letter-spacing: 0.01em; text-shadow: 0 1px 2px rgba(0,0,0,0.65); }
+.brand__tagline { max-width: 100%; margin: 1px 0 0; font-size: 0.86rem; line-height: 1.24; color: var(--ink); font-family: var(--serif-body); font-style: italic; letter-spacing: 0.01em; text-shadow: 0 1px 2px rgba(0,0,0,0.65); }
 .brand__poem { max-width: 100%; margin-top: 3px; padding: 3px 6px 4px; border-left: 1px solid var(--gold-soft); border-radius: 0 6px 6px 0; background: rgba(18, 14, 9, 0.24); color: var(--paper); font-family: var(--serif-body); text-shadow: 0 1px 2px rgba(0,0,0,0.68); backdrop-filter: blur(5px); }
 .brand__poem-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; margin-bottom: 2px; color: var(--gold-soft); font-size: 0.63rem; line-height: 1.2; }
 .brand__poem-head strong { font-family: var(--serif); font-size: 0.69rem; letter-spacing: 0.01em; }
-.brand__poem-body { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; white-space: pre-line; overflow-wrap: anywhere; font-size: 0.61rem; font-style: italic; line-height: 1.27; letter-spacing: 0.01em; }
+.brand__poem-body { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; white-space: pre-line; overflow-wrap: anywhere; font-size: 0.82rem; font-style: italic; line-height: 1.38; letter-spacing: 0.01em; }
 .app[data-theme='morning'] .brand__poem { background: rgba(246,243,235,0.72); text-shadow: none; }
 .app[data-theme='morning'] .brand__tagline { text-shadow: 0 1px 2px rgba(255,255,255,0.65); }
 
@@ -725,6 +727,7 @@ input[type='range']:disabled { opacity: 0.4; }
 .poem__image-wrap { position: relative; margin: 8px 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--field-bg); }
 .poem__image-wrap.is-preview { max-height: 130px; margin: 0; }
 .poem__image { display: block; width: 100%; max-height: 280px; object-fit: cover; }
+.poem__video { display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 280px; border: 0; background: #000; object-fit: contain; }
 .poem__image-wrap.is-preview .poem__image { max-height: 130px; }
 .poem__image-error { display: none; padding: 12px; color: var(--rose); font-size: 0.72rem; text-align: center; }
 .poem__image-wrap.is-error .poem__image { display: none; }
@@ -875,15 +878,18 @@ input[type='range']:disabled { opacity: 0.4; }
 @media (max-width: 480px) {
   .stage { --stage-gutter: 12px; padding: 12px var(--stage-gutter); }
   .topbar { display: block; }
-  .brand { width: min(250px, calc(100vw - 24px)); padding-top: 70px; }
-  .brand__pine { top: -8px; left: 45px; width: 178px; }
+  .brand { width: calc(100vw - 24px); padding-top: 51px; }
+  .brand__pine { top: -9px; width: calc(100vw - 4px); height: 62px; }
+  .brand__pine .brand__pine-art { transform: scaleX(1.55) scaleY(.5); }
+  .brand__cone { top: 10px; left: 178px; width: 48px; height: 69px; }
+  .brand__cone .brand__pine-art { left: -52px; width: 136px; }
   .brand__name { max-width: 220px; }
   .brand__tagline { display: block; max-width: 100%; font-size: 0.58rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .brand__poem { width: 100%; max-width: none; padding: 4px 6px 5px; }
   .brand__poem-head { font-size: 0.62rem; }
   .brand__poem-head strong { font-size: 0.65rem; }
   .brand__poem-body { display: block; overflow: visible; -webkit-line-clamp: unset; font-size: 0.61rem; line-height: 1.26; }
-  .brand__wordmark { width: 130px; }
+  .brand__wordmark { width: 210px; }
   .topbar { gap: 10px; }
   .topbar__actions { gap: 7px; }
   .theme-select { padding: 7px 10px; gap: 6px; }
