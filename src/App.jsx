@@ -37,6 +37,19 @@ function normalizeFx(v) {
   return [] // 'none' hoặc giá trị lạ
 }
 
+function boundedSetting(value, fallback) {
+  if (value == null || value === '') return fallback
+  const number = Number(value)
+  return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : fallback
+}
+
+function queueSignature(arr) {
+  return (arr || []).map((t) => [
+    t.kind || '', t.videoId || t.playlistId || '', t.title || '',
+    t.sourcePlaylistId || '', t.sourceTrackIndex ?? '',
+  ].join(':')).join('|')
+}
+
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
 
@@ -68,6 +81,7 @@ export default function App() {
 
   const [scene, setScene] = useState(() => load('vibe.scene', 'fog'))
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
+  const [bgLabels, setBgLabels] = useState(() => load('vibe.bgLabels', {}))
   const [hiddenBg, setHiddenBg] = useState(() => load('vibe.hiddenBg', []))
   const [bgId, setBgId] = useState(() => load('vibe.bgId', DEFAULT_BG_ID))
   const [theme, setTheme] = useState(() => load('vibe.theme', 'dusk')) // giao diện, độc lập ảnh nền
@@ -91,6 +105,7 @@ export default function App() {
   const [uiHidden, setUiHidden] = useState(false)
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [tagline, setTagline] = useState(() => pickTagline('dusk'))
+  const [featuredPoemId, setFeaturedPoemId] = useState(null)
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
@@ -110,8 +125,14 @@ export default function App() {
   const gallery = useSupabaseGallery(supaConfig)
   const roomSettings = useRoomSettings(supaConfig, admin)
   const poemsApi = usePoems(supaConfig, username)
+  const [roomHydrated, setRoomHydrated] = useState(false)
   const journal = supa.enabled ? supa.journal : gist
   const playlists = supa.enabled ? supa.playlists : localPlaylists
+
+  const featuredPoem = useMemo(
+    () => (poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null,
+    [poemsApi.poems, featuredPoemId],
+  )
 
   // Số tin chưa xem (của người kia, mới hơn mốc đã xem)
   const unread = useMemo(() => {
@@ -137,14 +158,16 @@ export default function App() {
     const builtins = BUILTIN_SCENES.filter((s) => !hiddenBg.includes(s.id)) // cho phép ẩn/xóa chủ đề dựng sẵn
     const rest = (useShared ? gallery.items : localBackgrounds)
       .filter((b) => !BUILTIN_SCENES.some((s) => s.id === b.id) && !(b.url || '').startsWith('/scenes/'))
-    return [...builtins, ...rest]
-  }, [useShared, gallery.items, localBackgrounds, hiddenBg])
+    return [...builtins, ...rest].map((b) => (bgLabels[b.id] ? { ...b, label: bgLabels[b.id] } : b))
+  }, [useShared, gallery.items, localBackgrounds, hiddenBg, bgLabels])
   const currentBg = backgrounds.find((b) => b.id === bgId) || backgrounds.find((b) => b.url) || backgrounds[0]
 
   const supaRef = useRef(supa); supaRef.current = supa
   const galleryRef = useRef(gallery); galleryRef.current = gallery
   const sharedRef = useRef(useShared); sharedRef.current = useShared
   const playlistsRef = useRef(playlists); playlistsRef.current = playlists
+  const queueRef = useRef(queue); queueRef.current = queue
+  const indexRef = useRef(index); indexRef.current = index
 
   useEffect(() => save('vibe.queue', queue), [queue])
   useEffect(() => save('vibe.playlists', localPlaylists), [localPlaylists])
@@ -156,6 +179,7 @@ export default function App() {
   useEffect(() => save('vibe.bgId', bgId), [bgId])
   useEffect(() => save('vibe.theme', theme), [theme])
   useEffect(() => save('vibe.userBgs', userBgs), [userBgs])
+  useEffect(() => save('vibe.bgLabels', bgLabels), [bgLabels])
   useEffect(() => save('vibe.hiddenBg', hiddenBg), [hiddenBg])
   useEffect(() => save('vibe.username', username), [username])
   useEffect(() => save('vibe.sync', syncConfig), [syncConfig])
@@ -189,6 +213,21 @@ export default function App() {
     return () => clearInterval(id)
   }, [theme])
 
+  // Mỗi lần mở/reload trang chọn một bài thơ từ Góc Thơ. Nếu có nhiều bài,
+  // tránh lặp lại bài đã hiện ở lần truy cập ngay trước đó.
+  const featuredPoemPickedRef = useRef(false)
+  useEffect(() => {
+    const list = poemsApi.poems || []
+    if (!list.length) { setFeaturedPoemId(null); return }
+    if (featuredPoemPickedRef.current && list.some((poem) => poem.id === featuredPoemId)) return
+    const previousId = load('vibe.featuredPoemId', '')
+    const candidates = list.length > 1 ? list.filter((poem) => poem.id !== previousId) : list
+    const next = candidates[Math.floor(Math.random() * candidates.length)] || list[0]
+    featuredPoemPickedRef.current = true
+    setFeaturedPoemId(next.id)
+    save('vibe.featuredPoemId', next.id)
+  }, [poemsApi.poems, featuredPoemId])
+
   // Mở nhật ký -> đánh dấu đã xem hết; xin quyền thông báo (cần thao tác người dùng)
   useEffect(() => {
     if (!journalOpen) return
@@ -215,7 +254,7 @@ export default function App() {
     // chỉ báo cho tin thực sự mới (tránh báo khi vừa tải trang)
     if (Date.now() - (last.ts || 0) > 60000) return
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      try { new Notification('Hiên Mưa 💌', { body: `${last.user}: ${last.text}`, tag: 'hienmua-chat', renotify: true }) } catch { /* ignore */ }
+      try { new Notification('Dưới Tán Thông 💌', { body: `${last.user}: ${last.text}`, tag: 'hienmua-chat', renotify: true }) } catch { /* ignore */ }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [journal.messages, journalOpen, username])
@@ -245,7 +284,7 @@ export default function App() {
     if (viewing) { setSeenPoemTs(latest.ts || Date.now()); return }
     if (Date.now() - (latest.ts || 0) > 60000) return  // tránh báo dồn khi vừa tải trang
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      try { new Notification('Hiên Mưa ✍️', { body: `${latest.author} vừa đăng thơ: ${latest.title || latest.body?.slice(0, 40) || ''}`, tag: 'hienmua-poem', renotify: true }) } catch { /* ignore */ }
+      try { new Notification('Dưới Tán Thông ✍️', { body: `${latest.author} vừa đăng thơ: ${latest.title || latest.body?.slice(0, 40) || ''}`, tag: 'hienmua-poem', renotify: true }) } catch { /* ignore */ }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poemsApi.poems, poemsOpen, username])
@@ -253,7 +292,7 @@ export default function App() {
   // Nhắc số tin/thơ chưa xem ngay trên tiêu đề tab
   useEffect(() => {
     const total = unread + unreadPoems
-    document.title = total > 0 ? `(${total}) Hiên Mưa` : 'Hiên Mưa — Đà Lạt trong sương'
+    document.title = total > 0 ? `(${total}) Dưới Tán Thông` : 'Dưới Tán Thông — Đà Lạt trong sương'
   }, [unread, unreadPoems])
 
   const playAt = useCallback((i) => {
@@ -277,7 +316,7 @@ export default function App() {
     })
   }, [yt])
 
-  const onClear = useCallback(() => { setQueue([]); setIndex(0) }, [])
+  const onClear = useCallback(() => { setQueue([]); setIndex(0); yt.stop() }, [yt])
 
   // ---- Playlist: lưu / tải / xóa (Supabase khi bật, không thì localStorage) ----
   const savePlaylist = useCallback((name) => {
@@ -298,7 +337,9 @@ export default function App() {
   const loadPlaylist = useCallback((id, mode = 'replace') => {
     const pl = playlistsRef.current.find((p) => p.id === id)
     if (!pl) return
-    const tracks = pl.tracks.map((t) => ({ key: nextKey(), ...t }))
+    const tracks = pl.tracks.map((t, sourceTrackIndex) => ({
+      key: nextKey(), ...t, sourcePlaylistId: pl.id, sourcePlaylistName: pl.name, sourceTrackIndex,
+    }))
     setQueue((q) => {
       const nq = mode === 'append' ? [...q, ...tracks] : tracks
       if (mode !== 'append' || q.length === 0) {
@@ -378,6 +419,42 @@ export default function App() {
     setIndex((cur) => (i < cur ? cur - 1 : cur))
   }, [])
 
+  // Link YouTube hỏng/bị chặn: xóa khỏi hàng chờ, đồng thời xóa khỏi playlist
+  // nguồn (nếu có), rồi phát ngay bài hợp lệ kế tiếp.
+  const removeBrokenFromPlaylist = useCallback((track) => {
+    if (!track?.sourcePlaylistId) return
+    const pl = playlistsRef.current.find((p) => p.id === track.sourcePlaylistId)
+    if (!pl) return
+    let sourceIndex = Number.isInteger(track.sourceTrackIndex) ? track.sourceTrackIndex : -1
+    const sameTrack = (candidate) => candidate && candidate.kind === track.kind
+      && (track.kind === 'playlist' ? candidate.playlistId === track.playlistId : candidate.videoId === track.videoId)
+    if (!sameTrack(pl.tracks[sourceIndex])) sourceIndex = pl.tracks.findIndex(sameTrack)
+    if (sourceIndex < 0) return
+    const tracks = pl.tracks.filter((_, i) => i !== sourceIndex)
+    if (supaRef.current.enabled) supaRef.current.updatePlaylistRow(pl.id, tracks)
+    else setLocalPlaylists((list) => list.map((p) => (p.id === pl.id ? { ...p, tracks } : p)))
+  }, [])
+
+  const onPlaybackError = useCallback((_code, failedTrack) => {
+    const failed = failedTrack || queueRef.current[indexRef.current]
+    if (!failed) return
+    removeBrokenFromPlaylist(failed)
+    setQueue((q) => {
+      let failedIndex = q.findIndex((t) => failed.key && t.key === failed.key)
+      if (failedIndex < 0) failedIndex = Math.max(0, Math.min(indexRef.current, q.length - 1))
+      const nextQueue = q.filter((_, i) => i !== failedIndex)
+      if (!nextQueue.length) {
+        setIndex(0)
+        setTimeout(() => yt.stop(), 0)
+        return nextQueue
+      }
+      const nextIndex = Math.min(failedIndex, nextQueue.length - 1)
+      setIndex(nextIndex)
+      setTimeout(() => yt.playTrack(nextQueue[nextIndex]), 0)
+      return nextQueue
+    })
+  }, [removeBrokenFromPlaylist, yt])
+
   const onNext = useCallback(() => {
     setQueue((q) => {
       if (!q.length) return q
@@ -423,46 +500,54 @@ export default function App() {
   }, [index, yt])
 
   useEffect(() => { yt.setOnEnded(onNext) }, [yt, onNext])
+  useEffect(() => { yt.setOnError(onPlaybackError) }, [yt, onPlaybackError])
   useEffect(() => { if (yt.ready) yt.setVolume(ytVolume) }, [ytVolume, yt.ready, yt])
 
-  // Tự phát 1 bài NGẪU NHIÊN khi mở trang (nếu bật). Trình duyệt thường chặn
-  // phát-tự-động có tiếng (nhất là điện thoại) -> chạm đầu tiên sẽ phát bài đã chọn.
+  // Khi mở trang, ưu tiên bài nhạc mặc định do admin đã chọn. Nếu chưa có hàng
+  // chờ chung thì mới chọn ngẫu nhiên từ playlist. Trình duyệt có thể chặn âm
+  // thanh tự phát -> lần chạm đầu tiên sẽ tiếp tục bài đã chuẩn bị.
   const ytLiveRef = useRef(yt); ytLiveRef.current = yt
   const autoStartedRef = useRef(false)
   const pendingAutoRef = useRef(false)
   useEffect(() => {
-    if (autoStartedRef.current || !autoplay || !yt.ready) return
+    if (autoStartedRef.current || !yt.ready || (roomSettings.enabled && !roomHydrated)) return
     let cancelled = false
-    const startAuto = () => {
+    const prepareMusic = () => {
       if (autoStartedRef.current || cancelled) return
-      // Ưu tiên: chọn NGẪU NHIÊN 1 playlist (có bài) rồi phát 1 bài ngẫu nhiên trong đó
-      const pls = (playlistsRef.current || []).filter((pl) => pl.tracks && pl.tracks.length)
-      if (pls.length) {
+      if (queue.length) {
+        const selectedIndex = Math.max(0, Math.min(index, queue.length - 1))
+        const track = queue[selectedIndex]
         autoStartedRef.current = true
-        const pl = pls[Math.floor(Math.random() * pls.length)]
-        const tracks = pl.tracks.map((t) => ({ key: nextKey(), ...t }))
-        const i = Math.floor(Math.random() * tracks.length)
-        setQueue(tracks); setIndex(i)
-        pendingAutoRef.current = true
-        setTimeout(() => ytLiveRef.current.playTrack(tracks[i]), 0)
+        setIndex(selectedIndex)
+        pendingAutoRef.current = autoplay
+        setTimeout(() => {
+          if (autoplay) ytLiveRef.current.playTrack(track)
+          else ytLiveRef.current.cueTrack(track)
+        }, 0)
         return
       }
-      // Không có playlist -> phát ngẫu nhiên trong hàng chờ hiện có (nếu có)
-      setQueue((q) => {
-        if (!q.length) return q
-        autoStartedRef.current = true
-        const i = Math.floor(Math.random() * q.length)
-        setIndex(i)
-        pendingAutoRef.current = true
-        setTimeout(() => ytLiveRef.current.playTrack(q[i]), 0)
-        return q
-      })
+
+      // Chưa có hàng chờ chung -> chọn ngẫu nhiên playlist và một bài trong đó.
+      const pls = (playlistsRef.current || []).filter((pl) => pl.tracks && pl.tracks.length)
+      if (!pls.length) return
+      autoStartedRef.current = true
+      const pl = pls[Math.floor(Math.random() * pls.length)]
+      const tracks = pl.tracks.map((t, sourceTrackIndex) => ({
+        key: nextKey(), ...t, sourcePlaylistId: pl.id, sourcePlaylistName: pl.name, sourceTrackIndex,
+      }))
+      const i = Math.floor(Math.random() * tracks.length)
+      setQueue(tracks)
+      setIndex(i)
+      pendingAutoRef.current = autoplay
+      setTimeout(() => {
+        if (autoplay) ytLiveRef.current.playTrack(tracks[i])
+        else ytLiveRef.current.cueTrack(tracks[i])
+      }, 0)
     }
-    // Có playlist sẵn -> chạy ngay; chưa có (đang tải Supabase) -> chờ tối đa 1.5s
-    if ((playlists || []).some((pl) => pl.tracks && pl.tracks.length)) startAuto()
-    else { const timer = setTimeout(startAuto, 1500); return () => { cancelled = true; clearTimeout(timer) } }
+    if (queue.length || (playlists || []).some((pl) => pl.tracks && pl.tracks.length)) prepareMusic()
+    else { const timer = setTimeout(prepareMusic, 1500); return () => { cancelled = true; clearTimeout(timer) } }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [yt.ready, autoplay, playlists])
+  }, [yt.ready, autoplay, playlists, queue, index, roomHydrated, roomSettings.enabled])
   useEffect(() => {
     const kick = () => {
       const y = ytLiveRef.current
@@ -475,10 +560,24 @@ export default function App() {
 
   useEffect(() => {
     if (!yt.nowTitle) return
+    const track = queueRef.current[index]
+    if (!track) return
     setQueue((q) => {
       if (!q[index] || q[index].title === yt.nowTitle) return q
       const nq = [...q]; nq[index] = { ...nq[index], title: yt.nowTitle }; return nq
     })
+    // Sau lần phát đầu tiên, ghi lại đúng tiêu đề YouTube vào playlist đã lưu.
+    if (track.kind !== 'video' || !track.sourcePlaylistId) return
+    const pl = playlistsRef.current.find((p) => p.id === track.sourcePlaylistId)
+    if (!pl) return
+    let sourceIndex = Number.isInteger(track.sourceTrackIndex) ? track.sourceTrackIndex : -1
+    if (pl.tracks[sourceIndex]?.videoId !== track.videoId) {
+      sourceIndex = pl.tracks.findIndex((t) => t.kind === 'video' && t.videoId === track.videoId)
+    }
+    if (sourceIndex < 0 || pl.tracks[sourceIndex].title === yt.nowTitle) return
+    const tracks = pl.tracks.map((t, i) => (i === sourceIndex ? { ...t, title: yt.nowTitle } : t))
+    if (supaRef.current.enabled) supaRef.current.updatePlaylistRow(pl.id, tracks)
+    else setLocalPlaylists((list) => list.map((p) => (p.id === pl.id ? { ...p, tracks } : p)))
   }, [yt.nowTitle, index])
 
   // Điều khiển nhạc trên màn hình khóa / trung tâm thông báo (MediaSession)
@@ -487,7 +586,7 @@ export default function App() {
     try {
       if (yt.nowTitle && typeof window.MediaMetadata === 'function') {
         navigator.mediaSession.metadata = new window.MediaMetadata({
-          title: yt.nowTitle, artist: 'Hiên Mưa', album: 'Đà Lạt trong sương',
+          title: yt.nowTitle, artist: 'Dưới Tán Thông', album: 'Đà Lạt trong sương',
         })
       }
       navigator.mediaSession.playbackState = yt.playing ? 'playing' : 'paused'
@@ -503,56 +602,109 @@ export default function App() {
     return () => { set('play', null); set('pause', null); set('previoustrack', null); set('nexttrack', null) }
   }, [yt, onNext, onPrev])
 
-  // ---- Đồng bộ cài đặt phòng: admin đổi -> mọi người theo (realtime) ----
-  const syncRef = useRef({ scene: null, bgId: null, theme: null, queueSig: null })
-  const queueSig = (arr) => (arr || []).map((t) => t.videoId || t.playlistId || '').join('|')
+  // ---- Mặc định chung của phòng: admin lưu, mọi người nhận khi vào + realtime ----
+  const sharedSettingsRef = useRef({ visualSig: '', musicSig: '' })
 
-  // Nhận cài đặt từ phòng và áp dụng
+  // Chờ truy vấn đầu tiên xong rồi mới cho admin phát thay đổi. Việc này tránh
+  // localStorage cũ ghi đè bản mặc định chung trong lúc Supabase còn đang tải.
   useEffect(() => {
+    if (!roomSettings.enabled) { setRoomHydrated(true); return }
+    if (!roomSettings.ready) { setRoomHydrated(false); return }
     const s = roomSettings.settings
-    if (!s || s.updated_by === roomSettings.clientId) return
-    if (s.scene && s.scene !== scene) { syncRef.current.scene = s.scene; setScene(s.scene) }
-    if (s.bg_id && s.bg_id !== bgId) { syncRef.current.bgId = s.bg_id; setBgId(s.bg_id) }
-    if (s.theme && s.theme !== theme) { syncRef.current.theme = s.theme; setTheme(s.theme) }
-    if (Array.isArray(s.queue) && queueSig(s.queue) !== queueSig(queue)) {
-      const sig = queueSig(s.queue)
-      syncRef.current.queueSig = sig
-      const nq = s.queue.map((t) => ({ key: nextKey(), ...t }))
-      setQueue(nq); setIndex(0)
-      if (nq.length) setTimeout(() => yt.playTrack(nq[0]), 0)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomSettings.settings])
+    if (!s) { setRoomHydrated(true); return }
+    if (s.updated_by === roomSettings.clientId) { setRoomHydrated(true); return }
 
-  // Admin phát cài đặt khi thay đổi (bỏ qua khi giá trị vừa nhận từ phòng)
-  useEffect(() => {
-    if (!admin || !roomSettings.enabled || scene === syncRef.current.scene) return
-    syncRef.current.scene = scene
-    roomSettings.save({ scene })
+    const nextScene = s.scene || scene
+    const nextBgId = s.bg_id || bgId
+    const nextTheme = s.theme || theme
+    const nextFx = s.fx_modes == null ? fx : normalizeFx(s.fx_modes)
+    const nextFxSpeed = boundedSetting(s.fx_speed, fxSpeed)
+    const nextFxDensity = boundedSetting(s.fx_density, fxDensity)
+    const nextFxSize = boundedSetting(s.fx_size, fxSize)
+    const nextFxPreset = s.fx_preset || fxPreset
+    const nextFxWindDir = s.fx_wind_dir || fxWindDir
+    const nextFxSwirl = boundedSetting(s.fx_swirl, fxSwirl)
+    const nextVolume = boundedSetting(s.yt_volume, ytVolume)
+    const nextAutoplay = typeof s.autoplay === 'boolean' ? s.autoplay : autoplay
+    const storedQueue = Array.isArray(s.queue)
+      ? s.queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }))
+      : queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }))
+    const nextIndex = storedQueue.length
+      ? Math.max(0, Math.min(Number.isInteger(s.q_index) ? s.q_index : 0, storedQueue.length - 1))
+      : 0
+
+    const visualPayload = {
+      scene: nextScene, bg_id: nextBgId, theme: nextTheme, fx_modes: nextFx,
+      fx_speed: nextFxSpeed, fx_density: nextFxDensity, fx_size: nextFxSize,
+      fx_preset: nextFxPreset, fx_wind_dir: nextFxWindDir, fx_swirl: nextFxSwirl,
+    }
+    const musicPayload = { queue: storedQueue, q_index: nextIndex, yt_volume: nextVolume, autoplay: nextAutoplay }
+    sharedSettingsRef.current.visualSig = `${supaConfig.room}|${JSON.stringify(visualPayload)}`
+    sharedSettingsRef.current.musicSig = `${supaConfig.room}|${JSON.stringify(musicPayload)}`
+
+    if (nextScene !== scene) setScene(nextScene)
+    if (nextBgId !== bgId) setBgId(nextBgId)
+    setHiddenBg((hidden) => (hidden.includes(nextBgId) ? hidden.filter((id) => id !== nextBgId) : hidden))
+    if (nextTheme !== theme) setTheme(nextTheme)
+    if (JSON.stringify(nextFx) !== JSON.stringify(fx)) setFx(nextFx)
+    if (nextFxSpeed !== fxSpeed) setFxSpeed(nextFxSpeed)
+    if (nextFxDensity !== fxDensity) setFxDensity(nextFxDensity)
+    if (nextFxSize !== fxSize) setFxSize(nextFxSize)
+    if (nextFxPreset !== fxPreset) setFxPreset(nextFxPreset)
+    if (nextFxWindDir !== fxWindDir) setFxWindDir(nextFxWindDir)
+    if (nextFxSwirl !== fxSwirl) setFxSwirl(nextFxSwirl)
+    if (nextVolume !== ytVolume) setYtVolume(nextVolume)
+    if (nextAutoplay !== autoplay) setAutoplay(nextAutoplay)
+    if (queueSignature(storedQueue) !== queueSignature(queue)) {
+      setQueue(storedQueue.map((track) => ({ key: nextKey(), ...track })))
+    }
+    if (nextIndex !== index) setIndex(nextIndex)
+    setRoomHydrated(true)
+    // Chỉ chạy khi có snapshot phòng mới; các giá trị hiện tại là fallback tương thích dữ liệu cũ.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, admin, roomSettings.enabled])
+  }, [roomSettings.enabled, roomSettings.ready, roomSettings.settings, roomSettings.clientId])
+
+  const sharedVisualPayload = {
+    scene, bg_id: bgId, theme, fx_modes: fx,
+    fx_speed: fxSpeed, fx_density: fxDensity, fx_size: fxSize,
+    fx_preset: fxPreset, fx_wind_dir: fxWindDir, fx_swirl: fxSwirl,
+  }
+  const sharedVisualSig = `${supaConfig.room}|${JSON.stringify(sharedVisualPayload)}`
   useEffect(() => {
-    if (!admin || !roomSettings.enabled || bgId === syncRef.current.bgId) return
-    syncRef.current.bgId = bgId
-    roomSettings.save({ bg_id: bgId })
+    if (!admin || !roomSettings.enabled || !roomSettings.ready || !roomHydrated) return
+    if (sharedVisualSig === sharedSettingsRef.current.visualSig) return
+    const timer = setTimeout(() => {
+      sharedSettingsRef.current.visualSig = sharedVisualSig
+      roomSettings.save(sharedVisualPayload)
+    }, 250)
+    return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bgId, admin, roomSettings.enabled])
+  }, [sharedVisualSig, admin, roomSettings.enabled, roomSettings.ready, roomHydrated])
+
+  const sharedQueue = queue.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex }))
+  const sharedMusicPayload = {
+    queue: sharedQueue,
+    q_index: sharedQueue.length ? Math.max(0, Math.min(index, sharedQueue.length - 1)) : 0,
+    yt_volume: ytVolume,
+    autoplay,
+  }
+  const sharedMusicSig = `${supaConfig.room}|${JSON.stringify(sharedMusicPayload)}`
   useEffect(() => {
-    if (!admin || !roomSettings.enabled || theme === syncRef.current.theme) return
-    syncRef.current.theme = theme
-    roomSettings.save({ theme })
+    if (!admin || !roomSettings.enabled || !roomSettings.ready || !roomHydrated) return
+    if (sharedMusicSig === sharedSettingsRef.current.musicSig) return
+    const timer = setTimeout(() => {
+      sharedSettingsRef.current.musicSig = sharedMusicSig
+      roomSettings.save(sharedMusicPayload)
+    }, 300)
+    return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, admin, roomSettings.enabled])
-  useEffect(() => {
-    if (!admin || !roomSettings.enabled) return
-    const sig = queueSig(queue)
-    if (sig === syncRef.current.queueSig) return
-    syncRef.current.queueSig = sig
-    roomSettings.save({ queue: queue.map(({ kind, videoId, playlistId, title }) => ({ kind, videoId, playlistId, title })), q_index: 0 })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queue, admin, roomSettings.enabled])
+  }, [sharedMusicSig, admin, roomSettings.enabled, roomSettings.ready, roomHydrated])
 
   const toggleLeft = (tab) => setLeftTab((cur) => (cur === tab ? null : tab))
+  const currentQueueTrack = queue[index]
+  const activePlaylistName = currentQueueTrack?.sourcePlaylistId
+    ? (playlists.find((p) => p.id === currentQueueTrack.sourcePlaylistId)?.name || currentQueueTrack.sourcePlaylistName || '')
+    : (currentQueueTrack?.kind === 'playlist' ? (currentQueueTrack.title || 'Playlist YouTube') : '')
 
   const addUserBg = useCallback((label, url) => {
     const id = `u${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -591,6 +743,22 @@ export default function App() {
     else removeBackground(id)
   }, [removeBackground])
 
+  const renameImage = useCallback(async (id, label) => {
+    const nextLabel = label?.trim()
+    if (!nextLabel) return false
+    if (BUILTIN_SCENES.some((s) => s.id === id)) {
+      setBgLabels((labels) => ({ ...labels, [id]: nextLabel }))
+      return true
+    }
+    if (sharedRef.current) return galleryRef.current.renameImage(id, nextLabel)
+    if (DEFAULT_BACKGROUNDS.some((b) => b.id === id)) {
+      setBgLabels((labels) => ({ ...labels, [id]: nextLabel }))
+      return true
+    }
+    setUserBgs((list) => list.map((b) => (b.id === id ? { ...b, label: nextLabel } : b)))
+    return true
+  }, [])
+
   // Máy có WebGL -> dùng LeafEngine (3D); không thì rơi về hiệu ứng CSS.
   const webglOK = useMemo(() => hasWebGL(), [])
   const leftKind = leftTab || 'music' // giữ nội dung khi drawer trượt ra
@@ -613,10 +781,19 @@ export default function App() {
       <div className="stage">
         <header className="topbar">
           <div className="brand">
-            <span className="brand__mark">☂</span>
             <div className="brand__name">
-              <h1>Hiên Mưa</h1>
-              <p>{tagline}</p>
+              <h1 className="brand__title">
+                <img className="brand__mark brand__mark--back" src="/brand-pine-branch.png" alt="" aria-hidden="true" width="280" height="128" />
+                <img className="brand__wordmark" src="/brand-wordmark-option4.png" alt="Dưới Tán Thông" width="600" height="133" />
+                <img className="brand__mark brand__mark--front" src="/brand-pine-branch.png" alt="" aria-hidden="true" width="280" height="128" />
+              </h1>
+              <p className="brand__tagline">{tagline}</p>
+              {featuredPoem && (
+                <article className="brand__poem" title="Một bài thơ ngẫu nhiên từ Góc Thơ">
+                  {featuredPoem.title && <div className="brand__poem-head"><strong>{featuredPoem.title}</strong></div>}
+                  <div className="brand__poem-body">{featuredPoem.body}</div>
+                </article>
+              )}
             </div>
           </div>
           <div className="topbar__actions">
@@ -699,6 +876,7 @@ export default function App() {
 
       <Dock
         yt={yt} queue={queue} index={index}
+        playlistName={activePlaylistName}
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
         shuffle={shuffle} onToggleShuffle={onToggleShuffle}
         unread={unread} unreadPoems={unreadPoems}
@@ -724,7 +902,7 @@ export default function App() {
       <SettingsModal
         open={settingsOpen} onClose={() => setSettingsOpen(false)}
         config={syncConfig} setConfig={setSyncConfig}
-        supaConfig={supaConfig} setSupaConfig={setSupaConfig} supaStatus={supa.status} supaError={supa.error}
+        supaConfig={supaConfig} setSupaConfig={setSupaConfig} supaStatus={supa.status} supaError={supa.error || roomSettings.error}
         admin={admin} setAdmin={setAdmin}
         keepAwake={keepAwake} setKeepAwake={setKeepAwake}
         autoplay={autoplay} setAutoplay={setAutoplay}
@@ -734,7 +912,7 @@ export default function App() {
         fxPreset={fxPreset} setFxPreset={setFxPreset}
         fxWindDir={fxWindDir} setFxWindDir={setFxWindDir} fxSwirl={fxSwirl} setFxSwirl={setFxSwirl}
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
-        onAddImage={addImage} onRemoveImage={removeImage}
+        onAddImage={addImage} onRemoveImage={removeImage} onRenameImage={renameImage}
         shared={useShared} galleryError={gallery.error}
         hiddenCount={hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
       />

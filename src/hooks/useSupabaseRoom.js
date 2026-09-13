@@ -152,6 +152,7 @@ export function useSupabaseRoom(config, username) {
   const updatePlaylistRow = useCallback(async (id, tracks) => {
     const c = clientRef.current
     if (!c) return
+    setPlaylists((prev) => prev.map((p) => (p.id === id ? { ...p, tracks } : p)))
     try { await c.from('playlists').update({ tracks, updated_at: new Date().toISOString() }).eq('id', id) } catch (e) { setError(e.message || 'Cập nhật playlist lỗi') }
     reloadPlaylists()
   }, [reloadPlaylists])

@@ -98,8 +98,22 @@ do $$ begin begin execute 'alter publication supabase_realtime add table public.
 -- ============================================================
 create table if not exists public.room_settings (
   id text primary key, scene text, bg_id text, theme text, queue jsonb, q_index int,
+  fx_modes jsonb, fx_speed smallint, fx_density smallint, fx_size smallint,
+  fx_preset text, fx_wind_dir text, fx_swirl smallint,
+  yt_volume smallint, autoplay boolean,
   updated_by text, updated_at timestamptz not null default now()
 );
+-- Nâng cấp an toàn cho project đã có room_settings từ phiên bản trước.
+alter table public.room_settings
+  add column if not exists fx_modes jsonb,
+  add column if not exists fx_speed smallint,
+  add column if not exists fx_density smallint,
+  add column if not exists fx_size smallint,
+  add column if not exists fx_preset text,
+  add column if not exists fx_wind_dir text,
+  add column if not exists fx_swirl smallint,
+  add column if not exists yt_volume smallint,
+  add column if not exists autoplay boolean;
 alter table public.room_settings enable row level security;
 drop policy if exists "anon room_settings" on public.room_settings;
 create policy "anon room_settings" on public.room_settings for all to anon using (true) with check (true);

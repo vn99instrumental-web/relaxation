@@ -4,18 +4,35 @@ import { IconMusic, IconAmbient, IconJournal, IconImmersive, IconPoem, IconShuff
 
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
+  playlistName = '',
   shuffle, onToggleShuffle, unread = 0, unreadPoems = 0,
   leftTab, onToggleLeft, journalOpen, onToggleJournal, poemsOpen, onTogglePoems, onHideUI,
 }) {
-  const title = yt.nowTitle || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
+  const title = yt.nowTitle || queue[index]?.title || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
+  const duration = Number(yt.duration) || 0
+  const currentTime = Math.min(Number(yt.currentTime) || 0, duration || Infinity)
+  const timeLabel = (seconds) => {
+    const safe = Math.max(0, Math.floor(Number(seconds) || 0))
+    return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, '0')}`
+  }
 
   return (
     <div className="dock">
       <div className="dock__now">
         <span className={`dock__spin ${yt.playing ? 'is-spinning' : ''}`}>❊</span>
-        <div className="dock__title" title={title}>
-          {title}
-          {queue.length > 0 && <span className="dock__count"> · {index + 1}/{queue.length}</span>}
+        <div className="dock__track-meta">
+          {playlistName && <div className="dock__playlist" title={playlistName}>♫ {playlistName}</div>}
+          <div className="dock__title" title={title}>
+            {title}
+            {queue.length > 0 && <span className="dock__count"> · {index + 1}/{queue.length}</span>}
+          </div>
+          <div className="dock__seek-row">
+            <span>{timeLabel(currentTime)}</span>
+            <input className="dock__seek" type="range" min="0" max={duration || 0.1} step="0.1"
+              value={currentTime} disabled={!duration} onChange={(e) => yt.seekTo(Number(e.target.value))}
+              aria-label="Tua bài hát" />
+            <span>{timeLabel(duration)}</span>
+          </div>
         </div>
       </div>
 

@@ -283,15 +283,34 @@ input, textarea { font-family: inherit; }
 
 /* ============ KHUNG APP (điện ảnh — cảnh là chính) ============ */
 .app { position: relative; height: 100%; z-index: 1; overflow: hidden; }
-.stage { position: absolute; inset: 0; z-index: 1; padding: 16px clamp(12px, 3vw, 30px); pointer-events: none; }
+.stage { --stage-gutter: clamp(12px, 3vw, 30px); position: absolute; inset: 0; z-index: 1; padding: 16px var(--stage-gutter); pointer-events: none; }
 .stage > * { pointer-events: auto; }
 
 .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.brand { display: flex; align-items: center; gap: 12px; }
-.brand__mark { font-size: 1.7rem; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); color: var(--gold-soft); }
-.brand__name { display: flex; flex-direction: column; line-height: 1.08; }
-.brand h1 { font-family: var(--serif); font-size: 1.55rem; letter-spacing: 0.4px; font-weight: 700; color: var(--paper); text-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 1px 1px rgba(0,0,0,0.5); }
-.brand p { margin: 1px 0 0; font-size: 0.74rem; color: var(--ink); font-family: var(--serif-body); font-style: italic; letter-spacing: 0.02em; text-shadow: 0 1px 2px rgba(0,0,0,0.65); }
+.brand { --brand-indent: 74px; min-width: 0; max-width: 100%; padding-left: calc(var(--brand-indent) - var(--stage-gutter)); }
+/* The branch enters from the scene edge. A clipped foreground copy lets a few
+   needles cross the lettering while the cone stays behind it. */
+.brand__mark { position: absolute; z-index: 0; left: calc(-1 * var(--brand-indent) - 6px); top: -8px; width: 146px; height: auto; transform: rotate(-8deg); transform-origin: 0 12%; pointer-events: none; transition: filter 0.45s ease; filter: drop-shadow(0 3px 7px rgba(0,0,0,0.58)); }
+.brand__mark--back { z-index: 0; }
+.brand__mark--front { z-index: 2; clip-path: polygon(48% 0, 100% 0, 100% 43%, 72% 40%, 48% 30%); opacity: 0.88; }
+.app[data-theme='dusk'] .brand__mark { filter: sepia(0.2) saturate(1.15) brightness(1.08) drop-shadow(0 3px 8px rgba(69,35,12,0.62)); }
+.app[data-theme='rain'] .brand__mark { filter: saturate(0.72) hue-rotate(12deg) brightness(0.9) contrast(1.08) drop-shadow(0 3px 9px rgba(5,24,35,0.72)); }
+.app[data-theme='morning'] .brand__mark { filter: saturate(0.82) brightness(1.18) contrast(0.94) drop-shadow(0 3px 7px rgba(72,67,42,0.3)); }
+.app[data-theme='film'] .brand__mark { filter: sepia(0.52) saturate(0.68) contrast(0.92) brightness(0.98) drop-shadow(0 3px 8px rgba(38,29,20,0.64)); }
+.brand__name { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; max-width: 280px; line-height: 1.08; }
+.brand__title { position: relative; isolation: isolate; max-width: 100%; margin: 0; line-height: 0; }
+.brand__wordmark { position: relative; z-index: 1; display: block; width: clamp(176px, 20vw, 210px); max-width: 100%; height: auto; transform: translateX(-1.85%); transition: filter 0.45s ease; }
+.app[data-theme='dusk'] .brand__wordmark { filter: sepia(0.08) saturate(1.06) brightness(1.08) drop-shadow(0 2px 3px rgba(49,25,10,0.62)); }
+.app[data-theme='rain'] .brand__wordmark { filter: saturate(0.48) hue-rotate(150deg) brightness(1.08) contrast(1.03) drop-shadow(0 2px 4px rgba(3,18,28,0.72)); }
+.app[data-theme='morning'] .brand__wordmark { filter: brightness(0.48) saturate(0.78) hue-rotate(28deg) contrast(1.2) drop-shadow(0 1px 2px rgba(255,255,255,0.25)); }
+.app[data-theme='film'] .brand__wordmark { filter: sepia(0.45) saturate(0.7) brightness(0.96) contrast(0.96) drop-shadow(0 2px 4px rgba(38,29,20,0.62)); }
+.brand__tagline { max-width: 100%; margin: 1px 0 0; font-size: 0.67rem; line-height: 1.28; color: var(--ink); font-family: var(--serif-body); font-style: italic; letter-spacing: 0.01em; text-shadow: 0 1px 2px rgba(0,0,0,0.65); }
+.brand__poem { max-width: 100%; margin-top: 4px; padding: 4px 7px 5px; border-left: 1px solid var(--gold-soft); border-radius: 0 6px 6px 0; background: rgba(18, 14, 9, 0.24); color: var(--paper); font-family: var(--serif-body); text-shadow: 0 1px 2px rgba(0,0,0,0.68); backdrop-filter: blur(5px); }
+.brand__poem-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; margin-bottom: 2px; color: var(--gold-soft); font-size: 0.63rem; line-height: 1.2; }
+.brand__poem-head strong { font-family: var(--serif); font-size: 0.69rem; letter-spacing: 0.01em; }
+.brand__poem-body { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; white-space: pre-line; overflow-wrap: anywhere; font-size: 0.68rem; font-style: italic; line-height: 1.3; letter-spacing: 0.01em; }
+.app[data-theme='morning'] .brand__poem { background: rgba(246,243,235,0.72); text-shadow: none; }
+.app[data-theme='morning'] .brand__tagline { text-shadow: 0 1px 2px rgba(255,255,255,0.65); }
 
 .topbar__actions { display: flex; align-items: center; gap: 10px; }
 .scene-tabs { display: flex; gap: 3px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 4px; backdrop-filter: blur(8px); }
@@ -406,12 +425,17 @@ input, textarea { font-family: inherit; }
   backdrop-filter: blur(20px) saturate(1.1);
   box-shadow: var(--shadow);
 }
-.dock__now { display: flex; align-items: center; gap: 9px; min-width: 0; max-width: 240px; }
+.dock__now { display: flex; align-items: center; gap: 9px; min-width: 0; width: 250px; max-width: 27vw; }
 .dock__spin { color: var(--gold-soft); font-size: 0.95rem; display: inline-block; }
 .dock__spin.is-spinning { animation: spin 6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.dock__track-meta { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
+.dock__playlist { color: var(--gold-soft); font-family: var(--ui); font-size: 0.62rem; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dock__title { font-family: var(--serif-body); font-size: 0.86rem; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dock__count { color: var(--ink-dim); }
+.dock__seek-row { display: grid; grid-template-columns: 28px minmax(70px, 1fr) 28px; align-items: center; gap: 5px; color: var(--ink-dim); font: 0.56rem/1 var(--ui); }
+.dock__seek { width: 100%; height: 12px; margin: 0; accent-color: var(--gold-soft); cursor: pointer; }
+.dock__seek:disabled { cursor: default; opacity: 0.4; }
 .dock__transport { display: flex; align-items: center; gap: 8px; }
 .dock__vol { display: flex; align-items: center; gap: 7px; margin-left: 4px; }
 .dock__vol input { width: 82px; }
@@ -739,6 +763,8 @@ input[type='range']:disabled { opacity: 0.4; }
 .bg-tile__label { position: relative; z-index: 1; width: 100%; padding: 4px 6px; font-size: 0.68rem; line-height: 1.2; background: linear-gradient(transparent, rgba(0,0,0,0.7)); text-align: left; }
 .bg-tile__del { position: absolute; top: 3px; right: 3px; z-index: 2; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); border-radius: 50%; font-size: 0.62rem; color: var(--ink); }
 .bg-tile__del:hover { background: var(--rose); }
+.bg-tile__edit { position: absolute; top: 3px; left: 3px; z-index: 2; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.58); border-radius: 50%; font-size: 0.72rem; color: #fff; }
+.bg-tile__edit:hover { background: var(--gold-soft); color: #24170d; }
 /* Chọn nhiều ảnh để xóa cùng lúc */
 .bg-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .bg-head h3 { margin: 0; }
@@ -762,11 +788,18 @@ input[type='range']:disabled { opacity: 0.4; }
 
 /* ============ RESPONSIVE ============ */
 /* Có thêm nút Thơ -> ẩn thông tin "đang phát" sớm hơn để dock đủ chỗ */
-@media (max-width: 1080px) { .dock__now { display: none; } }
+@media (max-width: 1080px) {
+  .dock__now {
+    position: absolute; left: 50%; bottom: calc(100% + 7px); transform: translateX(-50%);
+    display: flex; width: min(360px, calc(100vw - 24px)); max-width: none;
+    padding: 7px 11px; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--dock-bg); backdrop-filter: blur(18px) saturate(1.1); box-shadow: var(--shadow);
+  }
+}
 @media (max-width: 820px) {
   .pip { top: auto; bottom: 88px; right: 10px; width: 210px; }
-  .dock { gap: 10px; padding: 7px 10px; overflow-x: auto; }
-  .dock__now { display: none; }
+  .dock { gap: 10px; padding: 7px 10px; overflow: visible; }
+  .dock__now { display: flex; }
   .dock__btn span { display: none; }
   .dock__btn:not(.dock__btn--icon) { min-width: 0; }
   .dock__vol { display: none; }
@@ -787,11 +820,18 @@ input[type='range']:disabled { opacity: 0.4; }
 }
 /* ---- Điện thoại: khung tràn viền, gõ chat gọn, nút to dễ chạm ---- */
 @media (max-width: 480px) {
-  .stage { padding: 12px; }
-  .brand { gap: 9px; }
-  .brand p { display: block; font-size: 0.66rem; max-width: 56vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .brand h1 { font-size: 1.28rem; }
-  .brand__mark { font-size: 1.45rem; }
+  .stage { --stage-gutter: 12px; padding: 12px var(--stage-gutter); }
+  .topbar { display: block; }
+  .topbar__actions { position: absolute; top: 12px; right: 12px; }
+  .brand { --brand-indent: 56px; }
+  .brand__name { max-width: calc(100vw - 68px); }
+  .brand__tagline { display: block; max-width: min(180px, calc(100vw - 180px)); font-size: 0.58rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brand__poem { width: calc(100vw - 68px); max-width: none; padding: 4px 6px 5px; }
+  .brand__poem-head { font-size: 0.62rem; }
+  .brand__poem-head strong { font-size: 0.65rem; }
+  .brand__poem-body { display: block; overflow: visible; -webkit-line-clamp: unset; font-size: 0.61rem; line-height: 1.26; }
+  .brand__wordmark { width: 138px; }
+  .brand__mark { width: 116px; top: -6px; }
   .topbar { gap: 10px; }
   .topbar__actions { gap: 7px; }
   .theme-select { padding: 7px 10px; gap: 6px; }
@@ -809,7 +849,12 @@ input[type='range']:disabled { opacity: 0.4; }
   .emoji-item { font-size: 1.45rem; padding: 7px 0; }
   .mixer__row { grid-template-columns: 100px 1fr; }
   .dock { gap: 7px; padding: 6px 8px; max-width: calc(100vw - 16px); }
-  .dock__btn--icon { padding: 9px 11px; }
+  .dock__transport { gap: 4px; }
+  .dock__transport .ctrl { width: 32px; height: 32px; }
+  .dock__transport .ctrl--sm { width: 30px; height: 30px; }
+  .dock__transport .ctrl--main { width: 40px; height: 40px; }
+  .dock__tabs { gap: 3px; padding-left: 6px; }
+  .dock__btn, .dock__btn--icon { width: 32px; height: 32px; padding: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .scene__grain, .fog, .scene__rays span, .scene__svg { animation: none !important; }

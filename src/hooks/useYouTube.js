@@ -30,7 +30,12 @@ export function useYouTube(mountId) {
   const [current, setCurrent] = useState(null) // track đang phát
   const [nowTitle, setNowTitle] = useState('')
   const [buffering, setBuffering] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const currentRef = useRef(null)
   const onEndedRef = useRef(() => {})
+  const onErrorRef = useRef(() => {})
+  const errorHandledRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -56,6 +61,7 @@ export function useYouTube(mountId) {
               try {
                 const d = playerRef.current.getVideoData()
                 if (d && d.title) setNowTitle(d.title)
+                setDuration(Number(playerRef.current.getDuration()) || 0)
               } catch { /* ignore */ }
             } else if (e.data === S.PAUSED) {
               setPlaying(false)
@@ -66,9 +72,13 @@ export function useYouTube(mountId) {
               onEndedRef.current()
             }
           },
-          onError: () => {
-            // Video bị chặn/xóa -> nhảy bài tiếp theo cho khỏi kẹt.
-            onEndedRef.current()
+          onError: (e) => {
+            // YouTube có thể phát nhiều sự kiện lỗi liên tiếp cho cùng một link.
+            if (errorHandledRef.current) return
+            errorHandledRef.current = true
+            setPlaying(false)
+            setBuffering(false)
+            onErrorRef.current(e?.data, currentRef.current)
           },
         },
       })
@@ -83,12 +93,46 @@ export function useYouTube(mountId) {
   const playTrack = useCallback((track) => {
     const p = playerRef.current
     if (!p || !track) return
+    errorHandledRef.current = false
+    currentRef.current = track
     setCurrent(track)
     setNowTitle(track.title || '')
+    setCurrentTime(0)
+    setDuration(0)
     if (track.kind === 'playlist') {
       p.loadPlaylist({ list: track.playlistId, listType: 'playlist', index: 0 })
     } else {
       p.loadVideoById(track.videoId)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!ready) return undefined
+    const readProgress = () => {
+      try {
+        const p = playerRef.current
+        setCurrentTime(Number(p?.getCurrentTime?.()) || 0)
+        setDuration(Number(p?.getDuration?.()) || 0)
+      } catch { /* ignore */ }
+    }
+    readProgress()
+    const timer = window.setInterval(readProgress, 500)
+    return () => window.clearInterval(timer)
+  }, [ready])
+
+  const cueTrack = useCallback((track) => {
+    const p = playerRef.current
+    if (!p || !track) return
+    errorHandledRef.current = false
+    currentRef.current = track
+    setCurrent(track)
+    setNowTitle(track.title || '')
+    setCurrentTime(0)
+    setDuration(0)
+    if (track.kind === 'playlist') {
+      p.cuePlaylist({ list: track.playlistId, listType: 'playlist', index: 0 })
+    } else {
+      p.cueVideoById(track.videoId)
     }
   }, [])
 
@@ -106,7 +150,31 @@ export function useYouTube(mountId) {
     try { playerRef.current?.setVolume(Math.round(v)) } catch { /* ignore */ }
   }, [])
 
-  const setOnEnded = useCallback((fn) => { onEndedRef.current = fn }, [])
+  const seekTo = useCallback((seconds) => {
+    const value = Number(seconds)
+    if (!Number.isFinite(value)) return
+    try {
+      playerRef.current?.seekTo(Math.max(0, value), true)
+      setCurrentTime(Math.max(0, value))
+    } catch { /* ignore */ }
+  }, [])
 
-  return { ready, playing, buffering, current, nowTitle, playTrack, play, pause, toggle, setVolume, setOnEnded }
+  const stop = useCallback(() => {
+    try { playerRef.current?.stopVideo() } catch { /* ignore */ }
+    currentRef.current = null
+    setCurrent(null)
+    setNowTitle('')
+    setCurrentTime(0)
+    setDuration(0)
+    setPlaying(false)
+    setBuffering(false)
+  }, [])
+
+  const setOnEnded = useCallback((fn) => { onEndedRef.current = fn }, [])
+  const setOnError = useCallback((fn) => { onErrorRef.current = fn }, [])
+
+  return {
+    ready, playing, buffering, current, nowTitle, currentTime, duration,
+    playTrack, cueTrack, play, pause, toggle, stop, seekTo, setVolume, setOnEnded, setOnError,
+  }
 }

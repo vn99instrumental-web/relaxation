@@ -1,5 +1,5 @@
-// Câu tagline dưới tên "Hiên Mưa" — đổi ngẫu nhiên, chọn theo giờ trong ngày
-// và theo "thời tiết" (lấy theme đang chọn làm gợi ý). "Hiên Mưa" giữ cố định.
+// Câu tagline dưới tên "Dưới Tán Thông" — đổi ngẫu nhiên, chọn theo giờ trong ngày
+// và theo "thời tiết" (lấy theme đang chọn làm gợi ý). Tên thương hiệu giữ cố định.
 
 const GENERAL = [
   'nghe mưa, viết cho nhau',

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { makeClient } from '../lib/supabase'
 
 // Thư viện ảnh nền dùng chung qua Supabase (bảng public.backgrounds + Storage 'backgrounds').
-// Ai thêm/xóa ảnh thì cả 2 người thấy (realtime). File upload nằm trên Supabase Storage.
+// Ai thêm/xóa/đổi tên ảnh thì cả 2 người thấy (realtime). File upload nằm trên Supabase Storage.
 const BUCKET = 'backgrounds'
 
 function thumbFor(url) {
@@ -81,5 +81,23 @@ export function useSupabaseGallery(config) {
     } catch (e) { setError(e.message || 'Xóa ảnh lỗi') }
   }, [])
 
-  return { enabled, ready, items, error, addImage, removeImage }
+  const renameImage = useCallback(async (id, label) => {
+    const c = clientRef.current
+    const nextLabel = label?.trim()
+    if (!c || !nextLabel) return false
+    const previous = rowsRef.current.find((r) => r.id === id)?.label
+    setItems((list) => list.map((r) => (r.id === id ? { ...r, label: nextLabel } : r)))
+    try {
+      const { error: e } = await c.from('backgrounds').update({ label: nextLabel }).eq('id', id)
+      if (e) throw e
+      setError('')
+      return true
+    } catch (e) {
+      setItems((list) => list.map((r) => (r.id === id ? { ...r, label: previous || r.label } : r)))
+      setError(e.message || 'Đổi tên ảnh lỗi')
+      return false
+    }
+  }, [])
+
+  return { enabled, ready, items, error, addImage, removeImage, renameImage }
 }

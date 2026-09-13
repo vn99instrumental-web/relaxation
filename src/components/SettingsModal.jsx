@@ -9,7 +9,7 @@ const isUserImg = (id) => id.startsWith('u') || id.includes('__u')
 // và đồng bộ nhật ký qua GitHub Gist.
 export default function SettingsModal({
   open, onClose, config, setConfig,
-  backgrounds, bgId, setBgId, onAddImage, onRemoveImage, hiddenCount, onRestoreBg,
+  backgrounds, bgId, setBgId, onAddImage, onRemoveImage, onRenameImage, hiddenCount, onRestoreBg,
   shared, galleryError,
   supaConfig, setSupaConfig, supaStatus, supaError,
   admin, setAdmin, keepAwake, setKeepAwake, autoplay, setAutoplay,
@@ -74,6 +74,13 @@ export default function SettingsModal({
     if (!window.confirm(`Xoá ${selectedBg.length} ảnh nền đã chọn?`)) return
     selectedBg.forEach((id) => onRemoveImage(id))
     exitSelect()
+  }
+  const renameBackground = async (b) => {
+    const nextLabel = window.prompt('Tên ảnh mới', b.label)
+    if (nextLabel === null || nextLabel.trim() === b.label) return
+    if (!nextLabel.trim()) { setMsg('Tên ảnh không được để trống.'); return }
+    const ok = await onRenameImage(b.id, nextLabel)
+    setMsg(ok === false ? 'Không thể đổi tên ảnh.' : 'Đã đổi tên ảnh.')
   }
 
   return (
@@ -202,9 +209,12 @@ export default function SettingsModal({
                     <span className="bg-tile__label">{b.label}</span>
                     {selectMode
                       ? canDelete(b) && <span className={`bg-tile__check ${checked ? 'is-on' : ''}`}>{checked ? '✓' : ''}</span>
-                      : (admin || isUserImg(b.id) || b.builtin) && (
-                        <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); if (window.confirm(`Xoá ảnh nền “${b.label}”?`)) onRemoveImage(b.id) }} title="Xóa ảnh này">✕</span>
-                      )}
+                      : <>
+                          <span className="bg-tile__edit" onClick={(e) => { e.stopPropagation(); renameBackground(b) }} title="Đổi tên ảnh">✎</span>
+                          {(admin || isUserImg(b.id) || b.builtin) && (
+                            <span className="bg-tile__del" onClick={(e) => { e.stopPropagation(); if (window.confirm(`Xoá ảnh nền “${b.label}”?`)) onRemoveImage(b.id) }} title="Xóa ảnh này">✕</span>
+                          )}
+                        </>}
                   </button>
                 )
               })}
