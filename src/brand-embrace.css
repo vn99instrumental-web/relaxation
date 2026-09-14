@@ -1,7 +1,6 @@
-/* Pine branch + “Dưới Tán Thông” use one transparent composite image.
-   The real React-owned <img> controls the visual size again.
-   No aspect-ratio frame, background image, pseudo-element, or CSS content replacement.
-   Tagline and featured poem remain live React content below it. */
+/* Final header rendering: one real transparent image contains pine + “Dưới Tán Thông”.
+   Tagline and featured poem stay live React content below it.
+   No DOM mutation, pseudo-element image, background-image, content:url, or forced aspect-ratio frame. */
 .brand {
   position: relative;
   isolation: isolate;
@@ -12,7 +11,7 @@
   transform: translate(-6px, -8px);
 }
 
-/* Old separate pine layer is disabled to avoid duplicate branches. */
+/* The approved composite already includes the pine branch. */
 .brand::after,
 .brand__pine {
   display: none !important;
@@ -23,23 +22,23 @@
   flex-direction: column;
   align-items: flex-start;
   min-width: 0;
-  max-width: 250px;
+  max-width: 285px;
   line-height: 1.08;
 }
 
-/* Keep the exact last-known-good wordmark footprint. */
+/* Original layout reserved ~270px for the pine artwork inside a 285px brand block.
+   The composite replaces pine + title, so it uses that same overall footprint. */
 .brand__title {
   position: relative;
   z-index: 2;
   display: block;
-  width: clamp(145px, 16vw, 190px);
+  width: min(270px, 100%);
   max-width: 100%;
   margin: 0;
   line-height: 0;
   overflow: visible;
 }
 
-/* The image itself defines height from its native 1368:525 ratio. */
 .brand__wordmark {
   position: static !important;
   display: block !important;
@@ -64,6 +63,7 @@
 .brand__poem {
   position: relative;
   z-index: 3;
+  max-width: 250px;
 }
 
 @media (max-width: 480px) {
@@ -73,11 +73,15 @@
   }
 
   .brand__name {
-    max-width: 175px;
+    max-width: 220px;
   }
 
-  /* Exact mobile footprint from the last known-good header. */
   .brand__title {
-    width: 122px;
+    width: min(220px, 100%);
+  }
+
+  .brand__tagline,
+  .brand__poem {
+    max-width: 175px;
   }
 }
