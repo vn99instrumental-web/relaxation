@@ -851,7 +851,7 @@ export default function App() {
         <header className="topbar">
           <div className="brand">
             <div className="brand__pine" aria-hidden="true">
-              <img className="brand__pine-art" src="/brand-pine-header-v2.png" alt="" width="280" height="128" />
+              <img className="brand__pine-art" src="/brand-pine-header-v3.png" alt="" width="2172" height="724" />
             </div>
             <div className="brand__name">
               <h1 className="brand__title">
