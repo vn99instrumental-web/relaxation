@@ -111,7 +111,7 @@ export default function Player({
           <p className="recent__hint">Khi chưa ghim bài mặc định, trang sẽ bắt đầu từ bài mới nhất trong danh sách này.</p>
           <ul className="queue queue--recent">
             {recentTracks.map(({ track, queueIndex }, rank) => (
-              <li key={track.key} className={`queue__item ${queueIndex === index ? 'is-current' : ''}`}>
+              <li key={track.key} className={`queue__item ${queueIndex === index ? 'is-current' : ''}`} aria-current={queueIndex === index ? 'true' : undefined}>
                 <span className="recent__rank">{String(rank + 1).padStart(2, '0')}</span>
                 <button className="queue__play" onClick={() => onSelectRecent(queueIndex)}>
                   {track.kind === 'playlist'
@@ -183,7 +183,7 @@ export default function Player({
           {showQueue && (
             <ul className="queue">
               {recentTracks.map(({ track: t, queueIndex: i }) => (
-                <li key={t.key} className={`queue__item ${i === index ? 'is-current' : ''}`}>
+                <li key={t.key} className={`queue__item ${i === index ? 'is-current' : ''}`} aria-current={i === index ? 'true' : undefined}>
                   <button className="queue__play" onClick={() => onSelectRecent(i)}>
                     {t.kind === 'playlist'
                       ? <span className="queue__thumb queue__thumb--list">≡</span>

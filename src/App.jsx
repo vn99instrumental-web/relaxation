@@ -327,7 +327,7 @@ export default function App() {
   }, [unread, unreadPoems])
 
   const playAt = useCallback((i) => {
-    setRecentPlayback(false)
+    if (mode !== 'append') setRecentPlayback(false)
     setQueue((q) => {
       const t = q[i]
       if (t) { setIndex(i); yt.playTrack(t) }
@@ -344,7 +344,7 @@ export default function App() {
     })
   }, [yt])
 
-  const setOpeningTrack = useCallback((track) => { setRecentPlayback(false); setDefaultTrack(portableTrack(track)) }, [])
+  const setOpeningTrack = useCallback((track) => { setRecentPlayback(true); setDefaultTrack(portableTrack(track)) }, [])
   const clearOpeningTrack = useCallback(() => setDefaultTrack(null), [])
 
   const onAddMany = useCallback((parsedList) => {
@@ -386,6 +386,7 @@ export default function App() {
   const loadPlaylist = useCallback((id, mode = 'replace') => {
     const pl = playlistsRef.current.find((p) => p.id === id)
     if (!pl) return
+    if (mode !== 'append') setRecentPlayback(false)
     const tracks = pl.tracks.map((t, sourceTrackIndex) => ({
       key: nextKey(), ...t, sourcePlaylistId: pl.id, sourcePlaylistName: pl.name, sourceTrackIndex,
     }))
@@ -508,7 +509,7 @@ export default function App() {
     setQueue((q) => {
       if (!q.length) return q
       let ni
-      const recent = recentPlayback && !defaultTrack ? recentQueueIndexes(q, recentLimit) : []
+      const recent = recentPlayback ? recentQueueIndexes(q, recentLimit) : []
       if (recent.length) {
         const position = Math.max(0, recent.indexOf(index))
         if (shuffle && recent.length > 1) {
@@ -549,7 +550,7 @@ export default function App() {
   const onPrev = useCallback(() => {
     setQueue((q) => {
       if (!q.length) return q
-      const recent = recentPlayback && !defaultTrack ? recentQueueIndexes(q, recentLimit) : []
+      const recent = recentPlayback ? recentQueueIndexes(q, recentLimit) : []
       const position = recent.indexOf(index)
       const pi = recent.length
         ? recent[(position <= 0 ? recent.length : position) - 1]
@@ -574,7 +575,7 @@ export default function App() {
     const prepareMusic = () => {
       if (autoStartedRef.current || cancelled) return
       if (defaultTrack) {
-        setRecentPlayback(false)
+        setRecentPlayback(true)
         const existingIndex = queue.findIndex((track) => sameTrack(track, defaultTrack))
         const selectedTrack = existingIndex >= 0 ? queue[existingIndex] : { key: nextKey(), ...defaultTrack }
         const selectedIndex = existingIndex >= 0 ? existingIndex : 0
@@ -772,7 +773,7 @@ export default function App() {
   }
   const sharedMusicSig = `${supaConfig.room}|${JSON.stringify(sharedMusicPayload)}`
   useEffect(() => {
-    if (!admin || !roomSettings.enabled || !roomSettings.ready || !roomHydrated) return
+    if (!admin || !recentPlayback || !roomSettings.enabled || !roomSettings.ready || !roomHydrated) return
     if (sharedMusicSig === sharedSettingsRef.current.musicSig) return
     const timer = setTimeout(() => {
       sharedSettingsRef.current.musicSig = sharedMusicSig
@@ -780,7 +781,7 @@ export default function App() {
     }, 300)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sharedMusicSig, admin, roomSettings.enabled, roomSettings.ready, roomHydrated])
+  }, [sharedMusicSig, admin, recentPlayback, roomSettings.enabled, roomSettings.ready, roomHydrated])
 
   const toggleLeft = (tab) => setLeftTab((cur) => (cur === tab ? null : tab))
   const currentQueueTrack = queue[index]
