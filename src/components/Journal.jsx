@@ -11,6 +11,25 @@ const EMOJIS = [
 
 const REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🔥']
 
+function journalUserKey(value) {
+  return String(value || '').trim().toLocaleLowerCase('vi-VN')
+}
+
+function canonicalJournalUser(value) {
+  const raw = String(value || '').trim()
+  const key = journalUserKey(raw)
+  if (key === 'rt') return 'RT'
+  if (key === 'rừng thông') return 'Rừng Thông'
+  if (key === 'dốc nhà làng') return 'Dốc Nhà Làng'
+  return raw
+}
+
+function sameJournalUser(a, b) {
+  const aKey = journalUserKey(a)
+  const bKey = journalUserKey(b)
+  return Boolean(aKey && bKey && aKey === bKey)
+}
+
 export default function Journal({ journal, username, setUsername, onClose }) {
   const {
     messages, status, error, sending, online, send, refresh,
@@ -33,6 +52,11 @@ export default function Journal({ journal, username, setUsername, onClose }) {
 
   useEffect(() => { setNameInput(username || '') }, [username])
   useEffect(() => {
+    if (!accessAllowed || !username) return
+    const canonical = canonicalJournalUser(username)
+    if (canonical && canonical !== username) setUsername(canonical)
+  }, [accessAllowed, username, setUsername])
+  useEffect(() => {
     const el = listRef.current
     if (el && accessAllowed) el.scrollTop = el.scrollHeight
   }, [messages.length, accessAllowed])
@@ -48,7 +72,7 @@ export default function Journal({ journal, username, setUsername, onClose }) {
     const result = await unlock(candidate)
     setUnlocking(false)
     if (result?.allowed) {
-      setUsername(result.displayName || candidate)
+      setUsername(canonicalJournalUser(result.displayName || candidate))
       setUnlockName('')
       return
     }
@@ -73,9 +97,10 @@ export default function Journal({ journal, username, setUsername, onClose }) {
 
   const toggleReaction = (m, emoji) => {
     if (!reactMessage) return
-    const u = username || 'Ẩn danh'
+    const u = canonicalJournalUser(username) || 'Ẩn danh'
     const cur = (m.reactions && m.reactions[emoji]) || []
-    const nextList = cur.includes(u) ? cur.filter((x) => x !== u) : [...cur, u]
+    const alreadyReacted = cur.some((name) => sameJournalUser(name, u))
+    const nextList = alreadyReacted ? cur.filter((name) => !sameJournalUser(name, u)) : [...cur, u]
     const next = { ...(m.reactions || {}) }
     if (nextList.length) next[emoji] = nextList; else delete next[emoji]
     reactMessage(m.id, next)
@@ -109,7 +134,7 @@ export default function Journal({ journal, username, setUsername, onClose }) {
       setEditingName(false)
       return
     }
-    setUsername(result.displayName || n)
+    setUsername(canonicalJournalUser(result.displayName || n))
     setEditingName(false)
   }
 
@@ -179,13 +204,13 @@ export default function Journal({ journal, username, setUsername, onClose }) {
           <div className="journal__day" key={group.day}>
             <div className="journal__daysep"><span>{group.day}</span></div>
             {group.items.map((m) => {
-              const mine = m.user === username
+              const mine = sameJournalUser(m.user, username)
               const canEdit = (mine || admin) && editMessage
               const editing = editingId === m.id
               return (
                 <div className={`bubble ${mine ? 'bubble--mine' : ''}`} key={m.id}>
                   <div className="bubble__meta">
-                    {!mine && <span className="bubble__user">{m.user}</span>}
+                    {!mine && <span className="bubble__user">{canonicalJournalUser(m.user)}</span>}
                     <span className="bubble__time">{formatTime(m.ts)}{m.edited ? ' · đã sửa' : ''}</span>
                     {!editing && reactMessage && <button className="bubble__edit" onClick={() => setReactId(reactId === m.id ? null : m.id)} title="Thả cảm xúc">☺</button>}
                     {!editing && canEdit && <button className="bubble__edit" onClick={() => startEdit(m)} title="Sửa tin này">✎</button>}
@@ -212,8 +237,8 @@ export default function Journal({ journal, username, setUsername, onClose }) {
                   )}
                   {m.reactions && Object.keys(m.reactions).length > 0 && (
                     <div className="bubble__reacts">{Object.entries(m.reactions).map(([e, users]) => (Array.isArray(users) && users.length > 0) && (
-                      <button key={e} type="button" title={users.join(', ')}
-                        className={`react-chip ${users.includes(username) ? 'is-mine' : ''}`}
+                      <button key={e} type="button" title={users.map(canonicalJournalUser).join(', ')}
+                        className={`react-chip ${users.some((name) => sameJournalUser(name, username)) ? 'is-mine' : ''}`}
                         onClick={() => toggleReaction(m, e)}>{e}<span>{users.length}</span></button>
                     ))}</div>
                   )}
@@ -238,7 +263,7 @@ export default function Journal({ journal, username, setUsername, onClose }) {
             <button type="button" className="journal__whoami"
               onClick={() => { setNameInput(username); setEditingName(true) }} title="Đổi người dùng">
               <IconUserSwitch />
-              <span>{username}</span>
+              <span>{canonicalJournalUser(username)}</span>
             </button>
             <input ref={inputRef} type="text" placeholder="Viết cho người ấy hoặc cho chính mình…"
               value={draft} onChange={(e) => setDraft(e.target.value)} />
