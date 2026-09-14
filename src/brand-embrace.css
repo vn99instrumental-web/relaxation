@@ -5,10 +5,10 @@
   position: relative;
   isolation: isolate;
   overflow: visible;
-  width: min(285px, calc(100vw - 36px));
+  width: min(360px, calc(100vw - 12px));
   min-width: 0;
   padding-top: 0;
-  transform: translate(-6px, -8px);
+  transform: translate(calc(-1 * var(--stage-gutter)), -16px);
 }
 
 /* The composite image already contains the pine branch. */
@@ -21,25 +21,25 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  width: 100%;
+  width: 70%;
   min-width: 0;
-  max-width: 285px;
+  max-width: none;
+  margin: -2px 0 0 18%;
   line-height: 1.08;
 }
 
-/* Restore the original overall pine footprint: about 270px on desktop. */
 .brand__title {
   position: relative;
   z-index: 2;
   display: block;
-  width: min(270px, 100%);
+  width: 100%;
   max-width: 100%;
   margin: 0;
   line-height: 0;
   overflow: visible;
 }
 
-.brand__wordmark {
+.brand__lockup {
   position: static !important;
   display: block !important;
   width: 100% !important;
@@ -70,16 +70,18 @@
 
 @media (max-width: 480px) {
   .brand {
-    width: min(220px, calc(100vw - 24px));
-    transform: translate(-4px, -6px);
+    width: min(300px, 88vw);
+    transform: translate(calc(-1 * var(--stage-gutter)), -12px);
   }
 
   .brand__name {
-    max-width: 220px;
+    width: 72%;
+    max-width: none;
+    margin-left: 18%;
   }
 
   .brand__title {
-    width: min(220px, 100%);
+    width: 100%;
   }
 
   .brand__tagline,
