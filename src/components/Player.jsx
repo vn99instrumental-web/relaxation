@@ -151,25 +151,31 @@ export default function Player({
               <h3 title={currentTitle}>{currentTitle}</h3>
               <small>{queue.length ? `${index + 1} / ${queue.length}` : 'Chưa có bài'}</small>
             </div>
-            <div className="now-player__seek">
-              <input type="range" min="0" max={duration || 0.1} step="0.1" value={currentTime}
-                disabled={!duration} onChange={(event) => yt?.seekTo(Number(event.target.value))} aria-label="Tua bài hát" />
-              <div><span>{timeLabel(currentTime)}</span><span>{timeLabel(duration)}</span></div>
+            <div className="now-player__controls">
+              <div className="now-player__seek">
+                <span>{timeLabel(currentTime)}</span>
+                <input type="range" min="0" max={duration || 0.1} step="0.1" value={currentTime}
+                  disabled={!duration} onChange={(event) => yt?.seekTo(Number(event.target.value))} aria-label="Tua bài hát" />
+                <span>{timeLabel(duration)}</span>
+              </div>
+              <div className="now-player__control-row">
+                <div className="now-player__transport">
+                  <button className={`ctrl ctrl--sm shuffle ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
+                    aria-label="Phát ngẫu nhiên" aria-pressed={shuffle} disabled={queue.length < 2}><IconShuffle /></button>
+                  <button className="ctrl" onClick={onPrev} aria-label="Bài trước" disabled={!queue.length}><IconPrev /></button>
+                  <button className="ctrl ctrl--main" onClick={yt?.toggle} aria-label={yt?.playing ? 'Dừng' : 'Phát'} disabled={!yt?.current}>
+                    {yt?.playing ? <IconPause /> : <IconPlay />}
+                  </button>
+                  <button className="ctrl" onClick={onNext} aria-label="Bài sau" disabled={!queue.length}><IconNext /></button>
+                  <button className={`ctrl ctrl--sm ${showVideo ? 'is-on' : ''}`} onClick={onToggleVideo}
+                    title={showVideo ? 'Ẩn video YouTube' : 'Trình chiếu video YouTube trong khung'}
+                    aria-label={showVideo ? 'Ẩn video' : 'Hiện video'}>▣</button>
+                </div>
+                <label className="now-player__volume" title="Âm lượng"><b>♪</b>
+                  <input type="range" min="0" max="100" value={ytVolume} onChange={(event) => setYtVolume(Number(event.target.value))} aria-label="Âm lượng" />
+                </label>
+              </div>
             </div>
-            <div className="now-player__transport">
-              <button className={`ctrl ctrl--sm shuffle ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
-                aria-label="Phát ngẫu nhiên" aria-pressed={shuffle} disabled={queue.length < 2}><IconShuffle /></button>
-              <button className="ctrl" onClick={onPrev} aria-label="Bài trước" disabled={!queue.length}><IconPrev /></button>
-              <button className="ctrl ctrl--main" onClick={yt?.toggle} aria-label={yt?.playing ? 'Dừng' : 'Phát'} disabled={!yt?.current}>
-                {yt?.playing ? <IconPause /> : <IconPlay />}
-              </button>
-              <button className="ctrl" onClick={onNext} aria-label="Bài sau" disabled={!queue.length}><IconNext /></button>
-              <button className={`ctrl ctrl--sm ${showVideo ? 'is-on' : ''}`} onClick={onToggleVideo} aria-label={showVideo ? 'Ẩn video' : 'Hiện video'}>▣</button>
-            </div>
-            <label className="now-player__volume"><span>Âm lượng</span><b>♪</b>
-              <input type="range" min="0" max="100" value={ytVolume} onChange={(event) => setYtVolume(Number(event.target.value))} />
-            </label>
-            <p className="now-player__background">Có điều khiển trên màn hình khóa khi thiết bị hỗ trợ. Phát nền có thể bị YouTube hoặc hệ điều hành tạm dừng.</p>
           </div>
       </section>
       {tab !== 'now' && (tab === 'recent' ? (
