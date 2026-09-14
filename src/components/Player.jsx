@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { parseYouTube, videoThumb } from '../lib/youtube'
-import { IconShuffle } from './icons'
+import { IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
 
 const addedTime = (track, fallback) => {
   const numeric = Number(track?.addedAt)
@@ -14,14 +14,15 @@ const addedTime = (track, fallback) => {
 //  • Thư viện: playlist đã lưu + hàng chờ (danh sách bài).
 //  • Thêm nhạc: dán link (vào hàng chờ / playlist có sẵn / playlist mới) + lưu playlist.
 export default function Player({
-  queue, index, onAddMany, onSelect, onSelectRecent, onRemove, onClear,
+  queue, index, yt, playlistName, onNext, onPrev, ytVolume, setYtVolume,
+  onAddMany, onSelect, onSelectRecent, onRemove, onClear,
   showVideo, onToggleVideo, shuffle, onToggleShuffle,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
   onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist, onRenamePlaylist,
   admin, defaultTrack, onSetDefaultTrack, onClearDefaultTrack,
   recentLimit, onRecentLimitChange,
 }) {
-  const [tab, setTab] = useState('recent')         // 'recent' | 'library' | 'add'
+  const [tab, setTab] = useState('now')            // 'now' | 'recent' | 'library' | 'add'
   const [editPlId, setEditPlId] = useState(null)   // id playlist đang đổi tên
   const [plRename, setPlRename] = useState('')
   const [input, setInput] = useState('')
@@ -81,10 +82,21 @@ export default function Player({
     .map((track, queueIndex) => ({ track, queueIndex }))
     .sort((a, b) => addedTime(b.track, b.queueIndex) - addedTime(a.track, a.queueIndex))
     .slice(0, recentLimit)
+  const currentTrack = queue[index]
+  const currentTitle = yt?.nowTitle || currentTrack?.title || 'Chưa chọn bài hát'
+  const duration = Number(yt?.duration) || 0
+  const currentTime = Math.min(Number(yt?.currentTime) || 0, duration || Infinity)
+  const timeLabel = (seconds) => {
+    const safe = Math.max(0, Math.floor(Number(seconds) || 0))
+    return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, '0')}`
+  }
 
   return (
     <div className="pane">
       <div className="player__tabs" role="tablist">
+        <button role="tab" aria-selected={tab === 'now'}
+          className={`player__tab ${tab === 'now' ? 'is-active' : ''}`}
+          onClick={() => setTab('now')}>Đang nghe</button>
         <button role="tab" aria-selected={tab === 'recent'}
           className={`player__tab ${tab === 'recent' ? 'is-active' : ''}`}
           onClick={() => setTab('recent')}>Mới đăng</button>
@@ -98,7 +110,38 @@ export default function Player({
 
       {note && <div className="form-note">{note}</div>}
 
-      {tab === 'recent' ? (
+      {tab === 'now' ? (
+        <section className="now-player" aria-label="Trình phát nhạc">
+          <div className="now-player__art">
+            {currentTrack?.videoId ? <img src={videoThumb(currentTrack.videoId, 'hqdefault')} alt="" /> : <span>♫</span>}
+            <i className={yt?.playing ? 'is-playing' : ''} aria-hidden="true">❊</i>
+          </div>
+          <div className="now-player__meta">
+            <span>{playlistName ? `Playlist · ${playlistName}` : 'Playlist · Mới đăng'}</span>
+            <h3 title={currentTitle}>{currentTitle}</h3>
+            <small>{queue.length ? `${index + 1} / ${queue.length}` : 'Chưa có bài'}</small>
+          </div>
+          <div className="now-player__seek">
+            <input type="range" min="0" max={duration || 0.1} step="0.1" value={currentTime}
+              disabled={!duration} onChange={(event) => yt?.seekTo(Number(event.target.value))} aria-label="Tua bài hát" />
+            <div><span>{timeLabel(currentTime)}</span><span>{timeLabel(duration)}</span></div>
+          </div>
+          <div className="now-player__transport">
+            <button className={`ctrl ctrl--sm shuffle ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
+              aria-label="Phát ngẫu nhiên" aria-pressed={shuffle} disabled={queue.length < 2}><IconShuffle /></button>
+            <button className="ctrl" onClick={onPrev} aria-label="Bài trước" disabled={!queue.length}><IconPrev /></button>
+            <button className="ctrl ctrl--main" onClick={yt?.toggle} aria-label={yt?.playing ? 'Dừng' : 'Phát'} disabled={!yt?.current}>
+              {yt?.playing ? <IconPause /> : <IconPlay />}
+            </button>
+            <button className="ctrl" onClick={onNext} aria-label="Bài sau" disabled={!queue.length}><IconNext /></button>
+            <button className="ctrl ctrl--sm" onClick={onToggleVideo} aria-label={showVideo ? 'Ẩn video' : 'Hiện video'}>▣</button>
+          </div>
+          <label className="now-player__volume"><span>Âm lượng</span><b>♪</b>
+            <input type="range" min="0" max="100" value={ytVolume} onChange={(event) => setYtVolume(Number(event.target.value))} />
+          </label>
+          <p className="now-player__background">Có điều khiển trên màn hình khóa khi thiết bị hỗ trợ. Phát nền có thể bị YouTube hoặc hệ điều hành tạm dừng.</p>
+        </section>
+      ) : tab === 'recent' ? (
         <div className="player__recent">
           <div className="recent__head">
             <div><strong>Bài mới nhất</strong><span>{recentTracks.length} bài</span></div>

@@ -663,15 +663,26 @@ export default function App() {
   // Điều khiển nhạc trên màn hình khóa / trung tâm thông báo (MediaSession)
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    const track = queue[index]
     try {
       if (yt.nowTitle && typeof window.MediaMetadata === 'function') {
         navigator.mediaSession.metadata = new window.MediaMetadata({
-          title: yt.nowTitle, artist: 'Dưới Tán Thông', album: 'Đà Lạt trong sương',
+          title: yt.nowTitle,
+          artist: 'Dưới Tán Thông',
+          album: track?.sourcePlaylistName || 'Mới đăng',
+          artwork: track?.videoId
+            ? [{ src: `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`, sizes: '480x360', type: 'image/jpeg' }]
+            : [],
         })
       }
       navigator.mediaSession.playbackState = yt.playing ? 'playing' : 'paused'
+      if (yt.duration > 0) navigator.mediaSession.setPositionState({
+        duration: yt.duration,
+        playbackRate: 1,
+        position: Math.min(Math.max(0, yt.currentTime || 0), yt.duration),
+      })
     } catch { /* ignore */ }
-  }, [yt.nowTitle, yt.playing])
+  }, [queue, index, yt.nowTitle, yt.playing, yt.currentTime, yt.duration])
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
     const set = (a, fn) => { try { navigator.mediaSession.setActionHandler(a, fn) } catch { /* ignore */ } }
@@ -679,7 +690,13 @@ export default function App() {
     set('pause', () => yt.pause())
     set('previoustrack', () => onPrev())
     set('nexttrack', () => onNext())
-    return () => { set('play', null); set('pause', null); set('previoustrack', null); set('nexttrack', null) }
+    set('seekbackward', (details) => yt.seekTo(Math.max(0, yt.currentTime - (details.seekOffset || 10))))
+    set('seekforward', (details) => yt.seekTo(Math.min(yt.duration || Infinity, yt.currentTime + (details.seekOffset || 10))))
+    set('seekto', (details) => { if (Number.isFinite(details.seekTime)) yt.seekTo(details.seekTime) })
+    return () => {
+      set('play', null); set('pause', null); set('previoustrack', null); set('nexttrack', null)
+      set('seekbackward', null); set('seekforward', null); set('seekto', null)
+    }
   }, [yt, onNext, onPrev])
 
   // ---- Mặc định chung của phòng: admin lưu, mọi người nhận khi vào + realtime ----
@@ -888,7 +905,8 @@ export default function App() {
           </div>
           <div className="drawer__body">
             <Player
-                queue={queue} index={index} nowTitle={yt.nowTitle}
+                queue={queue} index={index} yt={yt} playlistName={activePlaylistName}
+                onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
                 onAddMany={onAddMany} onSelect={playAt} onSelectRecent={playRecentAt} onRemove={onRemove} onClear={onClear}
                 showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
                 shuffle={shuffle} onToggleShuffle={onToggleShuffle}
