@@ -1,6 +1,6 @@
 /* Pine branch + “Dưới Tán Thông” are one transparent composite asset.
    Tagline and featured poem remain live React content below it.
-   This is rendered only with CSS, so React re-renders cannot replace the image. */
+   Render the composite on the real React-owned <img>; no pseudo-element, no DOM mutation. */
 .brand {
   position: relative;
   isolation: isolate;
@@ -10,7 +10,7 @@
   transform: translate(-6px, -8px) !important;
 }
 
-/* The old separate pine layer is disabled completely. */
+/* Remove the old separate pine layer. */
 .brand::after,
 .brand__pine {
   display: none !important;
@@ -19,51 +19,37 @@
 .brand__name {
   position: relative;
   z-index: 2;
-  max-width: 250px;
+  max-width: 285px;
   width: 100%;
 }
 
-/* Reserve the exact visual area for the single pine + title composite. */
 .brand__title {
   position: relative;
   display: block;
   width: min(285px, calc(100vw - 36px));
   max-width: none !important;
-  aspect-ratio: 1368 / 525;
   margin: 0 0 2px 0 !important;
   line-height: 0 !important;
   overflow: visible;
-  isolation: isolate;
 }
 
-/* Render the asset independently from React's <img src>. */
-.brand__title::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: block;
-  background-image: url('/brand-header-pine-title.webp');
-  background-repeat: no-repeat;
-  background-position: left top;
-  background-size: contain;
-  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .48));
-  pointer-events: none;
-}
-
-/* Keep the React-owned old wordmark out of sight; it is retained only for semantic fallback/alt text. */
+/* Use the real img node that React already renders.
+   CSS content replaces the old wordmark source with the single composite asset,
+   so there is always a painted image even after React re-renders. */
 .brand__wordmark {
+  content: url('/brand-header-pine-title.webp');
   display: block !important;
   width: 100% !important;
+  max-width: none !important;
   height: auto !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
+  opacity: 1 !important;
+  visibility: visible !important;
   transform: none !important;
-  filter: none !important;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .48)) !important;
   pointer-events: none !important;
 }
 
-/* Dynamic content stays live and above the background scene. */
+/* Dynamic text stays live below the visual header. */
 .brand__tagline,
 .brand__poem {
   position: relative;
@@ -77,7 +63,7 @@
   }
 
   .brand__name {
-    max-width: 175px;
+    max-width: 220px;
   }
 
   .brand__title {
