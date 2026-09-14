@@ -1,24 +1,25 @@
-function applyCompositeHeader() {
-  const brand = document.querySelector('.brand')
-  const wordmark = brand?.querySelector('.brand__wordmark')
-  if (!brand || !wordmark) return false
-  if (wordmark.dataset.compositeHeader === '1') return true
+const COMPOSITE_SRC = '/brand-header-pine-title.webp'
 
-  const oldPine = brand.querySelector('.brand__pine')
-  if (oldPine) oldPine.remove()
+function syncCompositeHeader() {
+  const wordmark = document.querySelector('.brand__wordmark')
+  if (!wordmark) return false
 
-  wordmark.src = '/brand-header-pine-title.webp'
-  wordmark.width = 1368
-  wordmark.height = 525
+  const current = wordmark.getAttribute('src') || ''
+  if (current !== COMPOSITE_SRC) wordmark.setAttribute('src', COMPOSITE_SRC)
+  if (wordmark.getAttribute('width') !== '1368') wordmark.setAttribute('width', '1368')
+  if (wordmark.getAttribute('height') !== '525') wordmark.setAttribute('height', '525')
   wordmark.dataset.compositeHeader = '1'
-  wordmark.classList.add('brand__wordmark--composite')
-  brand.classList.add('brand--composite')
   return true
 }
 
-if (!applyCompositeHeader()) {
-  const observer = new MutationObserver(() => {
-    if (applyCompositeHeader()) observer.disconnect()
-  })
-  observer.observe(document.documentElement, { childList: true, subtree: true })
-}
+syncCompositeHeader()
+
+// React still owns the element and may re-apply the JSX src on a later render.
+// Keep the real <img> pointed at the composite without creating a second visual layer.
+const observer = new MutationObserver(() => syncCompositeHeader())
+observer.observe(document.documentElement, {
+  childList: true,
+  subtree: true,
+  attributes: true,
+  attributeFilter: ['src'],
+})
