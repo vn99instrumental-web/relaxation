@@ -1,55 +1,71 @@
 /* Pine branch + “Dưới Tán Thông” are one transparent composite asset.
-   Tagline and featured poem remain live React content below it.
-   Render the composite on the real React-owned <img>; no pseudo-element, no DOM mutation. */
+   Render it as the background of the real React title box.
+   No CSS content replacement, pseudo-element image, or DOM mutation.
+   Tagline and featured poem remain live React content below it. */
 .brand {
   position: relative;
   isolation: isolate;
   overflow: visible;
-  width: min(285px, calc(100vw - 36px)) !important;
-  padding-top: 0 !important;
-  transform: translate(-6px, -8px) !important;
+  width: min(285px, calc(100vw - 36px));
+  min-width: 0;
+  padding-top: 0;
+  transform: translate(-6px, -8px);
 }
 
-/* Remove the old separate pine layer. */
+/* Old separate pine layer is no longer part of the visual header. */
 .brand::after,
 .brand__pine {
   display: none !important;
 }
 
+/* Match the last known-good layout before the header experiments. */
 .brand__name {
-  position: relative;
-  z-index: 2;
-  max-width: 285px;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  max-width: 250px;
+  line-height: 1.08;
 }
 
+/* The original wordmark footprint was 145–190px on desktop.
+   Keep exactly that footprint and preserve the composite 1368:525 ratio. */
 .brand__title {
   position: relative;
+  z-index: 2;
   display: block;
-  width: min(285px, calc(100vw - 36px));
-  max-width: none !important;
-  margin: 0 0 2px 0 !important;
-  line-height: 0 !important;
+  width: clamp(145px, 16vw, 190px);
+  max-width: 100%;
+  aspect-ratio: 1368 / 525;
+  margin: 0;
+  line-height: 0;
   overflow: visible;
+  background-image: url('/brand-header-pine-title.webp');
+  background-repeat: no-repeat;
+  background-position: left top;
+  background-size: 100% 100%;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .52));
 }
 
-/* Use the real img node that React already renders.
-   CSS content replaces the old wordmark source with the single composite asset,
-   so there is always a painted image even after React re-renders. */
+/* Keep the React-owned old image only as semantic fallback; it must not size the box. */
 .brand__wordmark {
-  content: url('/brand-header-pine-title.webp');
-  display: block !important;
-  width: 100% !important;
-  max-width: none !important;
-  height: auto !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  transform: none !important;
-  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .48)) !important;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  opacity: 0 !important;
   pointer-events: none !important;
+  transform: none !important;
+  filter: none !important;
 }
 
-/* Dynamic text stays live below the visual header. */
+/* Dynamic content keeps the same behavior as before. */
 .brand__tagline,
 .brand__poem {
   position: relative;
@@ -58,15 +74,16 @@
 
 @media (max-width: 480px) {
   .brand {
-    width: min(220px, calc(100vw - 24px)) !important;
-    transform: translate(-4px, -6px) !important;
+    width: min(220px, calc(100vw - 24px));
+    transform: translate(-4px, -6px);
   }
 
   .brand__name {
-    max-width: 220px;
+    max-width: 175px;
   }
 
+  /* Exact mobile width from the last known-good header. */
   .brand__title {
-    width: min(220px, calc(100vw - 24px));
+    width: 122px;
   }
 }
