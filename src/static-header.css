@@ -1,0 +1,47 @@
+/* Approved final header artwork: render as ONE image, never as separate layers. */
+.brand.brand--exact-static {
+  position: relative !important;
+  width: min(715px, calc(100vw - (2 * var(--stage-gutter)))) !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  aspect-ratio: 1448 / 1086 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transform: none !important;
+  overflow: hidden !important;
+  isolation: isolate;
+  background: transparent !important;
+}
+
+/* Hide the old dynamic header without deleting it from React state. */
+.brand.brand--exact-static > * {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* One full-frame image. No independent scaling/cropping of branch, text or poem. */
+.brand.brand--exact-static::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: block;
+  background-image: var(--brand-exact-image);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+
+/* Disable the previous layered pine treatment completely. */
+.brand.brand--exact-static::after,
+.brand.brand--exact-static .brand__pine,
+.brand.brand--exact-static .brand__name {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  .brand.brand--exact-static {
+    width: calc(100vw - (2 * var(--stage-gutter))) !important;
+  }
+}
