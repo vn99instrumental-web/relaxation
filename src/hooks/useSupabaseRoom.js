@@ -4,7 +4,7 @@ import { makeClient } from '../lib/supabase'
 // Đồng bộ chat + playlist qua Supabase, có REALTIME (tin nhắn hiện ngay).
 // config: { url, key, room }. Khi thiếu -> enabled=false (app dùng cách khác).
 const mapMsg = (r) => ({ id: r.id, user: r.author, text: r.body, ts: new Date(r.created_at).getTime(), edited: !!r.edited_at, editedTs: r.edited_at ? new Date(r.edited_at).getTime() : null, reactions: r.reactions && typeof r.reactions === 'object' ? r.reactions : {} })
-const mapPl = (r) => ({ id: r.id, name: r.name, tracks: Array.isArray(r.tracks) ? r.tracks : [], ts: new Date(r.created_at).getTime() })
+const mapPl = (r) => ({ id: r.id, name: r.name, tracks: Array.isArray(r.tracks) ? r.tracks : [], ts: new Date(r.updated_at || r.created_at).getTime() })
 
 function mergeById(list, incoming) {
   const map = new Map(list.map((m) => [m.id, m]))
@@ -26,7 +26,8 @@ export function useSupabaseRoom(config, username) {
   const reloadPlaylists = useCallback(async () => {
     const c = clientRef.current
     if (!c) return
-    const { data } = await c.from('playlists').select('*').eq('room_id', room).order('created_at', { ascending: false })
+    const { data } = await c.from('playlists').select('*').eq('room_id', room)
+      .order('updated_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false })
     setPlaylists((data || []).map(mapPl))
   }, [room])
 
@@ -58,7 +59,8 @@ export function useSupabaseRoom(config, username) {
       try {
         const [m, p] = await Promise.all([
           client.from('messages').select('*').eq('room_id', room).order('created_at'),
-          client.from('playlists').select('*').eq('room_id', room).order('created_at', { ascending: false }),
+          client.from('playlists').select('*').eq('room_id', room)
+            .order('updated_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }),
         ])
         if (cancelled) return
         if (m.error) throw m.error

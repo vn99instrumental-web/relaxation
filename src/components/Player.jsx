@@ -82,6 +82,13 @@ export default function Player({
     .map((track, queueIndex) => ({ track, queueIndex }))
     .sort((a, b) => addedTime(b.track, b.queueIndex) - addedTime(a.track, a.queueIndex))
     .slice(0, recentLimit)
+  const currentTracks = queue
+    .map((track, queueIndex) => ({ track, queueIndex }))
+    .sort((a, b) => addedTime(b.track, b.queueIndex) - addedTime(a.track, a.queueIndex))
+  const sortedPlaylistTracks = (tracks) => (tracks || [])
+    .map((track, sourceIndex) => ({ track, sourceIndex }))
+    .sort((a, b) => addedTime(b.track, b.sourceIndex) - addedTime(a.track, a.sourceIndex))
+  const displayedPlaylists = [...(playlists || [])].sort((a, b) => (b.ts || 0) - (a.ts || 0))
   const currentTrack = queue[index]
   const currentTitle = yt?.nowTitle || currentTrack?.title || 'Chưa chọn bài hát'
   const duration = Number(yt?.duration) || 0
@@ -115,7 +122,7 @@ export default function Player({
           <aside className="now-player__queue">
             <div className="now-player__queue-head"><strong>{playlistName || 'Mới đăng'}</strong><span>{queue.length} bài</span></div>
             <ul className="queue">
-              {queue.map((track, queueIndex) => (
+              {currentTracks.map(({ track, queueIndex }) => (
                 <li key={track.key || `${track.videoId}-${queueIndex}`} className={`queue__item ${queueIndex === index ? 'is-current' : ''}`}>
                   <span className="recent__rank">{String(queueIndex + 1).padStart(2, '0')}</span>
                   <button className="queue__play" onClick={() => onSelect(queueIndex)}>
@@ -234,7 +241,7 @@ export default function Player({
               </div>
               {showPlaylists && (
                 <ul className="pl-list">
-                  {playlists.map((p) => (
+                  {displayedPlaylists.map((p) => (
                     <li key={p.id} className="pl-group">
                       <div className="pl-item">
                         <button className="pl-expand" onClick={() => setExpanded((e) => (e === p.id ? null : p.id))}
@@ -261,8 +268,8 @@ export default function Player({
                       {expanded === p.id && (
                         <ul className="pl-tracks">
                           {p.tracks.length === 0 && <li className="pl-track pl-track--empty">Playlist trống.</li>}
-                          {p.tracks.map((t, i) => (
-                            <li key={i} className="pl-track">
+                          {sortedPlaylistTracks(p.tracks).map(({ track: t, sourceIndex: i }) => (
+                            <li key={t.recordId || `${t.videoId || t.playlistId}-${i}`} className="pl-track">
                               <span className="pl-track__name">{t.kind === 'playlist' ? '≡ ' : ''}{t.title || 'Video'}</span>
                               {onMoveTrack && (
                                 <select className="pl-move" value="" title="Chuyển bài này sang…"

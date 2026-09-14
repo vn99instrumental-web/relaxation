@@ -74,6 +74,12 @@ function recentQueueIndexes(queue, limit) {
     .map(({ queueIndex }) => queueIndex)
 }
 
+function sortTracksNewest(tracks) {
+  return (tracks || [])
+    .map((track, originalIndex) => ({ track, originalIndex }))
+    .sort((a, b) => trackAddedTime(b.track, b.originalIndex) - trackAddedTime(a.track, a.originalIndex))
+}
+
 let keySeed = 1
 const nextKey = () => `t${keySeed++}-${Math.random().toString(36).slice(2, 6)}`
 const nextRecordId = () => globalThis.crypto?.randomUUID?.() || `music-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
@@ -395,7 +401,7 @@ export default function App() {
   const savePlaylist = useCallback((name) => {
     setQueue((q) => {
       if (!q.length) return q
-      const tracks = q.map(({ kind, videoId, playlistId, title }) => ({ kind, videoId, playlistId, title }))
+      const tracks = sortTracksNewest(q).map(({ track }) => portableTrack(track))
       const nm = name || 'Playlist mới'
       if (supaRef.current.enabled) {
         supaRef.current.savePlaylistRow(nm, tracks)
@@ -411,8 +417,8 @@ export default function App() {
     const pl = playlistsRef.current.find((p) => p.id === id)
     if (!pl) return
     if (mode !== 'append') setRecentPlayback(false)
-    const tracks = pl.tracks.map((t, sourceTrackIndex) => ({
-      key: nextKey(), ...t, sourcePlaylistId: pl.id, sourcePlaylistName: pl.name, sourceTrackIndex,
+    const tracks = sortTracksNewest(pl.tracks).map(({ track, originalIndex }) => ({
+      key: nextKey(), ...track, sourcePlaylistId: pl.id, sourcePlaylistName: pl.name, sourceTrackIndex: originalIndex,
     }))
     setQueue((q) => {
       const nq = mode === 'append' ? [...q, ...tracks] : tracks
@@ -431,7 +437,7 @@ export default function App() {
 
   const renamePlaylist = useCallback((id, name) => {
     if (supaRef.current.enabled) supaRef.current.renamePlaylistRow(id, name)
-    else setLocalPlaylists((list) => list.map((p) => (p.id === id ? { ...p, name } : p)))
+    else setLocalPlaylists((list) => list.map((p) => (p.id === id ? { ...p, name, ts: Date.now() } : p)))
   }, [])
 
   const tracksFromParsed = (parsedList) =>
@@ -441,9 +447,9 @@ export default function App() {
   const addToPlaylist = useCallback((playlistId, parsedList) => {
     const pl = playlistsRef.current.find((p) => p.id === playlistId)
     if (!pl) return
-    const merged = [...pl.tracks, ...tracksFromParsed(parsedList)]
+    const merged = sortTracksNewest([...pl.tracks, ...tracksFromParsed(parsedList)]).map(({ track }) => track)
     if (supaRef.current.enabled) supaRef.current.updatePlaylistRow(playlistId, merged)
-    else setLocalPlaylists((list) => list.map((p) => (p.id === playlistId ? { ...p, tracks: merged } : p)))
+    else setLocalPlaylists((list) => list.map((p) => (p.id === playlistId ? { ...p, tracks: merged, ts: Date.now() } : p)))
   }, [])
 
   // Chuyển 1 bài từ playlist này sang playlist khác (hoặc ra Hàng chờ)
@@ -461,13 +467,14 @@ export default function App() {
     }
     const to = playlistsRef.current.find((p) => p.id === toId)
     if (!to) return
-    const toTracks = [...to.tracks, track]
+    const movedTrack = { ...track, addedAt: Date.now() }
+    const toTracks = sortTracksNewest([...to.tracks, movedTrack]).map(({ track: item }) => item)
     if (supaRef.current.enabled) {
       supaRef.current.updatePlaylistRow(fromId, remaining)
       supaRef.current.updatePlaylistRow(toId, toTracks)
     } else {
       setLocalPlaylists((list) => list.map((p) => (
-        p.id === fromId ? { ...p, tracks: remaining } : p.id === toId ? { ...p, tracks: toTracks } : p
+        p.id === fromId ? { ...p, tracks: remaining, ts: Date.now() } : p.id === toId ? { ...p, tracks: toTracks, ts: Date.now() } : p
       )))
     }
   }, [])
@@ -478,12 +485,12 @@ export default function App() {
     if (!pl) return
     const tracks = pl.tracks.filter((_, i) => i !== index)
     if (supaRef.current.enabled) supaRef.current.updatePlaylistRow(playlistId, tracks)
-    else setLocalPlaylists((list) => list.map((p) => (p.id === playlistId ? { ...p, tracks } : p)))
+    else setLocalPlaylists((list) => list.map((p) => (p.id === playlistId ? { ...p, tracks, ts: Date.now() } : p)))
   }, [])
 
   // Tạo playlist mới từ link
   const createPlaylistWith = useCallback((name, parsedList) => {
-    const tracks = tracksFromParsed(parsedList)
+    const tracks = sortTracksNewest(tracksFromParsed(parsedList)).map(({ track }) => track)
     const nm = name || `Playlist ${new Date().toLocaleDateString('vi-VN')}`
     if (supaRef.current.enabled) supaRef.current.savePlaylistRow(nm, tracks)
     else setLocalPlaylists((list) => [{ id: `pl${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, name: nm, tracks, ts: Date.now() }, ...list])
@@ -636,8 +643,8 @@ export default function App() {
       if (!pls.length) return
       autoStartedRef.current = true
       const pl = pls[Math.floor(Math.random() * pls.length)]
-      const tracks = pl.tracks.map((t, sourceTrackIndex) => ({
-        key: nextKey(), ...t, sourcePlaylistId: pl.id, sourcePlaylistName: pl.name, sourceTrackIndex,
+      const tracks = sortTracksNewest(pl.tracks).map(({ track, originalIndex }) => ({
+        key: nextKey(), ...track, sourcePlaylistId: pl.id, sourcePlaylistName: pl.name, sourceTrackIndex: originalIndex,
       }))
       const i = Math.floor(Math.random() * tracks.length)
       setQueue(tracks)
