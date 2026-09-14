@@ -82,6 +82,7 @@ export default function Poems({ poems, username, admin, onAddPoem, onEditPoem, o
 
 function MemoryInteractions({ poem, username, admin, onAddComment, onDeleteComment, onToggleReaction }) {
   const [text, setText] = useState('')
+  const [commentsOpen, setCommentsOpen] = useState(false)
   const items = Array.isArray(poem.comments) ? poem.comments : []
   const comments = items.filter((item) => item.type !== 'reaction')
   const reactions = items.filter((item) => item.type === 'reaction')
@@ -93,7 +94,7 @@ function MemoryInteractions({ poem, username, admin, onAddComment, onDeleteComme
   }
   return <div className="memory-social">
     <div className="memory-reactions" aria-label="Tương tác bài viết">
-      {['👍', '❤️', '🕯️'].map((emoji) => {
+      {['❤️'].map((emoji) => {
         const matches = reactions.filter((item) => item.emoji === emoji)
         const active = matches.some((item) => item.author === (username || 'Ẩn danh'))
         return <button key={emoji} type="button" className={active ? 'is-active' : ''}
@@ -101,9 +102,9 @@ function MemoryInteractions({ poem, username, admin, onAddComment, onDeleteComme
           <span>{emoji}</span>{matches.length > 0 && <b>{matches.length}</b>}
         </button>
       })}
-      <span className="memory-comment-count">💬 {comments.length}</span>
+      <button type="button" className="memory-comment-count" onClick={() => setCommentsOpen((value) => !value)} aria-expanded={commentsOpen}>Bình luận {comments.length}</button>
     </div>
-    {comments.length > 0 && <div className="poem__comments">
+    {commentsOpen && comments.length > 0 && <div className="poem__comments">
       {comments.map((comment) => <div className="pcm" key={comment.id}>
         <div className="pcm__body">
           <span className="pcm__meta"><b>{comment.author || 'Ẩn danh'}</b></span>
@@ -113,10 +114,10 @@ function MemoryInteractions({ poem, username, admin, onAddComment, onDeleteComme
           onClick={() => onDeleteComment?.(poem.id, comment.id)} title="Xoá bình luận">✕</button>}
       </div>)}
     </div>}
-    <form className="pcm-add" onSubmit={submit}>
+    {commentsOpen && <form className="pcm-add" onSubmit={submit}>
       <input value={text} onChange={(event) => setText(event.target.value)} placeholder="Viết bình luận…" />
       <button type="submit" disabled={!text.trim()}>Gửi</button>
-    </form>
+    </form>}
   </div>
 }
 

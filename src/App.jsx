@@ -7,7 +7,6 @@ import Journal from './components/Journal'
 import Poems from './components/Poems'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
-import VideoPip from './components/VideoPip'
 import { IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
@@ -136,9 +135,13 @@ export default function App() {
   // Điều khiển hiển thị: mặc định đóng hết để thấy trọn khung cảnh
   const [leftTab, setLeftTab] = useState(null)   // null | 'music'
   const [rightTab, setRightTab] = useState(null) // null | 'journal' | 'poems'
+  const [musicView, setMusicView] = useState('now')
   const journalOpen = rightTab === 'journal'
   const poemsOpen = rightTab === 'poems'
-  const toggleRight = (tab) => setRightTab((cur) => (cur === tab ? null : tab))
+  const toggleRight = (tab) => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches) setLeftTab(null)
+    setRightTab((cur) => (cur === tab ? null : tab))
+  }
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
@@ -149,6 +152,7 @@ export default function App() {
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
   const [seenPoemTs, setSeenPoemTs] = useState(() => load('vibe.seenPoemTs', Date.now())) // mốc thơ đã xem
+  const [seenHeartTs, setSeenHeartTs] = useState(() => load('vibe.seenHeartTs', Date.now()))
   const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // mảng: leaves|petals|rain
   const [fxSpeed, setFxSpeed] = useState(() => { const v = load('vibe.fxSpeed', 50); return typeof v === 'number' ? v : 50 }) // 0 chậm .. 100 nhanh
   const [fxDensity, setFxDensity] = useState(() => { const v = load('vibe.fxDensity', 50); return typeof v === 'number' ? v : 50 }) // 0 thưa .. 100 dày
@@ -182,6 +186,11 @@ export default function App() {
     const list = poemsApi.poems || []
     return list.filter((p) => p.author && p.author !== username && (p.ts || 0) > seenPoemTs).length
   }, [poemsApi.poems, username, seenPoemTs])
+  const heartEvents = useMemo(() => (poemsApi.poems || []).flatMap((poem) =>
+    (poem.comments || []).filter((item) => item.type === 'reaction' && item.emoji === '❤️' && item.author !== username)
+      .map((item) => ({ ...item, poemId: poem.id }))), [poemsApi.poems, username])
+  const latestHeartTs = useMemo(() => heartEvents.reduce((latest, item) => Math.max(latest, item.ts || 0), 0), [heartEvents])
+  const unreadHearts = useMemo(() => heartEvents.filter((item) => (item.ts || 0) > seenHeartTs).length, [heartEvents, seenHeartTs])
 
   // Ảnh nền: dùng thư viện Supabase (chung 2 người) khi có; không thì dùng local.
   const localBackgrounds = useMemo(
@@ -226,6 +235,7 @@ export default function App() {
   useEffect(() => save('vibe.keepAwake', keepAwake), [keepAwake])
   useEffect(() => save('vibe.seenTs', seenTs), [seenTs])
   useEffect(() => save('vibe.seenPoemTs', seenPoemTs), [seenPoemTs])
+  useEffect(() => save('vibe.seenHeartTs', seenHeartTs), [seenHeartTs])
   useEffect(() => save('vibe.fx', fx), [fx])
   useEffect(() => save('vibe.fxSpeed', fxSpeed), [fxSpeed])
   useEffect(() => save('vibe.fxDensity', fxDensity), [fxDensity])
@@ -295,11 +305,12 @@ export default function App() {
     if (!poemsOpen) return
     const list = poemsApi.poems || []
     if (list.length) setSeenPoemTs(Math.max(seenPoemTs, list[0].ts || Date.now()))
+    if (latestHeartTs) setSeenHeartTs((current) => Math.max(current, latestHeartTs))
     if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
       try { Notification.requestPermission() } catch { /* ignore */ }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [poemsOpen, poemsApi.poems])
+  }, [poemsOpen, poemsApi.poems, latestHeartTs])
 
   // Có THƠ MỚI: đang xem -> đánh dấu đã xem; không -> thông báo hệ thống (title tự cập nhật)
   const prevPoemLenRef = useRef((poemsApi.poems || []).length)
@@ -320,11 +331,24 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poemsApi.poems, poemsOpen, username])
 
+  const prevHeartTsRef = useRef(latestHeartTs)
+  useEffect(() => {
+    const previous = prevHeartTsRef.current
+    prevHeartTsRef.current = latestHeartTs
+    if (!latestHeartTs || latestHeartTs <= previous) return
+    const viewing = poemsOpen && (typeof document === 'undefined' || document.visibilityState === 'visible')
+    if (viewing) { setSeenHeartTs(latestHeartTs); return }
+    if (Date.now() - latestHeartTs > 60000) return
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try { new Notification('Dưới Tán Thông ❤️', { body: 'Có người vừa thả tim một hoài niệm.', tag: 'hienmua-poem-heart', renotify: true }) } catch { /* ignore */ }
+    }
+  }, [latestHeartTs, poemsOpen])
+
   // Nhắc số tin/thơ chưa xem ngay trên tiêu đề tab
   useEffect(() => {
-    const total = unread + unreadPoems
+    const total = unread + unreadPoems + unreadHearts
     document.title = total > 0 ? `(${total}) Dưới Tán Thông` : 'Dưới Tán Thông — Đà Lạt trong sương'
-  }, [unread, unreadPoems])
+  }, [unread, unreadPoems, unreadHearts])
 
   const playAt = useCallback((i) => {
     if (mode !== 'append') setRecentPlayback(false)
@@ -800,7 +824,10 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedMusicSig, admin, recentPlayback, roomSettings.enabled, roomSettings.ready, roomHydrated])
 
-  const toggleLeft = (tab) => setLeftTab((cur) => (cur === tab ? null : tab))
+  const toggleLeft = (tab) => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches) setRightTab(null)
+    setLeftTab((cur) => (cur === tab ? null : tab))
+  }
   const currentQueueTrack = queue[index]
   const activePlaylistName = currentQueueTrack?.sourcePlaylistId
     ? (playlists.find((p) => p.id === currentQueueTrack.sourcePlaylistId)?.name || currentQueueTrack.sourcePlaylistName || '')
@@ -862,7 +889,7 @@ export default function App() {
   // Máy có WebGL -> dùng LeafEngine (3D); không thì rơi về hiệu ứng CSS.
   const webglOK = useMemo(() => hasWebGL(), [])
   return (
-    <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''} ${rightTab ? 'is-right-open' : ''}`} data-theme={theme}>
+    <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''} ${rightTab ? 'is-right-open' : ''} ${musicView === 'now' ? 'is-music-now' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
       {webglOK && fx.length > 0 ? (
         <Suspense fallback={<FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />}>
@@ -872,9 +899,6 @@ export default function App() {
         <FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />
       )}
 
-
-      {/* Video kéo được, luôn tồn tại để nhạc tiếp tục phát */}
-      <VideoPip showVideo={showVideo && !uiHidden} onClose={() => setShowVideo(false)} />
 
       <div className="stage">
         <header className="topbar">
@@ -917,6 +941,7 @@ export default function App() {
                 admin={admin} defaultTrack={defaultTrack}
                 onSetDefaultTrack={setOpeningTrack} onClearDefaultTrack={clearOpeningTrack}
                 recentLimit={recentLimit} onRecentLimitChange={setRecentLimit}
+                onTabChange={setMusicView}
               />
           </div>
         </aside>
@@ -948,7 +973,7 @@ export default function App() {
         playlistName={activePlaylistName}
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
         shuffle={shuffle} onToggleShuffle={onToggleShuffle}
-        unread={unread} unreadPoems={unreadPoems}
+        unread={unread} unreadPoems={unreadPoems + unreadHearts}
         leftTab={leftTab} onToggleLeft={toggleLeft}
         journalOpen={journalOpen} onToggleJournal={() => toggleRight('journal')}
         poemsOpen={rightTab === 'poems'} onTogglePoems={() => toggleRight('poems')}

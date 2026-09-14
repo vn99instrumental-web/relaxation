@@ -350,8 +350,10 @@ input, textarea { font-family: inherit; }
   z-index: 5;
   transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.36s;
 }
-.drawer--left { left: 0; border-left: none; border-radius: 0 var(--radius) var(--radius) 0; transform: translateX(-104%); opacity: 0; }
-.drawer--right { top: 14px; right: 0; border-right: none; border-radius: var(--radius) 0 0 var(--radius); transform: translateX(104%); opacity: 0; }
+.drawer--left { top: 0; left: 0; width: min(760px, calc(100vw - 24px)); border-left: none; border-radius: 0 var(--radius) var(--radius) 0; transform: translateX(-104%); opacity: 0; }
+.drawer--right { top: 14px; right: 0; width: min(500px, 92vw); border-right: none; border-radius: var(--radius) 0 0 var(--radius); transform: translateX(104%); opacity: 0; }
+.app.is-left-open.is-right-open .drawer--left { width: min(58vw, 720px); }
+.app.is-left-open.is-right-open .drawer--right { width: min(40vw, 500px); }
 .drawer.is-open { transform: translateX(0); opacity: 1; }
 
 .drawer__tabs { display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -409,12 +411,23 @@ input, textarea { font-family: inherit; }
 .player__saveblock .muted { display: block; font-size: 0.76rem; margin-bottom: 8px; }
 
 /* Trình phát đầy đủ trong tab Nhạc */
-.now-player { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 4px 8px 10px; }
+.now-player { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: minmax(190px, .72fr) minmax(280px, 1fr); gap: 18px; padding: 4px 8px 10px; }
+.now-player.is-tab-hidden { position: fixed; left: -9999px; width: 760px; height: 600px; pointer-events: none; }
+.now-player__queue { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding-right: 13px; border-right: 1px solid var(--border); }
+.now-player__queue-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 4px 5px 9px; color: var(--gold-soft); }
+.now-player__queue-head strong { overflow: hidden; font: .86rem/1.2 var(--serif); white-space: nowrap; text-overflow: ellipsis; }
+.now-player__queue-head span { color: var(--ink-dim); font-size: .64rem; white-space: nowrap; }
+.now-player__queue .queue { flex: 1; min-height: 0; overflow-y: auto; }
+.now-player__main { min-width: 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 0 5px; }
 .now-player__art { position: relative; width: min(100%, 270px); aspect-ratio: 1 / 1; overflow: hidden; border: 1px solid var(--border-strong); border-radius: 18px; background: radial-gradient(circle at 42% 38%, var(--surface-2), var(--panel-solid)); box-shadow: 0 16px 38px rgba(0,0,0,.28); }
 .now-player__art img { width: 100%; height: 100%; object-fit: cover; filter: sepia(.12) saturate(.86) contrast(.96); }
 .now-player__art > span { display: grid; place-items: center; width: 100%; height: 100%; color: var(--gold-soft); font: 4rem/1 var(--serif); opacity: .72; }
 .now-player__art i { position: absolute; right: 12px; bottom: 10px; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--border-strong); border-radius: 50%; background: color-mix(in srgb, var(--panel-solid) 82%, transparent); color: var(--gold-soft); font-style: normal; backdrop-filter: blur(7px); }
 .now-player__art i.is-playing { animation: spin 5s linear infinite; }
+.now-player__video { width: 100%; height: 100%; background: #000; }
+.now-player__video.is-hidden { position: fixed; left: -9999px; width: 280px; height: 158px; }
+.now-player__video.is-shown { position: absolute; inset: 0; }
+.now-player__video #yt-frame, .now-player__video #yt-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
 .now-player__meta { width: 100%; margin: 14px 0 11px; text-align: center; }
 .now-player__meta > span { display: block; margin-bottom: 4px; color: var(--gold-soft); font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; }
 .now-player__meta h3 { margin: 0; overflow: hidden; color: var(--paper); font: 600 .98rem/1.35 var(--serif-body); white-space: nowrap; text-overflow: ellipsis; }
@@ -774,7 +787,7 @@ input[type='range']:disabled { opacity: 0.4; }
 .memory-reactions button { display: inline-flex; align-items: center; gap: 4px; min-width: 34px; height: 27px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--field-bg); color: var(--ink-dim); font-size: 0.74rem; }
 .memory-reactions button.is-active { border-color: var(--gold-soft); background: var(--sel); color: var(--gold-soft); }
 .memory-reactions button b { font-size: 0.66rem; font-weight: 600; }
-.memory-comment-count { margin-left: auto; color: var(--ink-dim); font-size: 0.68rem; }
+.memory-comment-count { margin-left: auto; min-width: 0 !important; border: 0 !important; background: transparent !important; color: var(--ink-dim) !important; font-size: 0.68rem !important; }
 
 /* ============ MODAL ============ */
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(10, 6, 3, 0.66); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -885,6 +898,11 @@ input[type='range']:disabled { opacity: 0.4; }
 }
 /* Mở panel trái (Nhạc/Không gian) trên màn hình rộng -> dời dock sang phải và
    thu gọn (ẩn "đang phát"), kéo dài panel trái xuống đáy để có thêm không gian. */
+@media (max-width: 700px) {
+  .now-player { grid-template-columns: 1fr; grid-template-rows: minmax(110px, 30vh) auto; overflow-y: auto; gap: 10px; }
+  .now-player__queue { padding: 0 0 9px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .now-player__main { overflow: visible; }
+}
 @media (min-width: 1100px) {
   .app.is-left-open .dock { left: auto; right: clamp(12px, 3vw, 30px); transform: none; }
   .app.is-left-open .dock__now { display: none; }
@@ -918,6 +936,7 @@ input[type='range']:disabled { opacity: 0.4; }
   .icon-btn { width: 38px; height: 38px; font-size: 1rem; }
   .drawer { top: 56px; bottom: 74px; left: 0; right: 0; width: 100vw; border-radius: 0; }
   .drawer--right { top: 0; }
+  .drawer--left { top: 0; }
   .drawer--left { border-right: none; }
   .drawer--right { border-left: none; }
   .drawer__body { padding: 12px; }

@@ -101,7 +101,7 @@ export function usePoems(config, username) {
 
   const toggleReaction = useCallback((poemId, emoji) => {
     const poem = poemsRef.current.find((p) => p.id === poemId)
-    if (!poem || !['👍', '❤️', '🕯️'].includes(emoji)) return
+    if (!poem || emoji !== '❤️') return
     const author = username || 'Ẩn danh'
     const items = poem.comments || []
     const existing = items.find((item) => item.type === 'reaction' && item.emoji === emoji && item.author === author)
