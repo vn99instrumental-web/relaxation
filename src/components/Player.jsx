@@ -122,9 +122,9 @@ export default function Player({
           <aside className="now-player__queue">
             <div className="now-player__queue-head"><strong>{playlistName || 'Mới đăng'}</strong><span>{queue.length} bài</span></div>
             <ul className="queue">
-              {currentTracks.map(({ track, queueIndex }) => (
+              {currentTracks.map(({ track, queueIndex }, displayIndex) => (
                 <li key={track.key || `${track.videoId}-${queueIndex}`} className={`queue__item ${queueIndex === index ? 'is-current' : ''}`}>
-                  <span className="recent__rank">{String(queueIndex + 1).padStart(2, '0')}</span>
+                  <span className="recent__rank">{String(displayIndex + 1).padStart(2, '0')}</span>
                   <button className="queue__play" onClick={() => onSelect(queueIndex)}>
                     {track.videoId ? <img className="queue__thumb" src={videoThumb(track.videoId, 'default')} alt="" loading="lazy" /> : <span className="queue__thumb queue__thumb--list">≡</span>}
                     <span className="queue__label"><span className="queue__name">{track.title || 'Video'}</span></span>
