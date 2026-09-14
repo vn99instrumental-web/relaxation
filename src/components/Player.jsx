@@ -28,8 +28,7 @@ export default function Player({
   const [plRename, setPlRename] = useState('')
   const [input, setInput] = useState('')
   const [expanded, setExpanded] = useState(null)   // id playlist đang mở xem bài
-  const [showQueue, setShowQueue] = useState(true)          // mặc định mở danh sách bài
-  const [showPlaylists, setShowPlaylists] = useState(false) // mặc định thu gọn danh sách playlist
+  const [showPlaylists, setShowPlaylists] = useState(true)
   const [note, setNote] = useState('')
   const [plName, setPlName] = useState('')
   const [target, setTarget] = useState('__queue__') // __queue__ | <playlistId> | __new__
@@ -226,51 +225,6 @@ export default function Player({
         </div>
       ) : (
         <div className="player__library">
-          <div className="queue__head">
-            <button className="pl-collapse" onClick={() => setShowQueue((v) => !v)} title="Ẩn/hiện hàng chờ">
-              <span className="pl-collapse__caret">{showQueue ? '▾' : '▸'}</span> Playlist đang phát · Mới đăng ({recentTracks.length})
-            </button>
-            <div className="queue__head-actions">
-              {queue.length > 1 && (
-                <button className={`link-btn shuffle-link ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
-                  title="Phát ngẫu nhiên" aria-pressed={shuffle}>
-                  <IconShuffle /><span>Trộn</span>
-                </button>
-              )}
-              <button className="link-btn" onClick={onToggleVideo}>{showVideo ? 'Ẩn video' : 'Video'}</button>
-              {queue.length > 0 && <button className="link-btn" onClick={() => { if (window.confirm('Xoá toàn bộ playlist Mới đăng?')) onClear() }}>Xóa</button>}
-            </div>
-          </div>
-
-          {showQueue && (
-            <ul className="queue">
-              {recentTracks.map(({ track: t, queueIndex: i }) => (
-                <li key={t.key} className={`queue__item ${i === index ? 'is-current' : ''}`} aria-current={i === index ? 'true' : undefined}>
-                  <button className="queue__play" onClick={() => onSelectRecent(i)}>
-                    {t.kind === 'playlist'
-                      ? <span className="queue__thumb queue__thumb--list">≡</span>
-                      : <img className="queue__thumb" src={videoThumb(t.videoId, 'default')} alt="" loading="lazy" />}
-                    <span className="queue__label">
-                      <span className="queue__name">{t.title || (t.kind === 'playlist' ? 'Playlist' : 'Video')}</span>
-                    </span>
-                  </button>
-                  {admin && i === index && (
-                    <button className={`queue__default ${sameTrack(t, defaultTrack) ? 'is-on' : ''}`}
-                      onClick={() => sameTrack(t, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(t)}
-                      title={sameTrack(t, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}
-                      aria-label={sameTrack(t, defaultTrack) ? 'Bỏ bài hát mặc định' : 'Đặt bài hát mặc định'}>
-                      {sameTrack(t, defaultTrack) ? '★' : '☆'}
-                    </button>
-                  )}
-                  <button className="queue__remove" onClick={() => onRemove(i)} title="Xóa">✕</button>
-                </li>
-              ))}
-              {queue.length === 0 && (
-                <li className="queue__empty">Playlist Mới đăng chưa có bài nào — mở tab “Thêm nhạc” để dán link.</li>
-              )}
-            </ul>
-          )}
-
           {playlists?.length > 0 && (
             <div className={`pl-saved ${!showPlaylists ? 'is-collapsed' : ''}`}>
               <div className="queue__head">
@@ -333,6 +287,7 @@ export default function Player({
               )}
             </div>
           )}
+          {!playlists?.length && <div className="queue__empty">Chưa có playlist đã lưu. Bạn có thể tạo playlist trong tab “Thêm nhạc”.</div>}
         </div>
       ))}
     </div>

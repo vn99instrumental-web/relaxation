@@ -484,6 +484,10 @@ input, textarea { font-family: inherit; }
 .dock__vol { display: flex; align-items: center; gap: 7px; margin-left: 4px; }
 .dock__vol input { width: 82px; }
 .dock__tabs { display: flex; align-items: center; gap: 6px; padding-left: 12px; border-left: 1px solid var(--border); }
+.app.is-left-open .drawer { bottom: 84px; }
+.app.is-left-open .dock { left: auto; right: clamp(12px, 3vw, 30px); transform: none; }
+.app.is-left-open .dock__now, .app.is-left-open .dock__transport { display: none; }
+.app.is-left-open .dock__tabs { padding-left: 0; border-left: 0; }
 /* Cùng chiều cao (36px), chiều rộng tự vừa theo chữ */
 .dock__btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; white-space: nowrap; border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); padding: 0 13px; border-radius: 10px; font-size: 0.82rem; transition: 0.2s; }
 .dock__btn:hover { color: var(--ink); border-color: var(--border-strong); }
@@ -509,6 +513,7 @@ input, textarea { font-family: inherit; }
 .pl-save input:focus { outline: none; border-color: var(--border-strong); }
 .pl-save button { background: var(--pine-soft); border: none; color: var(--ink); padding: 0 15px; border-radius: 10px; font-size: 0.86rem; }
 .pl-saved { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.player__library > .pl-saved { margin-top: 0; padding-top: 0; border-top: 0; }
 .pl-list { list-style: none; margin: 5px 0 0; padding: 0; display: flex; flex-direction: column; gap: 1px; flex: 1; min-height: 0; overflow-y: auto; }
 .pl-item { display: flex; align-items: center; gap: 3px; border-radius: 8px; padding: 1px; }
 .pl-item:hover { background: var(--surface); }
@@ -906,7 +911,7 @@ input[type='range']:disabled { opacity: 0.4; }
 @media (min-width: 1100px) {
   .app.is-left-open .dock { left: auto; right: clamp(12px, 3vw, 30px); transform: none; }
   .app.is-left-open .dock__now { display: none; }
-  .app.is-left-open .drawer--left { bottom: 18px; }
+  .app.is-left-open .drawer--left { bottom: 84px; }
 }
 @media (max-width: 640px) {
   .drawer { top: 60px; bottom: 80px; width: min(440px, 94vw); }
