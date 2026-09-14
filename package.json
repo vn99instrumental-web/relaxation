@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Hien Mua - lofi music, ambient sounds & a shared journal for two, wrapped in a misty 90s Da Lat atmosphere.",
   "scripts": {
+    "predev": "node scripts/build-header-asset.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/build-header-asset.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },

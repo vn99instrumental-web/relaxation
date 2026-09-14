@@ -1,6 +1,6 @@
-/* Final header rendering: one real transparent image contains pine + “Dưới Tán Thông”.
-   Tagline and featured poem stay live React content below it.
-   No DOM mutation, pseudo-element image, background-image, content:url, or forced aspect-ratio frame. */
+/* Approved pine + “Dưới Tán Thông” composite.
+   React renders the real PNG directly. No pseudo-element, background replacement,
+   DOM mutation, theme filter, transform, or forced aspect-ratio frame. */
 .brand {
   position: relative;
   isolation: isolate;
@@ -11,7 +11,7 @@
   transform: translate(-6px, -8px);
 }
 
-/* The approved composite already includes the pine branch. */
+/* The composite image already contains the pine branch. */
 .brand::after,
 .brand__pine {
   display: none !important;
@@ -21,13 +21,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  width: 100%;
   min-width: 0;
   max-width: 285px;
   line-height: 1.08;
 }
 
-/* Original layout reserved ~270px for the pine artwork inside a 285px brand block.
-   The composite replaces pine + title, so it uses that same overall footprint. */
+/* Restore the original overall pine footprint: about 270px on desktop. */
 .brand__title {
   position: relative;
   z-index: 2;
@@ -54,9 +54,11 @@
   white-space: normal !important;
   opacity: 1 !important;
   visibility: visible !important;
-  pointer-events: none !important;
+  object-fit: contain !important;
+  image-rendering: auto !important;
   transform: none !important;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .52)) !important;
+  filter: none !important;
+  pointer-events: none !important;
 }
 
 .brand__tagline,
