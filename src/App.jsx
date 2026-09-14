@@ -221,6 +221,36 @@ export default function App() {
   const queueRef = useRef(queue); queueRef.current = queue
   const indexRef = useRef(index); indexRef.current = index
 
+  // A queue loaded from one saved playlist is a live view of that playlist.
+  // Keep it aligned with Supabase/local realtime updates while preserving the
+  // currently playing track whenever that track still exists.
+  useEffect(() => {
+    if (!queue.length) return
+    const sourcePlaylistId = queue[0]?.sourcePlaylistId
+    if (!sourcePlaylistId || !queue.every((track) => track.sourcePlaylistId === sourcePlaylistId)) return
+    const sourcePlaylist = playlists.find((playlist) => playlist.id === sourcePlaylistId)
+    if (!sourcePlaylist) return
+
+    const syncedQueue = sortTracksNewest(sourcePlaylist.tracks).map(({ track, originalIndex }) => ({
+      key: nextKey(),
+      ...track,
+      sourcePlaylistId: sourcePlaylist.id,
+      sourcePlaylistName: sourcePlaylist.name,
+      sourceTrackIndex: originalIndex,
+    }))
+    if (queueSignature(syncedQueue) === queueSignature(queue)) return
+
+    const currentTrack = queue[index]
+    const matchingIndex = currentTrack ? syncedQueue.findIndex((track) => sameTrack(track, currentTrack)) : -1
+    const nextIndex = matchingIndex >= 0 ? matchingIndex : Math.min(index, Math.max(0, syncedQueue.length - 1))
+    setQueue(syncedQueue)
+    setIndex(nextIndex)
+    if (currentTrack && matchingIndex < 0) {
+      if (syncedQueue[nextIndex]) setTimeout(() => yt.playTrack(syncedQueue[nextIndex]), 0)
+      else setTimeout(() => yt.stop(), 0)
+    }
+  }, [playlists, queue, index, yt])
+
   useEffect(() => save('vibe.queue', queue), [queue])
   useEffect(() => save('vibe.playlists', localPlaylists), [localPlaylists])
   useEffect(() => save('vibe.shuffle', shuffle), [shuffle])
