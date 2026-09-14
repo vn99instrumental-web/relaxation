@@ -1,78 +1,72 @@
-/* Header option: nhành thông ôm/quyện lấy chữ.
-   Giữ asset hiện có và dựng thành 2 lớp: một lớp nằm sau wordmark,
-   một dải cành mảnh đi xuyên phía trước phần chân chữ. */
+/* Composite header: pine + title are one transparent image.
+   Tagline and poem remain live React content below it. */
 .brand {
   isolation: isolate;
   overflow: visible;
 }
 
-/* Tán chính: phủ từ trái sang phải và nằm SAU chữ. */
+.brand::after,
 .brand__pine {
-  z-index: 0;
-  top: -22px;
-  width: min(292px, 31vw);
-  opacity: .98;
-}
-.brand__pine .brand__pine-art {
-  transform: rotate(-1.2deg);
-  transform-origin: 42% 46%;
+  display: none !important;
 }
 
 .brand__name {
-  position: relative;
-  z-index: 2;
+  max-width: 250px;
 }
 
-/* Cành tiền cảnh: dùng lại cùng asset nhưng chỉ lộ một dải cành/kim ở
-   phần giữa, khiến nhành thông có cảm giác chạy xuyên qua và ôm chân chữ.
-   Phần quả thông bên phải được cắt khỏi lớp này để không bị nhân đôi. */
-.brand::after {
-  content: '';
-  position: absolute;
-  z-index: 3;
-  pointer-events: none;
-  top: 4px;
-  left: calc(-1 * var(--stage-gutter) + 4px);
-  width: min(282px, 30vw);
-  aspect-ratio: 2172 / 724;
-  background: url('/brand-pine-header-v3.png') center / contain no-repeat;
-  clip-path: polygon(0 44%, 87% 44%, 87% 76%, 0 76%);
-  transform: rotate(2.1deg);
-  transform-origin: 48% 54%;
-  opacity: .94;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,.52));
+.brand__title {
+  width: min(285px, calc(100vw - 36px));
+  max-width: none;
+  margin: 0 0 2px 0;
+  line-height: 0;
 }
 
-/* Giữ mood từng theme đồng nhất với cành gốc. */
-.app[data-theme='dusk'] .brand::after {
-  filter: sepia(.2) saturate(1.15) brightness(1.08) drop-shadow(0 2px 6px rgba(69,35,12,.56));
-}
-.app[data-theme='rain'] .brand::after {
-  filter: saturate(.72) hue-rotate(12deg) brightness(.9) contrast(1.08) drop-shadow(0 2px 7px rgba(5,24,35,.66));
-}
-.app[data-theme='morning'] .brand::after {
-  filter: saturate(.82) brightness(1.18) contrast(.94) drop-shadow(0 2px 5px rgba(72,67,42,.26));
-}
-.app[data-theme='film'] .brand::after {
-  filter: sepia(.52) saturate(.68) contrast(.92) brightness(.98) drop-shadow(0 2px 6px rgba(38,29,20,.58));
+.brand__wordmark.brand__wordmark--composite {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  transform: none !important;
+  filter: drop-shadow(0 3px 7px rgba(0,0,0,.48)) !important;
 }
 
-/* Chữ vẫn ưu tiên đọc được; cành tiền cảnh chỉ chạm khoảng 1/3 dưới wordmark. */
-.brand__wordmark {
+/* The composite already contains the visual treatment; do not recolor it per theme. */
+.app[data-theme='dusk'] .brand__wordmark--composite,
+.app[data-theme='rain'] .brand__wordmark--composite,
+.app[data-theme='morning'] .brand__wordmark--composite,
+.app[data-theme='film'] .brand__wordmark--composite {
+  filter: drop-shadow(0 3px 7px rgba(0,0,0,.48)) !important;
+}
+
+/* Return the live text directly below the visual header. */
+.brand--composite {
+  padding-top: 0 !important;
+  transform: translate(-6px, -8px) !important;
+  width: min(285px, calc(100vw - 36px)) !important;
+}
+
+.brand--composite .brand__name {
+  max-width: 250px;
+  width: 100%;
+}
+
+.brand--composite .brand__tagline,
+.brand--composite .brand__poem {
   position: relative;
   z-index: 2;
 }
 
 @media (max-width: 480px) {
-  .brand__pine {
-    top: -16px;
-    width: min(232px, 66vw);
+  .brand--composite {
+    width: min(220px, calc(100vw - 24px)) !important;
+    transform: translate(-4px, -6px) !important;
   }
-  .brand::after {
-    top: 1px;
-    left: -10px;
-    width: min(224px, 64vw);
-    clip-path: polygon(0 45%, 86% 45%, 86% 77%, 0 77%);
-    transform: rotate(2.4deg);
+
+  .brand--composite .brand__name {
+    max-width: 175px;
+  }
+
+  .brand__title {
+    width: min(220px, calc(100vw - 24px));
   }
 }
