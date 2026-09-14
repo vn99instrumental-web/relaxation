@@ -2,6 +2,13 @@ import { useState } from 'react'
 import { parseYouTube, videoThumb } from '../lib/youtube'
 import { IconShuffle } from './icons'
 
+const addedTime = (track, fallback) => {
+  const numeric = Number(track?.addedAt)
+  if (Number.isFinite(numeric) && numeric > 0) return numeric
+  const parsed = Date.parse(track?.addedAt)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 // Panel "Nhạc" — 3 tab con:
 //  • Mới đăng: các bài vừa được thêm gần nhất.
 //  • Thư viện: playlist đã lưu + hàng chờ (danh sách bài).
@@ -72,7 +79,7 @@ export default function Player({
   const targetValid = target === '__queue__' || target === '__new__' || playlists.some((p) => p.id === target)
   const recentTracks = queue
     .map((track, queueIndex) => ({ track, queueIndex }))
-    .sort((a, b) => (Number(b.track.addedAt) || b.queueIndex) - (Number(a.track.addedAt) || a.queueIndex))
+    .sort((a, b) => addedTime(b.track, b.queueIndex) - addedTime(a.track, a.queueIndex))
     .slice(0, recentLimit)
 
   return (

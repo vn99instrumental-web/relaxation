@@ -60,10 +60,17 @@ function sameTrack(a, b) {
   return a.kind === 'playlist' ? a.playlistId === b.playlistId : a.videoId === b.videoId
 }
 
+function trackAddedTime(track, fallback = 0) {
+  const numeric = Number(track?.addedAt)
+  if (Number.isFinite(numeric) && numeric > 0) return numeric
+  const parsed = Date.parse(track?.addedAt)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 function recentQueueIndexes(queue, limit) {
   return queue
     .map((track, queueIndex) => ({ track, queueIndex }))
-    .sort((a, b) => (Number(b.track.addedAt) || b.queueIndex) - (Number(a.track.addedAt) || a.queueIndex))
+    .sort((a, b) => trackAddedTime(b.track, b.queueIndex) - trackAddedTime(a.track, a.queueIndex))
     .slice(0, limit)
     .map(({ queueIndex }) => queueIndex)
 }
@@ -79,7 +86,7 @@ function normalizeQueueMetadata(tracks, updatedAt = Date.now()) {
     ...track,
     recordId: track.recordId || nextRecordId(),
     // Dữ liệu cũ được backfill theo thứ tự đã thêm trong mảng: cuối mảng là mới nhất.
-    addedAt: Number(track.addedAt) || base - (list.length - 1 - index) * 1000,
+    addedAt: trackAddedTime(track, base - (list.length - 1 - index) * 1000),
   }))
 }
 
@@ -350,9 +357,13 @@ export default function App() {
         setIndex(0)
         setTimeout(() => yt.playTrack(newTracks[0]), 0)
       }
+      if (roomSettings.enabled && roomSettings.ready && roomHydrated) {
+        const shared = nq.map(({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt }) => ({ kind, videoId, playlistId, title, sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, recordId, addedAt }))
+        setTimeout(() => roomSettings.saveShared({ queue: shared, q_index: q.length ? indexRef.current : 0 }), 0)
+      }
       return nq
     })
-  }, [yt])
+  }, [yt, roomSettings, roomHydrated])
 
   const onClear = useCallback(() => { setQueue([]); setIndex(0); yt.stop() }, [yt])
 
@@ -580,7 +591,7 @@ export default function App() {
       if (queue.length) {
         const newest = queue
           .map((track, queueIndex) => ({ track, queueIndex }))
-          .sort((a, b) => (Number(b.track.addedAt) || b.queueIndex) - (Number(a.track.addedAt) || a.queueIndex))
+          .sort((a, b) => trackAddedTime(b.track, b.queueIndex) - trackAddedTime(a.track, a.queueIndex))
           .slice(0, recentLimit)
         const selectedIndex = newest[0]?.queueIndex ?? Math.max(0, Math.min(index, queue.length - 1))
         const track = queue[selectedIndex]

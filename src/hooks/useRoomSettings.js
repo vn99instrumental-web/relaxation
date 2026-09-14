@@ -70,11 +70,33 @@ export function useRoomSettings(config, isAdmin) {
     }
   }, [room, isAdmin, connectionKey])
 
+  // Playlist Mới đăng là nội dung cộng tác: mọi người đều có thể thêm bài.
+  // Các cài đặt giao diện vẫn đi qua save() và tiếp tục bị chặn bởi isAdmin.
+  const saveShared = useCallback(async (patch) => {
+    const c = clientRef.current
+    if (!c) return { data: null, error: null }
+    try {
+      const result = await c.from('room_settings')
+        .upsert({ id: room, ...patch, updated_by: clientId.current, updated_at: new Date().toISOString() })
+        .select('*')
+        .single()
+      if (result.error) throw result.error
+      setSettings(result.data)
+      setLoadedKey(connectionKey)
+      setError('')
+      return result
+    } catch (e) {
+      setError(e.message || 'Không lưu được playlist Mới đăng')
+      return { data: null, error: e }
+    }
+  }, [room, connectionKey])
+
   return {
     enabled,
     ready: !enabled || loadedKey === connectionKey,
     settings,
     save,
+    saveShared,
     error,
     clientId: clientId.current,
   }
