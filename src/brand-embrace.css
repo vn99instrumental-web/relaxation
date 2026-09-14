@@ -1,68 +1,82 @@
-/* Composite header: pine + title are one transparent image.
-   Tagline and poem remain live React content below it. */
+/* Pine branch + “Dưới Tán Thông” are one transparent composite asset.
+   Tagline and featured poem remain live React content below it.
+   This is rendered only with CSS, so React re-renders cannot replace the image. */
 .brand {
+  position: relative;
   isolation: isolate;
   overflow: visible;
+  width: min(285px, calc(100vw - 36px)) !important;
+  padding-top: 0 !important;
+  transform: translate(-6px, -8px) !important;
 }
 
+/* The old separate pine layer is disabled completely. */
 .brand::after,
 .brand__pine {
   display: none !important;
 }
 
 .brand__name {
-  max-width: 250px;
-}
-
-.brand__title {
-  width: min(285px, calc(100vw - 36px));
-  max-width: none;
-  margin: 0 0 2px 0;
-  line-height: 0;
-}
-
-.brand__wordmark.brand__wordmark--composite {
-  display: block;
-  width: 100%;
-  max-width: none;
-  height: auto;
-  transform: none !important;
-  filter: drop-shadow(0 3px 7px rgba(0,0,0,.48)) !important;
-}
-
-/* The composite already contains the visual treatment; do not recolor it per theme. */
-.app[data-theme='dusk'] .brand__wordmark--composite,
-.app[data-theme='rain'] .brand__wordmark--composite,
-.app[data-theme='morning'] .brand__wordmark--composite,
-.app[data-theme='film'] .brand__wordmark--composite {
-  filter: drop-shadow(0 3px 7px rgba(0,0,0,.48)) !important;
-}
-
-/* Return the live text directly below the visual header. */
-.brand--composite {
-  padding-top: 0 !important;
-  transform: translate(-6px, -8px) !important;
-  width: min(285px, calc(100vw - 36px)) !important;
-}
-
-.brand--composite .brand__name {
-  max-width: 250px;
-  width: 100%;
-}
-
-.brand--composite .brand__tagline,
-.brand--composite .brand__poem {
   position: relative;
   z-index: 2;
+  max-width: 250px;
+  width: 100%;
+}
+
+/* Reserve the exact visual area for the single pine + title composite. */
+.brand__title {
+  position: relative;
+  display: block;
+  width: min(285px, calc(100vw - 36px));
+  max-width: none !important;
+  aspect-ratio: 1368 / 525;
+  margin: 0 0 2px 0 !important;
+  line-height: 0 !important;
+  overflow: visible;
+  isolation: isolate;
+}
+
+/* Render the asset independently from React's <img src>. */
+.brand__title::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  background-image: url('/brand-header-pine-title.webp');
+  background-repeat: no-repeat;
+  background-position: left top;
+  background-size: contain;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .48));
+  pointer-events: none;
+}
+
+/* Keep the React-owned old wordmark out of sight; it is retained only for semantic fallback/alt text. */
+.brand__wordmark {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: none !important;
+  filter: none !important;
+  pointer-events: none !important;
+}
+
+/* Dynamic content stays live and above the background scene. */
+.brand__tagline,
+.brand__poem {
+  position: relative;
+  z-index: 3;
 }
 
 @media (max-width: 480px) {
-  .brand--composite {
+  .brand {
     width: min(220px, calc(100vw - 24px)) !important;
     transform: translate(-4px, -6px) !important;
   }
 
-  .brand--composite .brand__name {
+  .brand__name {
     max-width: 175px;
   }
 
