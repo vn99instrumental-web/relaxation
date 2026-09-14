@@ -45,10 +45,10 @@ export default function Player({
       setNewName('')
     } else if (target === '__queue__') {
       onAddMany(parsed)
-      flash(`Đã thêm ${parsed.length} bài vào hàng chờ${tail}.`)
+      flash(`Đã thêm ${parsed.length} bài vào playlist Mới đăng${tail}.`)
     } else {
       const pl = playlists.find((p) => p.id === target)
-      if (!pl) { onAddMany(parsed); flash(`Đã thêm ${parsed.length} bài vào hàng chờ${tail}.`) }
+      if (!pl) { onAddMany(parsed); flash(`Đã thêm ${parsed.length} bài vào playlist Mới đăng${tail}.`) }
       else { onAddToPlaylist(target, parsed); flash(`Đã thêm ${parsed.length} bài vào “${pl.name}”${tail}.`) }
     }
     setInput('')
@@ -56,10 +56,10 @@ export default function Player({
 
   const doSave = (e) => {
     e.preventDefault()
-    if (!queue.length) { flash('Hàng chờ đang trống.'); return }
+    if (!queue.length) { flash('Playlist Mới đăng đang trống.'); return }
     onSavePlaylist(plName.trim() || `Playlist ${new Date().toLocaleDateString('vi-VN')}`)
     setPlName('')
-    flash('Đã lưu hàng chờ thành playlist.')
+    flash('Đã lưu danh sách Mới đăng thành playlist.')
   }
 
   const startRename = (p) => { setEditPlId(p.id); setPlRename(p.name) }
@@ -136,7 +136,7 @@ export default function Player({
             <div className="player__addbar">
               <select className="player__target" value={targetValid ? target : '__queue__'}
                 onChange={(e) => setTarget(e.target.value)} title="Thêm vào đâu">
-                <option value="__queue__">▶ Hàng chờ</option>
+                <option value="__queue__">▶ Playlist Mới đăng</option>
                 {playlists.map((p) => <option key={p.id} value={p.id}>♫ {p.name}</option>)}
                 <option value="__new__">＋ Playlist mới…</option>
               </select>
@@ -148,7 +148,7 @@ export default function Player({
           </form>
 
           <div className="player__saveblock">
-            <p className="muted">Lưu hàng chờ hiện tại ({queue.length} bài) thành playlist</p>
+            <p className="muted">Lưu danh sách Mới đăng hiện tại ({queue.length} bài) thành playlist</p>
             <form className="pl-save" onSubmit={doSave}>
               <input type="text" placeholder="Tên playlist…" value={plName} onChange={(e) => setPlName(e.target.value)} />
               <button type="submit" disabled={!queue.length}>Lưu</button>
@@ -159,7 +159,7 @@ export default function Player({
         <div className="player__library">
           <div className="queue__head">
             <button className="pl-collapse" onClick={() => setShowQueue((v) => !v)} title="Ẩn/hiện hàng chờ">
-              <span className="pl-collapse__caret">{showQueue ? '▾' : '▸'}</span> Đang phát · {queue.length}
+              <span className="pl-collapse__caret">{showQueue ? '▾' : '▸'}</span> Playlist đang phát · Mới đăng ({recentTracks.length})
             </button>
             <div className="queue__head-actions">
               {queue.length > 1 && (
@@ -169,15 +169,15 @@ export default function Player({
                 </button>
               )}
               <button className="link-btn" onClick={onToggleVideo}>{showVideo ? 'Ẩn video' : 'Video'}</button>
-              {queue.length > 0 && <button className="link-btn" onClick={() => { if (window.confirm('Xoá toàn bộ hàng chờ?')) onClear() }}>Xóa</button>}
+              {queue.length > 0 && <button className="link-btn" onClick={() => { if (window.confirm('Xoá toàn bộ playlist Mới đăng?')) onClear() }}>Xóa</button>}
             </div>
           </div>
 
           {showQueue && (
             <ul className="queue">
-              {queue.map((t, i) => (
+              {recentTracks.map(({ track: t, queueIndex: i }) => (
                 <li key={t.key} className={`queue__item ${i === index ? 'is-current' : ''}`}>
-                  <button className="queue__play" onClick={() => onSelect(i)}>
+                  <button className="queue__play" onClick={() => onSelectRecent(i)}>
                     {t.kind === 'playlist'
                       ? <span className="queue__thumb queue__thumb--list">≡</span>
                       : <img className="queue__thumb" src={videoThumb(t.videoId, 'default')} alt="" loading="lazy" />}
@@ -197,7 +197,7 @@ export default function Player({
                 </li>
               ))}
               {queue.length === 0 && (
-                <li className="queue__empty">Chưa có bài nào — mở tab “Thêm nhạc” để dán link, hoặc chọn một playlist bên dưới.</li>
+                <li className="queue__empty">Playlist Mới đăng chưa có bài nào — mở tab “Thêm nhạc” để dán link.</li>
               )}
             </ul>
           )}
@@ -230,7 +230,7 @@ export default function Player({
                               <span className="pl-item__count">{p.tracks.length} bài</span>
                             </button>
                             {onRenamePlaylist && <button className="link-btn" onClick={() => startRename(p)} title="Đổi tên playlist">✎</button>}
-                            <button className="link-btn" onClick={() => onLoadPlaylist(p.id, 'append')} title="Thêm vào hàng chờ">＋</button>
+                            <button className="link-btn" onClick={() => onLoadPlaylist(p.id, 'append')} title="Thêm vào playlist Mới đăng">＋</button>
                             <button className="queue__remove" onClick={() => { if (window.confirm(`Xoá playlist “${p.name}”? Không thể hoàn tác.`)) onDeletePlaylist(p.id) }} title="Xóa playlist">✕</button>
                           </>
                         )}
@@ -245,7 +245,7 @@ export default function Player({
                                 <select className="pl-move" value="" title="Chuyển bài này sang…"
                                   onChange={(e) => { if (e.target.value) { onMoveTrack(p.id, i, e.target.value); e.target.value = '' } }}>
                                   <option value="">⇄ Chuyển…</option>
-                                  <option value="__queue__">▶ Hàng chờ</option>
+                                  <option value="__queue__">▶ Playlist Mới đăng</option>
                                   {playlists.filter((x) => x.id !== p.id).map((x) => (
                                     <option key={x.id} value={x.id}>♫ {x.name}</option>
                                   ))}

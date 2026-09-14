@@ -90,14 +90,26 @@ export function usePoems(config, username) {
     if (!t) return
     const poem = poemsRef.current.find((p) => p.id === poemId)
     if (!poem) return
-    writeComments(poemId, [...poem.comments, { id: rid(), author: username || 'Ẩn danh', text: t, ts: Date.now() }])
+    writeComments(poemId, [...(poem.comments || []), { id: rid(), author: username || 'Ẩn danh', text: t, ts: Date.now() }])
   }, [username, writeComments])
 
   const deleteComment = useCallback((poemId, commentId) => {
     const poem = poemsRef.current.find((p) => p.id === poemId)
     if (!poem) return
-    writeComments(poemId, poem.comments.filter((c) => c.id !== commentId))
+    writeComments(poemId, (poem.comments || []).filter((c) => c.id !== commentId))
   }, [writeComments])
 
-  return { poems, addPoem, editPoem, deletePoem, addComment, deleteComment, enabled }
+  const toggleReaction = useCallback((poemId, emoji) => {
+    const poem = poemsRef.current.find((p) => p.id === poemId)
+    if (!poem || !['👍', '❤️', '🕯️'].includes(emoji)) return
+    const author = username || 'Ẩn danh'
+    const items = poem.comments || []
+    const existing = items.find((item) => item.type === 'reaction' && item.emoji === emoji && item.author === author)
+    const comments = existing
+      ? items.filter((item) => item.id !== existing.id)
+      : [...items, { id: rid(), type: 'reaction', emoji, author, ts: Date.now() }]
+    writeComments(poemId, comments)
+  }, [username, writeComments])
+
+  return { poems, addPoem, editPoem, deletePoem, addComment, deleteComment, toggleReaction, enabled }
 }

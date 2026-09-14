@@ -287,8 +287,8 @@ input, textarea { font-family: inherit; }
 .stage > * { pointer-events: auto; }
 
 .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.brand { position: relative; width: min(470px, calc(100vw - 36px)); min-width: 0; padding-top: 69px; }
-.brand__pine { position: absolute; z-index: 0; top: -15px; left: calc(-1 * var(--stage-gutter)); width: min(520px, 53vw); pointer-events: none; }
+.brand { position: relative; width: min(410px, calc(100vw - 36px)); min-width: 0; padding-top: 57px; }
+.brand__pine { position: absolute; z-index: 0; top: -10px; left: calc(-1 * var(--stage-gutter)); width: min(405px, 42vw); pointer-events: none; }
 .brand__pine .brand__pine-art { display: block; width: 100%; height: auto; }
 .brand__pine-art { transition: filter 0.45s ease; filter: drop-shadow(0 3px 7px rgba(0,0,0,0.58)); }
 .app[data-theme='dusk'] .brand__pine-art { filter: sepia(0.2) saturate(1.15) brightness(1.08) drop-shadow(0 3px 8px rgba(69,35,12,0.62)); }
@@ -749,6 +749,12 @@ input[type='range']:disabled { opacity: 0.4; }
 .pcm-add input { flex: 1; min-width: 0; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 8px; font-size: 0.8rem; font-family: var(--chat); }
 .pcm-add button { background: var(--pine-soft); border: none; color: var(--ink); padding: 8px 12px; border-radius: 8px; font-size: 0.76rem; }
 .pcm-add button:disabled { opacity: 0.5; }
+.memory-social { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+.memory-reactions { display: flex; align-items: center; gap: 5px; }
+.memory-reactions button { display: inline-flex; align-items: center; gap: 4px; min-width: 34px; height: 27px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--field-bg); color: var(--ink-dim); font-size: 0.74rem; }
+.memory-reactions button.is-active { border-color: var(--gold-soft); background: var(--sel); color: var(--gold-soft); }
+.memory-reactions button b { font-size: 0.66rem; font-weight: 600; }
+.memory-comment-count { margin-left: auto; color: var(--ink-dim); font-size: 0.68rem; }
 
 /* ============ MODAL ============ */
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(10, 6, 3, 0.66); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -876,8 +882,8 @@ input[type='range']:disabled { opacity: 0.4; }
 @media (max-width: 480px) {
   .stage { --stage-gutter: 12px; padding: 12px var(--stage-gutter); }
   .topbar { display: block; }
-  .brand { width: min(330px, calc(100vw - 24px)); padding-top: 54px; }
-  .brand__pine { top: -8px; width: min(390px, calc(100vw + 2px)); }
+  .brand { width: min(310px, calc(100vw - 24px)); padding-top: 47px; }
+  .brand__pine { top: -6px; width: min(330px, calc(100vw - 4px)); }
   .brand__name { max-width: 245px; }
   .brand__tagline { display: block; max-width: 100%; font-size: 0.58rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .brand__poem { width: 100%; max-width: none; padding: 4px 6px 5px; }

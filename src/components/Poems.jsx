@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 // Góc Hoài Niệm: thơ, tản văn, câu chữ và hình ảnh/video gợi suy tư.
-export default function Poems({ poems, username, admin, onAddPoem, onEditPoem, onDeletePoem, onClose }) {
+export default function Poems({ poems, username, admin, onAddPoem, onEditPoem, onDeletePoem, onAddComment, onDeleteComment, onToggleReaction, onClose }) {
   const [tab, setTab] = useState('feed')
   const [editingId, setEditingId] = useState(null)
   const [title, setTitle] = useState('')
@@ -70,12 +70,54 @@ export default function Poems({ poems, username, admin, onAddPoem, onEditPoem, o
               {poem.title && <h3 className="poem__title">{poem.title}</h3>}
               {poem.imageUrl && <MemoryMedia src={poem.imageUrl} />}
               <div className="poem__body">{poem.body}</div>
+              <MemoryInteractions poem={poem} username={username} admin={admin}
+                onAddComment={onAddComment} onDeleteComment={onDeleteComment} onToggleReaction={onToggleReaction} />
             </article>
           ))}
         </div>
       )}
     </section>
   )
+}
+
+function MemoryInteractions({ poem, username, admin, onAddComment, onDeleteComment, onToggleReaction }) {
+  const [text, setText] = useState('')
+  const items = Array.isArray(poem.comments) ? poem.comments : []
+  const comments = items.filter((item) => item.type !== 'reaction')
+  const reactions = items.filter((item) => item.type === 'reaction')
+  const submit = (event) => {
+    event.preventDefault()
+    if (!text.trim()) return
+    onAddComment?.(poem.id, text)
+    setText('')
+  }
+  return <div className="memory-social">
+    <div className="memory-reactions" aria-label="Tương tác bài viết">
+      {['👍', '❤️', '🕯️'].map((emoji) => {
+        const matches = reactions.filter((item) => item.emoji === emoji)
+        const active = matches.some((item) => item.author === (username || 'Ẩn danh'))
+        return <button key={emoji} type="button" className={active ? 'is-active' : ''}
+          onClick={() => onToggleReaction?.(poem.id, emoji)} aria-pressed={active}>
+          <span>{emoji}</span>{matches.length > 0 && <b>{matches.length}</b>}
+        </button>
+      })}
+      <span className="memory-comment-count">💬 {comments.length}</span>
+    </div>
+    {comments.length > 0 && <div className="poem__comments">
+      {comments.map((comment) => <div className="pcm" key={comment.id}>
+        <div className="pcm__body">
+          <span className="pcm__meta"><b>{comment.author || 'Ẩn danh'}</b></span>
+          <span className="pcm__text">{comment.text}</span>
+        </div>
+        {(admin || comment.author === username) && <button type="button" className="pcm__del"
+          onClick={() => onDeleteComment?.(poem.id, comment.id)} title="Xoá bình luận">✕</button>}
+      </div>)}
+    </div>}
+    <form className="pcm-add" onSubmit={submit}>
+      <input value={text} onChange={(event) => setText(event.target.value)} placeholder="Viết bình luận…" />
+      <button type="submit" disabled={!text.trim()}>Gửi</button>
+    </form>
+  </div>
 }
 
 function isImageUrl(value) {

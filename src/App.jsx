@@ -135,7 +135,7 @@ export default function App() {
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
-  const [recentPlayback, setRecentPlayback] = useState(false)
+  const [recentPlayback, setRecentPlayback] = useState(true)
   const [tagline, setTagline] = useState(() => pickTagline('dusk'))
   const [featuredPoemId, setFeaturedPoemId] = useState(null)
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
@@ -899,6 +899,7 @@ export default function App() {
                 poems={poemsApi.poems} username={username} admin={admin}
                 onAddPoem={poemsApi.addPoem} onEditPoem={poemsApi.editPoem} onDeletePoem={poemsApi.deletePoem}
                 onAddComment={poemsApi.addComment} onDeleteComment={poemsApi.deleteComment}
+                onToggleReaction={poemsApi.toggleReaction}
                 onClose={() => setRightTab(null)}
               />
             ) : (
