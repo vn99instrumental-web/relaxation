@@ -129,6 +129,12 @@ export default function Player({
                     {track.videoId ? <img className="queue__thumb" src={videoThumb(track.videoId, 'default')} alt="" loading="lazy" /> : <span className="queue__thumb queue__thumb--list">≡</span>}
                     <span className="queue__label"><span className="queue__name">{track.title || 'Video'}</span></span>
                   </button>
+                  {admin && <button className={`queue__default ${sameTrack(track, defaultTrack) ? 'is-on' : ''}`}
+                    onClick={() => sameTrack(track, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(track)}
+                    title={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}
+                    aria-label={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định' : `Đặt ${track.title || 'bài hát'} làm mặc định`}>
+                    {sameTrack(track, defaultTrack) ? '★' : '☆'}
+                  </button>}
                 </li>
               ))}
               {!queue.length && <li className="queue__empty">Chưa có bài hát.</li>}
@@ -271,6 +277,12 @@ export default function Player({
                           {sortedPlaylistTracks(p.tracks).map(({ track: t, sourceIndex: i }) => (
                             <li key={t.recordId || `${t.videoId || t.playlistId}-${i}`} className="pl-track">
                               <span className="pl-track__name">{t.kind === 'playlist' ? '≡ ' : ''}{t.title || 'Video'}</span>
+                              {admin && <button className={`queue__default ${sameTrack(t, defaultTrack) ? 'is-on' : ''}`}
+                                onClick={() => sameTrack(t, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(t)}
+                                title={sameTrack(t, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}
+                                aria-label={sameTrack(t, defaultTrack) ? 'Bỏ bài hát mặc định' : `Đặt ${t.title || 'bài hát'} làm mặc định`}>
+                                {sameTrack(t, defaultTrack) ? '★' : '☆'}
+                              </button>}
                               {onMoveTrack && (
                                 <select className="pl-move" value="" title="Chuyển bài này sang…"
                                   onChange={(e) => { if (e.target.value) { onMoveTrack(p.id, i, e.target.value); e.target.value = '' } }}>

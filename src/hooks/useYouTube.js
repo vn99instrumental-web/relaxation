@@ -21,6 +21,17 @@ function loadYouTubeAPI() {
   return apiPromise
 }
 
+function applyTrack(player, track, autoplay) {
+  if (!player || !track) return false
+  const method = track.kind === 'playlist'
+    ? (autoplay ? 'loadPlaylist' : 'cuePlaylist')
+    : (autoplay ? 'loadVideoById' : 'cueVideoById')
+  if (typeof player[method] !== 'function') return false
+  if (track.kind === 'playlist') player[method]({ list: track.playlistId, listType: 'playlist', index: 0 })
+  else player[method](track.videoId)
+  return true
+}
+
 // Quản lý 1 player YouTube ẩn + hàng chờ do mình tự điều khiển.
 // Mỗi track: { key, kind: 'video'|'playlist', videoId?, playlistId?, title }
 export function useYouTube(mountId) {
@@ -36,6 +47,7 @@ export function useYouTube(mountId) {
   const onEndedRef = useRef(() => {})
   const onErrorRef = useRef(() => {})
   const errorHandledRef = useRef(false)
+  const pendingTrackRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -52,7 +64,11 @@ export function useYouTube(mountId) {
           playsinline: 1,
         },
         events: {
-          onReady: () => setReady(true),
+          onReady: (event) => {
+            setReady(true)
+            const pending = pendingTrackRef.current
+            if (pending && applyTrack(event.target, pending.track, pending.autoplay)) pendingTrackRef.current = null
+          },
           onStateChange: (e) => {
             const S = window.YT.PlayerState
             if (e.data === S.PLAYING) {
@@ -92,18 +108,14 @@ export function useYouTube(mountId) {
 
   const playTrack = useCallback((track) => {
     const p = playerRef.current
-    if (!p || !track) return
+    if (!track) return
     errorHandledRef.current = false
     currentRef.current = track
     setCurrent(track)
     setNowTitle(track.title || '')
     setCurrentTime(0)
     setDuration(0)
-    if (track.kind === 'playlist') {
-      p.loadPlaylist({ list: track.playlistId, listType: 'playlist', index: 0 })
-    } else {
-      p.loadVideoById(track.videoId)
-    }
+    if (!applyTrack(p, track, true)) pendingTrackRef.current = { track, autoplay: true }
   }, [])
 
   useEffect(() => {
@@ -122,18 +134,14 @@ export function useYouTube(mountId) {
 
   const cueTrack = useCallback((track) => {
     const p = playerRef.current
-    if (!p || !track) return
+    if (!track) return
     errorHandledRef.current = false
     currentRef.current = track
     setCurrent(track)
     setNowTitle(track.title || '')
     setCurrentTime(0)
     setDuration(0)
-    if (track.kind === 'playlist') {
-      p.cuePlaylist({ list: track.playlistId, listType: 'playlist', index: 0 })
-    } else {
-      p.cueVideoById(track.videoId)
-    }
+    if (!applyTrack(p, track, false)) pendingTrackRef.current = { track, autoplay: false }
   }, [])
 
   const play = useCallback(() => { try { playerRef.current?.playVideo() } catch { /* ignore */ } }, [])

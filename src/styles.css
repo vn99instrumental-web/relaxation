@@ -418,6 +418,10 @@ input, textarea { font-family: inherit; }
 .now-player__queue-head strong { overflow: hidden; font: .86rem/1.2 var(--serif); white-space: nowrap; text-overflow: ellipsis; }
 .now-player__queue-head span { color: var(--ink-dim); font-size: .64rem; white-space: nowrap; }
 .now-player__queue .queue { flex: 1; min-height: 0; overflow-y: auto; }
+.now-player__queue .queue__item { align-items: flex-start; }
+.now-player__queue .queue__label { flex: 1; }
+.now-player__queue .queue__name { display: -webkit-box; overflow: hidden; font-size: .69rem; line-height: 1.28; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.now-player__queue .queue__default { margin-top: 2px; }
 .now-player__main { min-width: 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 0 5px; }
 .now-player__art { position: relative; width: min(100%, 270px); aspect-ratio: 1 / 1; overflow: hidden; border: 1px solid var(--border-strong); border-radius: 18px; background: radial-gradient(circle at 42% 38%, var(--surface-2), var(--panel-solid)); box-shadow: 0 16px 38px rgba(0,0,0,.28); }
 .now-player__art img { width: 100%; height: 100%; object-fit: cover; filter: sepia(.12) saturate(.86) contrast(.96); }
@@ -526,7 +530,8 @@ input, textarea { font-family: inherit; }
 .pl-tracks { list-style: none; margin: 2px 0 6px; padding: 0 4px 0 22px; display: flex; flex-direction: column; gap: 2px; }
 .pl-track { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 7px; }
 .pl-track:hover { background: var(--surface); }
-.pl-track__name { flex: 1; min-width: 0; font-size: 0.76rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-track__name { flex: 1; min-width: 0; font-size: 0.72rem; line-height: 1.35; color: var(--ink); white-space: normal; overflow-wrap: anywhere; }
+.pl-track .queue__default { width: 25px; height: 25px; flex-basis: 25px; font-size: .86rem; }
 .pl-track--empty { color: var(--ink-dim); font-style: italic; font-size: 0.75rem; }
 .pl-move { flex-shrink: 0; font-family: inherit; background: var(--field-bg); border: 1px solid var(--border); color: var(--ink-dim); padding: 4px 7px; border-radius: 7px; font-size: 0.7rem; max-width: 108px; }
 .pl-move:focus { outline: none; border-color: var(--border-strong); }

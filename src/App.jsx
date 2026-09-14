@@ -357,7 +357,7 @@ export default function App() {
   }, [unread, unreadPoems, unreadHearts])
 
   const playAt = useCallback((i) => {
-    if (mode !== 'append') setRecentPlayback(false)
+    setRecentPlayback(false)
     setQueue((q) => {
       const t = q[i]
       if (t) { setIndex(i); yt.playTrack(t) }
