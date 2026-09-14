@@ -24,7 +24,7 @@
   width: 70%;
   min-width: 0;
   max-width: none;
-  margin: -2px 0 0 8%;
+  margin: -2px 0 0 4%;
   line-height: 1.08;
 }
 
@@ -32,7 +32,7 @@
   position: relative;
   z-index: 2;
   display: block;
-  width: 65%;
+  width: 78%;
   max-width: 100%;
   margin: 0;
   line-height: 0;
@@ -77,11 +77,11 @@
   .brand__name {
     width: 72%;
     max-width: none;
-    margin-left: 8%;
+    margin-left: 4%;
   }
 
   .brand__title {
-    width: 65%;
+    width: 78%;
   }
 
   .brand__tagline,

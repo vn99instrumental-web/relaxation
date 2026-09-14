@@ -288,9 +288,9 @@ input, textarea { font-family: inherit; }
 
 .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .brand { position: relative; width: min(360px, calc(100vw - 12px)); min-width: 0; transform: translate(calc(-1 * var(--stage-gutter)), -16px); }
-.brand__title { width: 65%; max-width: 100%; margin: 0; line-height: 0; }
+.brand__title { width: 78%; max-width: 100%; margin: 0; line-height: 0; }
 .brand__lockup { display: block; width: 100%; height: auto; }
-.brand__name { display: flex; flex-direction: column; align-items: flex-start; width: 70%; min-width: 0; margin: -2px 0 0 8%; line-height: 1.08; }
+.brand__name { display: flex; flex-direction: column; align-items: flex-start; width: 70%; min-width: 0; margin: -2px 0 0 4%; line-height: 1.08; }
 .brand__tagline { max-width: 100%; margin: 1px 0 0; font-size: 0.58rem; line-height: 1.24; color: var(--ink); font-family: var(--serif-body); font-style: italic; letter-spacing: 0.01em; text-shadow: 0 1px 2px rgba(0,0,0,0.65); }
 .brand__poem { max-width: 100%; margin-top: 3px; padding: 3px 6px 4px; border-left: 1px solid var(--gold-soft); border-radius: 0 6px 6px 0; background: rgba(18, 14, 9, 0.24); color: var(--paper); font-family: var(--serif-body); text-shadow: 0 1px 2px rgba(0,0,0,0.68); backdrop-filter: blur(5px); }
 .brand__poem-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px; margin-bottom: 1px; color: var(--gold-soft); font-size: 0.45rem; line-height: 1.2; }
@@ -936,7 +936,7 @@ input[type='range']:disabled { opacity: 0.4; }
   .stage { --stage-gutter: 12px; padding: 12px var(--stage-gutter); }
   .topbar { display: block; }
   .brand { width: min(300px, 88vw); transform: translate(calc(-1 * var(--stage-gutter)), -12px); }
-  .brand__name { width: 72%; margin-left: 8%; }
+  .brand__name { width: 72%; margin-left: 4%; }
   .brand__tagline { display: block; max-width: 100%; font-size: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .brand__poem { width: 100%; max-width: none; padding: 4px 6px 5px; }
   .brand__poem-head { font-size: 0.44rem; }
