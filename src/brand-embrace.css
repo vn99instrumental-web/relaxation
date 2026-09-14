@@ -1,0 +1,78 @@
+/* Header option: nhành thông ôm/quyện lấy chữ.
+   Giữ asset hiện có và dựng thành 2 lớp: một lớp nằm sau wordmark,
+   một dải cành mảnh đi xuyên phía trước phần chân chữ. */
+.brand {
+  isolation: isolate;
+  overflow: visible;
+}
+
+/* Tán chính: phủ từ trái sang phải và nằm SAU chữ. */
+.brand__pine {
+  z-index: 0;
+  top: -22px;
+  width: min(292px, 31vw);
+  opacity: .98;
+}
+.brand__pine .brand__pine-art {
+  transform: rotate(-1.2deg);
+  transform-origin: 42% 46%;
+}
+
+.brand__name {
+  position: relative;
+  z-index: 2;
+}
+
+/* Cành tiền cảnh: dùng lại cùng asset nhưng chỉ lộ một dải cành/kim ở
+   phần giữa, khiến nhành thông có cảm giác chạy xuyên qua và ôm chân chữ.
+   Phần quả thông bên phải được cắt khỏi lớp này để không bị nhân đôi. */
+.brand::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  top: 4px;
+  left: calc(-1 * var(--stage-gutter) + 4px);
+  width: min(282px, 30vw);
+  aspect-ratio: 2172 / 724;
+  background: url('/brand-pine-header-v3.png') center / contain no-repeat;
+  clip-path: polygon(0 44%, 87% 44%, 87% 76%, 0 76%);
+  transform: rotate(2.1deg);
+  transform-origin: 48% 54%;
+  opacity: .94;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.52));
+}
+
+/* Giữ mood từng theme đồng nhất với cành gốc. */
+.app[data-theme='dusk'] .brand::after {
+  filter: sepia(.2) saturate(1.15) brightness(1.08) drop-shadow(0 2px 6px rgba(69,35,12,.56));
+}
+.app[data-theme='rain'] .brand::after {
+  filter: saturate(.72) hue-rotate(12deg) brightness(.9) contrast(1.08) drop-shadow(0 2px 7px rgba(5,24,35,.66));
+}
+.app[data-theme='morning'] .brand::after {
+  filter: saturate(.82) brightness(1.18) contrast(.94) drop-shadow(0 2px 5px rgba(72,67,42,.26));
+}
+.app[data-theme='film'] .brand::after {
+  filter: sepia(.52) saturate(.68) contrast(.92) brightness(.98) drop-shadow(0 2px 6px rgba(38,29,20,.58));
+}
+
+/* Chữ vẫn ưu tiên đọc được; cành tiền cảnh chỉ chạm khoảng 1/3 dưới wordmark. */
+.brand__wordmark {
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 480px) {
+  .brand__pine {
+    top: -16px;
+    width: min(232px, 66vw);
+  }
+  .brand::after {
+    top: 1px;
+    left: -10px;
+    width: min(224px, 64vw);
+    clip-path: polygon(0 45%, 86% 45%, 86% 77%, 0 77%);
+    transform: rotate(2.4deg);
+  }
+}
