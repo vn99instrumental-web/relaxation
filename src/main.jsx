@@ -4,6 +4,7 @@ import App from './App.jsx'
 import './styles.css'
 import './journal-lock.css'
 import './yahoo-preview.css'
+import './yahoo-layout-fix.css'
 
 document.documentElement.classList.add('yahoo-preview')
 
