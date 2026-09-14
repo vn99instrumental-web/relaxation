@@ -1,0 +1,159 @@
+/* Yahoo preview layout refinement
+   Keeps the fixed Messenger window on the left and makes open app windows
+   align to the same top edge without overlapping. */
+
+@media (min-width: 1060px) {
+  html.yahoo-preview {
+    --yh-desktop-top: 22px;
+    --yh-desktop-bottom: 58px;
+    --yh-desktop-left: 24px;
+    --yh-messenger-w: 326px;
+    --yh-desktop-gap: 16px;
+    --yh-desktop-right: 24px;
+  }
+
+  html.yahoo-preview .topbar {
+    left: var(--yh-desktop-left) !important;
+    top: var(--yh-desktop-top) !important;
+    width: var(--yh-messenger-w) !important;
+  }
+
+  /* A single open window uses the full workspace to the right of Messenger. */
+  html.yahoo-preview .drawer--left,
+  html.yahoo-preview .drawer--right,
+  html.yahoo-preview .drawer--right:has(.poems) {
+    top: var(--yh-desktop-top) !important;
+    bottom: var(--yh-desktop-bottom) !important;
+  }
+
+  html.yahoo-preview .drawer--left {
+    left: calc(var(--yh-desktop-left) + var(--yh-messenger-w) + var(--yh-desktop-gap)) !important;
+    right: var(--yh-desktop-right) !important;
+    width: auto !important;
+  }
+
+  html.yahoo-preview .drawer--right,
+  html.yahoo-preview .drawer--right:has(.poems) {
+    left: calc(var(--yh-desktop-left) + var(--yh-messenger-w) + var(--yh-desktop-gap)) !important;
+    right: var(--yh-desktop-right) !important;
+    width: auto !important;
+  }
+
+  /* When Music + Journal/360 are both open, split the free workspace evenly. */
+  html.yahoo-preview .app.is-left-open.is-right-open {
+    --yh-workspace-left: calc(var(--yh-desktop-left) + var(--yh-messenger-w) + var(--yh-desktop-gap));
+    --yh-workspace-width: calc(100vw - var(--yh-workspace-left) - var(--yh-desktop-right));
+    --yh-window-width: calc((var(--yh-workspace-width) - var(--yh-desktop-gap)) / 2);
+  }
+
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--left {
+    left: var(--yh-workspace-left) !important;
+    right: auto !important;
+    width: var(--yh-window-width) !important;
+    top: var(--yh-desktop-top) !important;
+    bottom: var(--yh-desktop-bottom) !important;
+  }
+
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right,
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) {
+    left: calc(var(--yh-workspace-left) + var(--yh-window-width) + var(--yh-desktop-gap)) !important;
+    right: auto !important;
+    width: var(--yh-window-width) !important;
+    top: var(--yh-desktop-top) !important;
+    bottom: var(--yh-desktop-bottom) !important;
+  }
+
+  /* Compact Yahoo! 360 layout when it shares the desktop with Music. */
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poems::before,
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poems::after {
+    display: none !important;
+  }
+
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poem-list,
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poem-compose--page {
+    margin: 40px 0 0 !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poem-tabs {
+    left: 14px !important;
+    right: 14px !important;
+  }
+
+  /* Taskbar stays full-width instead of shifting when Music opens. */
+  html.yahoo-preview .app.is-left-open .dock,
+  html.yahoo-preview .app.is-left-open.is-right-open .dock {
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+  }
+
+  html.yahoo-preview .app.is-left-open .dock__now,
+  html.yahoo-preview .app.is-left-open .dock__transport {
+    display: flex !important;
+  }
+}
+
+/* Intermediate desktop/laptop sizes: reserve a slimmer Messenger column. */
+@media (min-width: 761px) and (max-width: 1059px) {
+  html.yahoo-preview {
+    --yh-mid-top: 14px;
+    --yh-mid-bottom: 54px;
+    --yh-mid-left: 14px;
+    --yh-mid-messenger: 286px;
+    --yh-mid-gap: 12px;
+    --yh-mid-right: 14px;
+  }
+
+  html.yahoo-preview .topbar {
+    left: var(--yh-mid-left) !important;
+    top: var(--yh-mid-top) !important;
+    width: var(--yh-mid-messenger) !important;
+  }
+
+  html.yahoo-preview .drawer--left,
+  html.yahoo-preview .drawer--right,
+  html.yahoo-preview .drawer--right:has(.poems) {
+    top: var(--yh-mid-top) !important;
+    bottom: var(--yh-mid-bottom) !important;
+    left: calc(var(--yh-mid-left) + var(--yh-mid-messenger) + var(--yh-mid-gap)) !important;
+    right: var(--yh-mid-right) !important;
+    width: auto !important;
+  }
+
+  /* Two windows on a narrow laptop get a balanced 46/54 split; 360 receives
+     slightly more space because its reading area needs it. */
+  html.yahoo-preview .app.is-left-open.is-right-open {
+    --yh-mid-work-left: calc(var(--yh-mid-left) + var(--yh-mid-messenger) + var(--yh-mid-gap));
+    --yh-mid-work-width: calc(100vw - var(--yh-mid-work-left) - var(--yh-mid-right));
+  }
+
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--left {
+    left: var(--yh-mid-work-left) !important;
+    right: auto !important;
+    width: calc((var(--yh-mid-work-width) - var(--yh-mid-gap)) * .46) !important;
+  }
+
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right,
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) {
+    left: calc(var(--yh-mid-work-left) + (var(--yh-mid-work-width) - var(--yh-mid-gap)) * .46 + var(--yh-mid-gap)) !important;
+    right: auto !important;
+    width: calc((var(--yh-mid-work-width) - var(--yh-mid-gap)) * .54) !important;
+  }
+
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poems::before,
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poems::after {
+    display: none !important;
+  }
+
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poem-list,
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poem-compose--page {
+    margin: 40px 0 0 !important;
+  }
+
+  html.yahoo-preview .app.is-left-open.is-right-open .drawer--right:has(.poems) .poem-tabs {
+    left: 14px !important;
+    right: 14px !important;
+  }
+}

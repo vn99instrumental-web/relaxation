@@ -1,0 +1,838 @@
+/* Yahoo Messenger + Yahoo! 360 preview skin
+   Preview-only branch. Keeps all React/Supabase behaviour unchanged. */
+
+html.yahoo-preview {
+  --yh-purple-1: #7a72db;
+  --yh-purple-2: #4c46b8;
+  --yh-purple-3: #302a8e;
+  --yh-lilac: #ecebff;
+  --yh-line: #a9a6d9;
+  --yh-blue: #2457c5;
+  --yh-xp: #2d64d7;
+  --yh-green: #53a72a;
+  --yh-text: #25233a;
+  --yh-muted: #77768e;
+  --yh-panel: #f7f7fb;
+  --yh-white: #ffffff;
+  --yh-shadow: 0 12px 32px rgba(24, 26, 75, .35);
+}
+
+html.yahoo-preview body,
+html.yahoo-preview button,
+html.yahoo-preview input,
+html.yahoo-preview textarea,
+html.yahoo-preview select {
+  font-family: Tahoma, Verdana, Arial, sans-serif !important;
+}
+
+html.yahoo-preview .app {
+  --ink: var(--yh-text);
+  --ink-dim: var(--yh-muted);
+  --paper: #25233a;
+  --gold: var(--yh-purple-2);
+  --gold-soft: var(--yh-purple-1);
+  --pine-soft: #6572c7;
+  --panel: rgba(249, 249, 255, .97);
+  --panel-solid: #f8f8fd;
+  --dock-bg: #2b61d4;
+  --border: #c3c2dc;
+  --border-strong: #8d89c9;
+  --field-bg: #fff;
+  --surface: #f0f0fa;
+  --surface-2: #e7e7f8;
+  --bubble-bg: transparent;
+  --mine: transparent;
+  --track: #b7b7ca;
+  color: var(--yh-text);
+}
+
+/* Keep the scenic soul of the project, but make it feel like an old desktop wallpaper. */
+html.yahoo-preview .scene__photo::after {
+  background: linear-gradient(180deg, rgba(52, 47, 122, .06) 0%, rgba(20, 25, 70, .18) 72%, rgba(9, 16, 55, .42) 100%) !important;
+}
+html.yahoo-preview .scene__vignette { opacity: .28; }
+html.yahoo-preview .scene__grain { opacity: .055; }
+
+/* ===== Desktop / Messenger home ===== */
+html.yahoo-preview .stage {
+  padding: 0 !important;
+}
+
+html.yahoo-preview .topbar {
+  position: fixed;
+  left: 24px;
+  top: 22px;
+  width: 326px;
+  height: 446px;
+  display: block;
+  overflow: hidden;
+  border: 1px solid #443ba7;
+  border-radius: 7px 7px 3px 3px;
+  background: linear-gradient(#fbfbff, #ececf8);
+  box-shadow: var(--yh-shadow), inset 0 0 0 1px rgba(255,255,255,.8);
+}
+
+html.yahoo-preview .topbar::before {
+  content: '☯  Dưới Tán Thông Messenger';
+  display: flex;
+  align-items: center;
+  height: 31px;
+  padding: 0 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  background: linear-gradient(180deg, #8781e7 0%, #5f58ca 48%, #433ba9 100%);
+  border-bottom: 1px solid #2f287f;
+  text-shadow: 0 1px 0 rgba(0,0,0,.35);
+}
+
+html.yahoo-preview .topbar::after {
+  content: 'Bạn bè    Thao tác    Công cụ    Trợ giúp';
+  position: absolute;
+  top: 31px;
+  left: 0;
+  right: 0;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #3d3b55;
+  font-size: 11px;
+  word-spacing: 5px;
+  background: linear-gradient(#fff, #ececf5);
+  border-bottom: 1px solid #c5c4da;
+}
+
+html.yahoo-preview .brand {
+  width: auto !important;
+  max-width: none !important;
+  height: calc(100% - 55px);
+  margin: 0 !important;
+  padding: 16px 14px 12px !important;
+  transform: none !important;
+  background:
+    linear-gradient(#f8f8fe, #f1f1fb 114px, #fff 114px, #fff 100%);
+}
+
+html.yahoo-preview .brand__pine {
+  display: none !important;
+}
+
+html.yahoo-preview .brand__name {
+  display: block !important;
+  max-width: none !important;
+  height: 100%;
+}
+
+html.yahoo-preview .brand__title {
+  width: 74px;
+  height: 74px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #aaa8cb;
+  background: linear-gradient(145deg, #dfe2ff, #a7afe8);
+  box-shadow: inset 0 0 0 3px #fff;
+}
+
+html.yahoo-preview .brand__wordmark {
+  width: 118px !important;
+  max-width: none !important;
+  transform: rotate(-7deg) translate(-2px, 0) !important;
+  filter: brightness(.48) sepia(.2) hue-rotate(195deg) saturate(2.1) !important;
+}
+
+html.yahoo-preview .brand__tagline {
+  position: absolute;
+  left: 100px;
+  top: 19px;
+  width: 202px;
+  min-height: 52px;
+  margin: 0 !important;
+  color: #34324f !important;
+  font: 12px/1.45 Tahoma, Verdana, sans-serif !important;
+  font-style: normal !important;
+  text-shadow: none !important;
+}
+
+html.yahoo-preview .brand__tagline::before {
+  content: '●  Rừng Thông';
+  display: block;
+  margin-bottom: 6px;
+  color: #28263b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+html.yahoo-preview .brand__tagline::after {
+  content: '♫  Đang nghe: những bản nhạc cũ';
+  display: block;
+  margin-top: 8px;
+  color: #4c46b8;
+  font-size: 11px;
+}
+
+html.yahoo-preview .brand__poem {
+  position: absolute;
+  top: 102px;
+  left: 14px;
+  right: 14px;
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  min-height: 42px;
+  border: 1px solid #c7c6dd !important;
+  border-radius: 2px !important;
+  background: #fff !important;
+  color: #4f4d67 !important;
+  font: italic 11px/1.45 Georgia, serif !important;
+  text-shadow: none !important;
+  box-shadow: inset 0 1px 2px rgba(44, 42, 92, .08);
+}
+
+html.yahoo-preview .brand__poem-head { display: none !important; }
+html.yahoo-preview .brand__poem-body {
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  max-height: 30px;
+  overflow: hidden !important;
+  font-size: 11px !important;
+}
+
+html.yahoo-preview .brand__name::after {
+  content:
+    'Bạn bè (3)\A\A'
+    '●  RT                         Ở đây, như mọi khi...\A\A'
+    '●  Rừng Thông        Đang nghe nhạc...\A\A'
+    '●  Dốc Nhà Làng      Một chút bình yên thôi...';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 168px;
+  bottom: 14px;
+  padding: 13px 12px;
+  white-space: pre-line;
+  color: #292741;
+  font-size: 12px;
+  line-height: 1.4;
+  background:
+    linear-gradient(#e7e6fb 0 28px, #fff 28px 100%);
+  border: 1px solid #aaa8cb;
+  box-shadow: inset 0 1px #fff;
+}
+
+/* ===== XP-like taskbar from the existing Dock ===== */
+html.yahoo-preview .dock {
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 46px !important;
+  transform: none !important;
+  gap: 6px !important;
+  padding: 4px 8px 4px 88px !important;
+  border: 0 !important;
+  border-top: 1px solid #5f8ae8 !important;
+  border-radius: 0 !important;
+  background: linear-gradient(180deg, #4381e8 0%, #2764d8 38%, #1955c0 100%) !important;
+  box-shadow: 0 -1px 0 rgba(255,255,255,.35), 0 -4px 18px rgba(15,31,90,.28) !important;
+  backdrop-filter: none !important;
+}
+
+html.yahoo-preview .dock::before {
+  content: '▰  start';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 700;
+  text-shadow: 0 1px 1px #205819;
+  background: linear-gradient(180deg, #75ca50 0%, #43a82b 47%, #27881a 100%);
+  border-radius: 0 15px 15px 0;
+  box-shadow: inset -1px 0 rgba(255,255,255,.35);
+}
+
+html.yahoo-preview .dock__now {
+  width: min(285px, 24vw) !important;
+  max-width: 285px !important;
+  height: 36px;
+  padding: 4px 10px;
+  gap: 7px !important;
+  border: 1px solid rgba(0,49,138,.75);
+  border-radius: 3px;
+  background: linear-gradient(#69a0f2, #3978dc);
+  box-shadow: inset 0 1px rgba(255,255,255,.28);
+}
+
+html.yahoo-preview .dock__title,
+html.yahoo-preview .dock__playlist,
+html.yahoo-preview .dock__count,
+html.yahoo-preview .dock__seek-row {
+  color: #fff !important;
+  font-family: Tahoma, Verdana, sans-serif !important;
+  text-shadow: 0 1px rgba(0,0,0,.25);
+}
+html.yahoo-preview .dock__seek-row { display: none !important; }
+html.yahoo-preview .dock__spin { color: #fff !important; }
+
+html.yahoo-preview .dock__transport {
+  height: 36px;
+  padding: 2px 7px;
+  gap: 3px !important;
+  border: 1px solid rgba(0,49,138,.65);
+  border-radius: 3px;
+  background: rgba(69,126,224,.7);
+}
+html.yahoo-preview .dock__transport .ctrl {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 3px !important;
+  border: 1px solid rgba(255,255,255,.32) !important;
+  background: rgba(255,255,255,.11) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+html.yahoo-preview .dock__transport .ctrl--main {
+  background: linear-gradient(#f6f6ff, #cdccee) !important;
+  color: #423aa5 !important;
+  border-color: #2d42a9 !important;
+}
+html.yahoo-preview .dock__vol { display: none !important; }
+
+html.yahoo-preview .dock__tabs {
+  flex: 1;
+  justify-content: flex-start;
+  height: 36px;
+  gap: 4px !important;
+  padding-left: 0 !important;
+  border-left: 0 !important;
+}
+html.yahoo-preview .dock__btn {
+  min-width: 102px;
+  height: 34px !important;
+  padding: 0 10px !important;
+  justify-content: flex-start !important;
+  gap: 7px !important;
+  border: 1px solid #1548ad !important;
+  border-radius: 3px !important;
+  background: linear-gradient(#68a0ef, #3c78db) !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  text-shadow: 0 1px rgba(0,0,0,.28);
+  box-shadow: inset 0 1px rgba(255,255,255,.3);
+}
+html.yahoo-preview .dock__btn:hover,
+html.yahoo-preview .dock__btn.is-active {
+  background: linear-gradient(#cfd5ff, #8587df) !important;
+  color: #25245c !important;
+  text-shadow: none;
+}
+html.yahoo-preview .dock__btn--icon { min-width: 38px !important; width: 38px !important; padding: 0 !important; justify-content: center !important; }
+html.yahoo-preview .dock__notif {
+  bottom: calc(100% + 6px) !important;
+  border-radius: 3px !important;
+  font: 11px Tahoma, sans-serif !important;
+}
+
+/* ===== Window chrome shared by Music / Journal / 360 ===== */
+html.yahoo-preview .drawer {
+  border: 1px solid #433aa6 !important;
+  border-radius: 7px 7px 3px 3px !important;
+  background: #f7f7fb !important;
+  box-shadow: var(--yh-shadow) !important;
+  backdrop-filter: none !important;
+}
+
+html.yahoo-preview .drawer--left {
+  left: 374px !important;
+  top: 74px !important;
+  bottom: 66px !important;
+  width: min(760px, calc(100vw - 410px)) !important;
+}
+
+html.yahoo-preview .drawer--right {
+  top: 58px !important;
+  right: 34px !important;
+  bottom: 62px !important;
+  width: min(720px, calc(100vw - 420px)) !important;
+}
+
+html.yahoo-preview .drawer__tabs {
+  min-height: 31px !important;
+  padding: 0 9px !important;
+  border-bottom: 1px solid #312985 !important;
+  background: linear-gradient(180deg, #8882e7, #6159cb 52%, #433ca7) !important;
+}
+html.yahoo-preview .drawer__title {
+  color: #fff !important;
+  font: 700 12px Tahoma, sans-serif !important;
+  text-shadow: 0 1px rgba(0,0,0,.3);
+}
+html.yahoo-preview .drawer__close,
+html.yahoo-preview .pane__head .link-btn {
+  border: 1px solid rgba(255,255,255,.5) !important;
+  border-radius: 2px !important;
+  color: #fff !important;
+  background: linear-gradient(#ef7d78, #cf3a34) !important;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px !important;
+  line-height: 18px;
+  text-align: center;
+}
+
+html.yahoo-preview .drawer__body,
+html.yahoo-preview .drawer__body--flush {
+  background: #f7f7fb !important;
+}
+html.yahoo-preview .pane {
+  color: var(--yh-text) !important;
+  background: #f7f7fb;
+}
+html.yahoo-preview .pane__head {
+  min-height: 31px !important;
+  margin: 0 0 24px !important;
+  padding: 0 8px !important;
+  border-bottom: 1px solid #312985 !important;
+  background: linear-gradient(180deg, #8882e7, #6159cb 52%, #433ca7) !important;
+}
+html.yahoo-preview .pane__head::after {
+  content: 'Hội thoại   Sửa   Hiển thị   Thao tác   Trợ giúp';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 31px;
+  height: 23px;
+  display: flex;
+  align-items: center;
+  padding: 0 9px;
+  color: #45435a;
+  font-size: 11px;
+  white-space: pre;
+  background: linear-gradient(#fff, #ececf5);
+  border-bottom: 1px solid #c9c8db;
+}
+html.yahoo-preview .pane__head h2 {
+  color: #fff !important;
+  font: 700 12px Tahoma, sans-serif !important;
+  text-shadow: 0 1px rgba(0,0,0,.3);
+}
+
+/* ===== Journal = old Yahoo Messenger conversation ===== */
+html.yahoo-preview .journal {
+  position: relative;
+  padding: 0 10px 10px !important;
+}
+html.yahoo-preview .journal .pane__head {
+  margin-left: -10px !important;
+  margin-right: -10px !important;
+}
+html.yahoo-preview .journal__status .muted {
+  color: #fff !important;
+  font-size: 10px !important;
+}
+html.yahoo-preview .journal__status .dot { border: 1px solid #fff; }
+html.yahoo-preview .journal__status .link-btn:not(:last-child) {
+  color: #fff !important;
+  background: transparent !important;
+  border: 0 !important;
+  min-width: 18px;
+}
+
+html.yahoo-preview .journal__list {
+  margin-top: 2px;
+  padding: 10px 12px 14px !important;
+  gap: 0 !important;
+  border: 1px solid #a9a8c0;
+  background: #fff;
+  box-shadow: inset 0 1px 2px rgba(43, 42, 79, .08);
+}
+html.yahoo-preview .journal__day { gap: 0 !important; }
+html.yahoo-preview .journal__daysep {
+  margin: 8px 0 6px !important;
+  text-align: left !important;
+}
+html.yahoo-preview .journal__daysep span {
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #9997aa !important;
+  font-size: 10px !important;
+  text-transform: none !important;
+}
+
+html.yahoo-preview .bubble,
+html.yahoo-preview .bubble--mine {
+  max-width: 100% !important;
+  width: 100%;
+  align-self: stretch !important;
+  margin: 0 0 7px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+html.yahoo-preview .bubble__meta {
+  margin: 0 0 2px !important;
+  gap: 6px !important;
+}
+html.yahoo-preview .bubble__user,
+html.yahoo-preview .bubble--mine .bubble__meta::before {
+  color: #1748bc !important;
+  font: 700 11px Tahoma, sans-serif !important;
+}
+html.yahoo-preview .bubble--mine .bubble__meta::before {
+  content: 'Bạn';
+}
+html.yahoo-preview .bubble__time {
+  color: #8d8b9c !important;
+  font-size: 9px !important;
+}
+html.yahoo-preview .bubble__text {
+  padding-left: 2px;
+  color: #1f1e2d !important;
+  font: 12px/1.45 Tahoma, Verdana, sans-serif !important;
+}
+html.yahoo-preview .bubble__edit,
+html.yahoo-preview .bubble__del {
+  color: #77758a !important;
+}
+html.yahoo-preview .bubble__reacts { margin-left: 2px; }
+html.yahoo-preview .react-chip {
+  border-radius: 2px !important;
+  background: #f2f2f8 !important;
+  color: #333 !important;
+}
+
+html.yahoo-preview .emoji-panel {
+  margin-top: 4px !important;
+  border-radius: 2px !important;
+  border-color: #a7a5c8 !important;
+  background: #fff !important;
+  box-shadow: 2px 2px 8px rgba(38,36,88,.18) !important;
+}
+html.yahoo-preview .journal__compose,
+html.yahoo-preview .journal__name {
+  margin-top: 7px !important;
+  padding-top: 7px;
+  border-top: 1px solid #c8c7d8;
+}
+html.yahoo-preview .journal__compose input,
+html.yahoo-preview .journal__name input {
+  height: 40px;
+  padding: 8px 9px !important;
+  border: 1px solid #8f8eaa !important;
+  border-radius: 2px !important;
+  background: #fff !important;
+  color: #20202c !important;
+  font-size: 12px !important;
+}
+html.yahoo-preview .journal__whoami,
+html.yahoo-preview .emoji-toggle,
+html.yahoo-preview .journal__compose button[type='submit'],
+html.yahoo-preview .journal__name button {
+  border: 1px solid #7d7c9e !important;
+  border-radius: 3px !important;
+  background: linear-gradient(#fff, #dfdff0) !important;
+  color: #2d2b50 !important;
+  box-shadow: inset 0 1px #fff;
+}
+html.yahoo-preview .journal__compose button[type='submit'] {
+  min-width: 72px;
+  font-weight: 700;
+}
+
+/* Locked journal becomes a small Windows-XP/Yahoo style dialog. */
+html.yahoo-preview .journal--locked .journal-lock {
+  width: min(430px, calc(100% - 30px));
+  margin: auto;
+  padding: 26px 24px 22px !important;
+  border: 1px solid #7776a1 !important;
+  border-radius: 3px !important;
+  background: #f2f2f7 !important;
+  box-shadow: 5px 8px 22px rgba(28,29,78,.24);
+  color: #26253a !important;
+}
+html.yahoo-preview .journal-lock h3 { color: #2a2941 !important; font: 700 14px Tahoma, sans-serif !important; }
+html.yahoo-preview .journal-lock p { color: #55536b !important; font: 12px/1.55 Tahoma, sans-serif !important; }
+html.yahoo-preview .journal-lock__icon { color: #d0a536 !important; }
+html.yahoo-preview .journal-lock__form input,
+html.yahoo-preview .journal-lock__form button {
+  border-radius: 2px !important;
+  font-family: Tahoma, sans-serif !important;
+}
+
+/* ===== Hoài niệm = Yahoo! 360 ===== */
+html.yahoo-preview .drawer--right:has(.poems) {
+  width: min(1120px, 88vw) !important;
+  right: 3vw !important;
+  top: 36px !important;
+  bottom: 56px !important;
+}
+
+html.yahoo-preview .poems {
+  position: relative;
+  padding: 0 14px 12px !important;
+  background: #f6f6fb !important;
+  color: #25243a !important;
+}
+html.yahoo-preview .poems .pane__head {
+  height: 92px !important;
+  margin: 0 -14px 28px !important;
+  padding: 46px 18px 10px !important;
+  align-items: flex-end !important;
+  background:
+    linear-gradient(rgba(255,255,255,.08), rgba(255,255,255,.08)),
+    linear-gradient(90deg, #786fd2, #a19ade 45%, #d9d7f2) !important;
+  border-bottom: 1px solid #817bbb !important;
+}
+html.yahoo-preview .poems .pane__head::before {
+  content: 'Dưới Tán Thông 360°';
+  position: absolute;
+  left: 18px;
+  top: 10px;
+  color: #fff;
+  font: italic 28px Georgia, serif;
+  text-shadow: 0 1px 2px rgba(39,32,101,.45);
+}
+html.yahoo-preview .poems .pane__head::after {
+  content: 'Trang chủ     Nhật ký     Album     Bạn bè     Lời nhắn     Hoài niệm     Cài đặt';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: -25px;
+  height: 25px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  color: #403d70;
+  font: 11px Tahoma, sans-serif;
+  background: linear-gradient(#f7f7fd, #ddddf0);
+  border-top: 1px solid rgba(255,255,255,.75);
+  border-bottom: 1px solid #b6b3d1;
+}
+html.yahoo-preview .poems .pane__head h2 {
+  position: relative;
+  z-index: 2;
+  color: #fff !important;
+  font: 700 12px Tahoma, sans-serif !important;
+}
+
+html.yahoo-preview .poem-tabs {
+  position: absolute;
+  top: 104px;
+  left: 210px;
+  right: 210px;
+  z-index: 2;
+  height: 30px;
+  margin: 0 !important;
+  padding: 2px !important;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid #b7b5d0 !important;
+  border-radius: 0 !important;
+  background: #ededf7 !important;
+}
+html.yahoo-preview .poem-tabs button {
+  border-radius: 0 !important;
+  color: #4c4972 !important;
+  font: 11px Tahoma, sans-serif !important;
+}
+html.yahoo-preview .poem-tabs button.is-active {
+  background: #fff !important;
+  color: #29275e !important;
+  box-shadow: inset 0 0 0 1px #c3c0df !important;
+}
+
+html.yahoo-preview .poems::before,
+html.yahoo-preview .poems::after {
+  position: absolute;
+  top: 139px;
+  bottom: 12px;
+  z-index: 1;
+  width: 178px;
+  padding: 12px;
+  white-space: pre-line;
+  overflow: hidden;
+  color: #45425e;
+  font: 11px/1.55 Tahoma, sans-serif;
+  background: #efeff8;
+  border: 1px solid #c7c5dc;
+  box-shadow: inset 0 1px #fff;
+}
+html.yahoo-preview .poems::before {
+  content: 'Rừng Thông\A\A▣  Ảnh đại diện\A\A“Vẫn có những ngày Đà Lạt thật đẹp...”\A\A♫ Đang nghe:\A  Một bài nhạc cũ\A\ALượt xem: 3.260\A Bạn bè: 3\A Nhật ký: những ngày cũ';
+  left: 14px;
+}
+html.yahoo-preview .poems::after {
+  content: 'Bạn bè (3)\A\A● RT\A  Ở đây, như mọi khi...\A\A● Rừng Thông\A  Đang online\A\A● Dốc Nhà Làng\A  Một chút bình yên...\A\A──────────\AEntry gần đây\A\A› Những ngày sương mù trở lại\A› Một buổi chiều ở Dốc Nhà Làng\A› Âm thanh của những kỷ niệm';
+  right: 14px;
+}
+
+html.yahoo-preview .poem-list,
+html.yahoo-preview .poem-compose--page {
+  margin: 40px 196px 0 !important;
+  padding: 0 5px 8px !important;
+  gap: 10px !important;
+}
+html.yahoo-preview .poem {
+  border: 1px solid #c8c6db !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  color: #26253a !important;
+  box-shadow: 0 1px 2px rgba(49,45,98,.06);
+}
+html.yahoo-preview .poem--reading {
+  padding: 16px 16px 14px !important;
+}
+html.yahoo-preview .poem__title {
+  color: #262546 !important;
+  font: 700 16px/1.3 Tahoma, sans-serif !important;
+  border-bottom: 1px dotted #bebcd0;
+  padding-bottom: 8px;
+}
+html.yahoo-preview .poem__title::before {
+  content: 'Nhật ký  ·  ';
+  color: #777593;
+  font-size: 10px;
+  font-weight: 400;
+}
+html.yahoo-preview .poem__body {
+  color: #343246 !important;
+  font: 12px/1.65 Tahoma, Verdana, sans-serif !important;
+}
+html.yahoo-preview .poem__image-wrap {
+  border-radius: 0 !important;
+  border-color: #aaa8bd !important;
+  padding: 3px;
+  background: #fff !important;
+}
+html.yahoo-preview .memory-social {
+  border-top: 1px dotted #bcb9cf !important;
+}
+html.yahoo-preview .memory-reactions button,
+html.yahoo-preview .pcm-add button,
+html.yahoo-preview .poem-compose__bar button {
+  border-radius: 2px !important;
+  border: 1px solid #918eb5 !important;
+  background: linear-gradient(#fff, #e4e3f1) !important;
+  color: #3e3b70 !important;
+}
+html.yahoo-preview .memory-comment-count {
+  color: #4258a8 !important;
+}
+html.yahoo-preview .poem-title,
+html.yahoo-preview .poem-body,
+html.yahoo-preview .poem-image-url,
+html.yahoo-preview .pcm-add input {
+  border-radius: 2px !important;
+  border: 1px solid #aaa8c2 !important;
+  background: #fff !important;
+  color: #26253a !important;
+}
+
+/* Music window: make it feel like a compact Yahoo-era media player. */
+html.yahoo-preview .drawer--left .pane,
+html.yahoo-preview .drawer--left .now-player,
+html.yahoo-preview .drawer--left .player__library,
+html.yahoo-preview .drawer--left .player__recent {
+  color: #2a2940 !important;
+}
+html.yahoo-preview .drawer--left .now-player__art,
+html.yahoo-preview .drawer--left .player__screen,
+html.yahoo-preview .drawer--left .now-player__controls,
+html.yahoo-preview .drawer--left .player__tabs,
+html.yahoo-preview .drawer--left .queue__item {
+  border-radius: 2px !important;
+}
+html.yahoo-preview .drawer--left .player__tabs {
+  background: #ececf6 !important;
+}
+html.yahoo-preview .drawer--left .player__tab.is-active {
+  background: #fff !important;
+  color: #403d7a !important;
+}
+html.yahoo-preview .drawer--left .now-player__meta h3,
+html.yahoo-preview .drawer--left .recent__head strong,
+html.yahoo-preview .drawer--left .now-player__queue-head strong,
+html.yahoo-preview .drawer--left .queue__name,
+html.yahoo-preview .drawer--left .pl-item__name {
+  color: #2e2c45 !important;
+  font-family: Tahoma, Verdana, sans-serif !important;
+}
+
+/* Settings keeps working; give it old control-panel styling. */
+html.yahoo-preview .modal,
+html.yahoo-preview .settings-modal {
+  font-family: Tahoma, Verdana, sans-serif !important;
+}
+html.yahoo-preview .modal__panel,
+html.yahoo-preview .settings-modal .modal__panel {
+  border-radius: 4px !important;
+  border: 1px solid #4d45ae !important;
+  background: #f4f4fa !important;
+  box-shadow: var(--yh-shadow) !important;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1050px) {
+  html.yahoo-preview .topbar { width: 286px; height: 405px; }
+  html.yahoo-preview .drawer--left { left: 306px !important; width: calc(100vw - 330px) !important; }
+  html.yahoo-preview .drawer--right { width: calc(100vw - 330px) !important; }
+  html.yahoo-preview .drawer--right:has(.poems) { width: 94vw !important; right: 3vw !important; }
+  html.yahoo-preview .poems::before,
+  html.yahoo-preview .poems::after { width: 150px; }
+  html.yahoo-preview .poem-list,
+  html.yahoo-preview .poem-compose--page { margin-left: 168px !important; margin-right: 168px !important; }
+  html.yahoo-preview .poem-tabs { left: 182px; right: 182px; }
+  html.yahoo-preview .dock__now { display: none !important; }
+}
+
+@media (max-width: 760px) {
+  html.yahoo-preview .topbar {
+    left: 10px;
+    top: 10px;
+    width: min(300px, calc(100vw - 20px));
+    height: 206px;
+  }
+  html.yahoo-preview .brand { padding-top: 12px !important; }
+  html.yahoo-preview .brand__title { width: 56px; height: 56px; }
+  html.yahoo-preview .brand__wordmark { width: 94px !important; }
+  html.yahoo-preview .brand__tagline { left: 82px; top: 14px; width: calc(100% - 96px); }
+  html.yahoo-preview .brand__poem { top: 76px; }
+  html.yahoo-preview .brand__name::after { display: none; }
+
+  html.yahoo-preview .drawer--left,
+  html.yahoo-preview .drawer--right,
+  html.yahoo-preview .drawer--right:has(.poems) {
+    inset: 8px 8px 50px !important;
+    width: auto !important;
+    border-radius: 5px 5px 0 0 !important;
+  }
+  html.yahoo-preview .poems::before,
+  html.yahoo-preview .poems::after { display: none; }
+  html.yahoo-preview .poem-list,
+  html.yahoo-preview .poem-compose--page { margin: 40px 0 0 !important; }
+  html.yahoo-preview .poem-tabs { left: 14px; right: 14px; }
+  html.yahoo-preview .poems .pane__head::before { font-size: 22px; }
+
+  html.yahoo-preview .dock {
+    height: 45px !important;
+    padding-left: 64px !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+  html.yahoo-preview .dock::before { width: 60px; font-size: 13px; }
+  html.yahoo-preview .dock__transport { display: none !important; }
+  html.yahoo-preview .dock__tabs { min-width: max-content; }
+  html.yahoo-preview .dock__btn { min-width: 42px !important; width: 42px !important; padding: 0 !important; justify-content: center !important; }
+  html.yahoo-preview .dock__btn span { display: none !important; }
+}
