@@ -910,13 +910,10 @@ export default function App() {
       <div className="stage">
         <header className="topbar">
           <div className="brand">
-            <div className="brand__pine" aria-hidden="true">
-              <img className="brand__pine-art" src="/brand-pine-header-v3.png" alt="" width="2172" height="724" />
-            </div>
+            <h1 className="brand__title">
+              <img className="brand__lockup" src="/brand-pine-wordmark-header.png" alt="Dưới Tán Thông" width="2172" height="724" />
+            </h1>
             <div className="brand__name">
-              <h1 className="brand__title">
-                <img className="brand__wordmark" src="/brand-wordmark-option4.png" alt="Dưới Tán Thông" width="600" height="133" />
-              </h1>
               <p className="brand__tagline">{tagline}</p>
               {featuredPoem && (
                 <article className="brand__poem" title="Một đoạn ngẫu nhiên từ Góc Hoài Niệm">

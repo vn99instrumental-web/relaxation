@@ -287,21 +287,10 @@ input, textarea { font-family: inherit; }
 .stage > * { pointer-events: auto; }
 
 .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.brand { position: relative; width: min(285px, calc(100vw - 36px)); min-width: 0; padding-top: 37px; transform: translate(-6px, -8px); }
-.brand__pine { position: absolute; z-index: 0; top: -18px; left: calc(-1 * var(--stage-gutter)); width: min(270px, 29vw); pointer-events: none; }
-.brand__pine .brand__pine-art { display: block; width: 100%; height: auto; }
-.brand__pine-art { transition: filter 0.45s ease; filter: drop-shadow(0 3px 7px rgba(0,0,0,0.58)); }
-.app[data-theme='dusk'] .brand__pine-art { filter: sepia(0.2) saturate(1.15) brightness(1.08) drop-shadow(0 3px 8px rgba(69,35,12,0.62)); }
-.app[data-theme='rain'] .brand__pine-art { filter: saturate(0.72) hue-rotate(12deg) brightness(0.9) contrast(1.08) drop-shadow(0 3px 9px rgba(5,24,35,0.72)); }
-.app[data-theme='morning'] .brand__pine-art { filter: saturate(0.82) brightness(1.18) contrast(0.94) drop-shadow(0 3px 7px rgba(72,67,42,0.3)); }
-.app[data-theme='film'] .brand__pine-art { filter: sepia(0.52) saturate(0.68) contrast(0.92) brightness(0.98) drop-shadow(0 3px 8px rgba(38,29,20,0.64)); }
-.brand__name { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; max-width: 250px; line-height: 1.08; }
-.brand__title { position: relative; z-index: 2; isolation: isolate; max-width: 100%; margin: 0; line-height: 0; }
-.brand__wordmark { position: relative; z-index: 1; display: block; width: clamp(145px, 16vw, 190px); max-width: 100%; height: auto; transform: translateX(-1.85%); transition: filter 0.45s ease; }
-.app[data-theme='dusk'] .brand__wordmark { filter: sepia(0.08) saturate(1.06) brightness(1.08) drop-shadow(0 2px 3px rgba(49,25,10,0.62)); }
-.app[data-theme='rain'] .brand__wordmark { filter: saturate(0.48) hue-rotate(150deg) brightness(1.08) contrast(1.03) drop-shadow(0 2px 4px rgba(3,18,28,0.72)); }
-.app[data-theme='morning'] .brand__wordmark { filter: brightness(0.48) saturate(0.78) hue-rotate(28deg) contrast(1.2) drop-shadow(0 1px 2px rgba(255,255,255,0.25)); }
-.app[data-theme='film'] .brand__wordmark { filter: sepia(0.45) saturate(0.7) brightness(0.96) contrast(0.96) drop-shadow(0 2px 4px rgba(38,29,20,0.62)); }
+.brand { position: relative; width: min(360px, calc(100vw - 12px)); min-width: 0; transform: translate(calc(-1 * var(--stage-gutter)), -16px); }
+.brand__title { max-width: 100%; margin: 0; line-height: 0; }
+.brand__lockup { display: block; width: 100%; height: auto; }
+.brand__name { display: flex; flex-direction: column; align-items: flex-start; width: 70%; min-width: 0; margin: -2px 0 0 18%; line-height: 1.08; }
 .brand__tagline { max-width: 100%; margin: 1px 0 0; font-size: 0.58rem; line-height: 1.24; color: var(--ink); font-family: var(--serif-body); font-style: italic; letter-spacing: 0.01em; text-shadow: 0 1px 2px rgba(0,0,0,0.65); }
 .brand__poem { max-width: 100%; margin-top: 3px; padding: 3px 6px 4px; border-left: 1px solid var(--gold-soft); border-radius: 0 6px 6px 0; background: rgba(18, 14, 9, 0.24); color: var(--paper); font-family: var(--serif-body); text-shadow: 0 1px 2px rgba(0,0,0,0.68); backdrop-filter: blur(5px); }
 .brand__poem-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px; margin-bottom: 1px; color: var(--gold-soft); font-size: 0.45rem; line-height: 1.2; }
@@ -946,15 +935,13 @@ input[type='range']:disabled { opacity: 0.4; }
 @media (max-width: 480px) {
   .stage { --stage-gutter: 12px; padding: 12px var(--stage-gutter); }
   .topbar { display: block; }
-  .brand { width: min(220px, calc(100vw - 24px)); padding-top: 31px; transform: translate(-4px, -6px); }
-  .brand__pine { top: -13px; width: min(220px, 62vw); }
-  .brand__name { max-width: 175px; }
+  .brand { width: min(300px, 88vw); transform: translate(calc(-1 * var(--stage-gutter)), -12px); }
+  .brand__name { width: 72%; margin-left: 18%; }
   .brand__tagline { display: block; max-width: 100%; font-size: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .brand__poem { width: 100%; max-width: none; padding: 4px 6px 5px; }
   .brand__poem-head { font-size: 0.44rem; }
   .brand__poem-head strong { font-size: 0.46rem; }
   .brand__poem-body { display: block; overflow: visible; -webkit-line-clamp: unset; font-size: 0.52rem; line-height: 1.24; }
-  .brand__wordmark { width: 122px; }
   .topbar { gap: 10px; }
   .topbar__actions { gap: 7px; }
   .theme-select { padding: 7px 10px; gap: 6px; }
