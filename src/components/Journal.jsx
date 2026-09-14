@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
+import { IconLock, IconUserSwitch } from './icons'
 
 const EMOJIS = [
   '😊', '🙂', '😌', '🥰', '😍', '😘', '🤗', '😴', '😆', '😂',
@@ -128,7 +129,7 @@ export default function Journal({ journal, username, setUsername, onClose }) {
           {onClose && <button className="link-btn" onClick={onClose} title="Đóng">✕</button>}
         </header>
         <div className="journal-lock">
-          <div className="journal-lock__icon" aria-hidden="true">🔒</div>
+          <div className="journal-lock__icon" aria-hidden="true"><IconLock /></div>
           <h3>Những dòng dưới tán thông</h3>
           <p>Một vài câu chuyện chỉ dành cho<br />những người đã từng ngồi ở đây.</p>
           {checking ? (
@@ -165,7 +166,7 @@ export default function Journal({ journal, username, setUsername, onClose }) {
           <span className="muted">{statusText}</span>
           {online && <button className="link-btn" onClick={refresh} title="Làm mới">↻</button>}
           {messages.length > 0 && <button className="link-btn" onClick={clearAll} title="Xóa toàn bộ nhật ký">🗑</button>}
-          <button className="link-btn" onClick={handleLock} title="Khóa Nhật ký / đổi người dùng">🔒</button>
+          <button className="link-btn journal__lock-btn" onClick={handleLock} title="Khóa Nhật ký / đổi người dùng" aria-label="Khóa Nhật ký / đổi người dùng"><IconLock /></button>
           {onClose && <button className="link-btn" onClick={onClose} title="Đóng">✕</button>}
         </div>
       </header>
@@ -235,7 +236,10 @@ export default function Journal({ journal, username, setUsername, onClose }) {
           ))}</div>}
           <form className="journal__compose" onSubmit={submit}>
             <button type="button" className="journal__whoami"
-              onClick={() => { setNameInput(username); setEditingName(true) }} title="Đổi tên">{username} ▾</button>
+              onClick={() => { setNameInput(username); setEditingName(true) }} title="Đổi người dùng">
+              <IconUserSwitch />
+              <span>{username}</span>
+            </button>
             <input ref={inputRef} type="text" placeholder="Viết cho người ấy hoặc cho chính mình…"
               value={draft} onChange={(e) => setDraft(e.target.value)} />
             <button type="button" className={`emoji-toggle ${emojiOpen ? 'is-on' : ''}`}
