@@ -1,6 +1,6 @@
 /* Final header rendering: one real transparent image contains pine + “Dưới Tán Thông”.
-   Tagline and featured poem stay live React content below it.
-   No DOM mutation, pseudo-element image, background-image, content:url, or forced aspect-ratio frame. */
+   Tagline and featured poem are intentionally hidden so the header only shows pine + title.
+   Keep the existing approved footprint/aspect treatment unchanged. */
 .brand {
   position: relative;
   isolation: isolate;
@@ -26,8 +26,7 @@
   line-height: 1.08;
 }
 
-/* Original layout reserved ~270px for the pine artwork inside a 285px brand block.
-   The composite replaces pine + title, so it uses that same overall footprint. */
+/* Preserve the same visual footprint used by the approved version. */
 .brand__title {
   position: relative;
   z-index: 2;
@@ -59,11 +58,10 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .52)) !important;
 }
 
+/* Only keep the pine + “Dưới Tán Thông” artwork visible. */
 .brand__tagline,
 .brand__poem {
-  position: relative;
-  z-index: 3;
-  max-width: 250px;
+  display: none !important;
 }
 
 @media (max-width: 480px) {
@@ -78,10 +76,5 @@
 
   .brand__title {
     width: min(220px, 100%);
-  }
-
-  .brand__tagline,
-  .brand__poem {
-    max-width: 175px;
   }
 }
