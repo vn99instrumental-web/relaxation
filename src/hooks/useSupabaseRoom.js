@@ -19,11 +19,11 @@ export function useSupabaseRoom(config, username) {
   const clientRef = useRef(null)
   const [messages, setMessages] = useState([])
   const [playlists, setPlaylists] = useState([])
-  const [status, setStatus] = useState(enabled ? 'connecting' : 'offline') // offline|connecting|online|error
+  const [status, setStatus] = useState(enabled ? 'connecting' : 'offline')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
   const [accessAllowed, setAccessAllowed] = useState(false)
-  const [accessStatus, setAccessStatus] = useState(username ? 'checking' : 'locked') // checking|allowed|locked|error
+  const [accessStatus, setAccessStatus] = useState(username ? 'checking' : 'locked')
 
   const verifyAccess = useCallback(async (name) => {
     const clean = String(name || '').trim()
@@ -35,13 +35,14 @@ export function useSupabaseRoom(config, username) {
     setAccessStatus('checking')
     try {
       const c = clientRef.current || makeClient(url, key)
-      const { data, error: e } = await c.functions.invoke('journal-access', { body: { username: clean } })
+      const { data, error: e } = await c.rpc('check_journal_user', { p_username: clean })
       if (e) throw e
-      const allowed = Boolean(data?.allowed)
+      const row = Array.isArray(data) ? data[0] : data
+      const allowed = Boolean(row?.allowed)
       setAccessAllowed(allowed)
       setAccessStatus(allowed ? 'allowed' : 'locked')
       if (!allowed) setMessages([])
-      return { allowed, displayName: data?.displayName || clean }
+      return { allowed, displayName: row?.display_name || clean }
     } catch (e) {
       setAccessAllowed(false)
       setAccessStatus('error')
@@ -93,7 +94,6 @@ export function useSupabaseRoom(config, username) {
     clientRef.current = client
     setStatus('connecting'); setError('')
 
-    // đảm bảo phòng tồn tại (không lỗi nếu đã có)
     client.from('rooms').upsert({ id: room }).then(() => {}, () => {})
 
     const loadBase = async () => {
