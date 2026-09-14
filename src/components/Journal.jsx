@@ -20,6 +20,23 @@ export default function Journal({ journal, username, setUsername, onClose }) {
   const [unlocking, setUnlocking] = useState(false)
   const [unlockName, setUnlockName] = useState('')
   const [unlockError, setUnlockError] = useState('')
+  const [draft, setDraft] = useState('')
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(username || '')
+  const [editingId, setEditingId] = useState(null)
+  const [editText, setEditText] = useState('')
+  const [emojiOpen, setEmojiOpen] = useState(false)
+  const [reactId, setReactId] = useState(null)
+  const listRef = useRef(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => { setNameInput(username || '') }, [username])
+  useEffect(() => {
+    const el = listRef.current
+    if (el && accessAllowed) el.scrollTop = el.scrollHeight
+  }, [messages.length, accessAllowed])
+
+  const grouped = useMemo(() => groupByDay(messages), [messages])
 
   const handleUnlock = async (event) => {
     event?.preventDefault?.()
@@ -44,6 +61,63 @@ export default function Journal({ journal, username, setUsername, onClose }) {
     setUnlockName('')
     setUnlockError('')
   }
+
+  const removeOne = (id) => { if (deleteMessage && window.confirm('Xoá tin nhắn này? Không thể hoàn tác.')) deleteMessage(id) }
+  const clearAll = () => {
+    if (!clearMessages) return
+    if (window.confirm('Xóa toàn bộ nhật ký? Không thể hoàn tác.')) clearMessages()
+  }
+
+  const addEmoji = (e) => { setDraft((d) => d + e); inputRef.current?.focus() }
+
+  const toggleReaction = (m, emoji) => {
+    if (!reactMessage) return
+    const u = username || 'Ẩn danh'
+    const cur = (m.reactions && m.reactions[emoji]) || []
+    const nextList = cur.includes(u) ? cur.filter((x) => x !== u) : [...cur, u]
+    const next = { ...(m.reactions || {}) }
+    if (nextList.length) next[emoji] = nextList; else delete next[emoji]
+    reactMessage(m.id, next)
+    setReactId(null)
+  }
+
+  const startEdit = (m) => { setEditingId(m.id); setEditText(m.text) }
+  const cancelEdit = () => { setEditingId(null); setEditText('') }
+  const saveEdit = () => {
+    const t = editText.trim()
+    if (!t) return
+    if (editMessage) editMessage(editingId, t)
+    cancelEdit()
+  }
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (!draft.trim() || !username) return
+    send(draft)
+    setDraft('')
+    setEmojiOpen(false)
+  }
+
+  const saveName = async (e) => {
+    e.preventDefault()
+    const n = nameInput.trim()
+    if (!n || !unlock) return
+    const result = await unlock(n)
+    if (!result?.allowed) {
+      setNameInput(username || '')
+      setEditingName(false)
+      return
+    }
+    setUsername(result.displayName || n)
+    setEditingName(false)
+  }
+
+  const statusText = {
+    offline: 'Riêng tư',
+    connecting: 'Đang kết nối…',
+    online: 'Đồng bộ',
+    error: 'Lỗi',
+  }[status]
 
   if (!accessAllowed) {
     const checking = accessStatus === 'checking' && Boolean(username)
@@ -81,80 +155,6 @@ export default function Journal({ journal, username, setUsername, onClose }) {
   }
 
   const admin = true
-  const removeOne = (id) => { if (deleteMessage && window.confirm('Xoá tin nhắn này? Không thể hoàn tác.')) deleteMessage(id) }
-  const clearAll = () => {
-    if (!clearMessages) return
-    if (window.confirm('Xóa toàn bộ nhật ký? Không thể hoàn tác.')) clearMessages()
-  }
-  const [draft, setDraft] = useState('')
-  const [editingName, setEditingName] = useState(false)
-  const [nameInput, setNameInput] = useState(username || '')
-  const [editingId, setEditingId] = useState(null)
-  const [editText, setEditText] = useState('')
-  const [emojiOpen, setEmojiOpen] = useState(false)
-  const [reactId, setReactId] = useState(null)
-  const listRef = useRef(null)
-  const inputRef = useRef(null)
-
-  useEffect(() => { setNameInput(username || '') }, [username])
-
-  const addEmoji = (e) => { setDraft((d) => d + e); inputRef.current?.focus() }
-
-  const toggleReaction = (m, emoji) => {
-    if (!reactMessage) return
-    const u = username || 'Ẩn danh'
-    const cur = (m.reactions && m.reactions[emoji]) || []
-    const nextList = cur.includes(u) ? cur.filter((x) => x !== u) : [...cur, u]
-    const next = { ...(m.reactions || {}) }
-    if (nextList.length) next[emoji] = nextList; else delete next[emoji]
-    reactMessage(m.id, next)
-    setReactId(null)
-  }
-
-  const startEdit = (m) => { setEditingId(m.id); setEditText(m.text) }
-  const cancelEdit = () => { setEditingId(null); setEditText('') }
-  const saveEdit = () => {
-    const t = editText.trim()
-    if (!t) return
-    if (editMessage) editMessage(editingId, t)
-    cancelEdit()
-  }
-
-  useEffect(() => {
-    const el = listRef.current
-    if (el) el.scrollTop = el.scrollHeight
-  }, [messages.length])
-
-  const grouped = useMemo(() => groupByDay(messages), [messages])
-
-  const submit = (e) => {
-    e.preventDefault()
-    if (!draft.trim() || !username) return
-    send(draft)
-    setDraft('')
-    setEmojiOpen(false)
-  }
-
-  const saveName = async (e) => {
-    e.preventDefault()
-    const n = nameInput.trim()
-    if (!n || !unlock) return
-    const result = await unlock(n)
-    if (!result?.allowed) {
-      setNameInput(username || '')
-      setEditingName(false)
-      return
-    }
-    setUsername(result.displayName || n)
-    setEditingName(false)
-  }
-
-  const statusText = {
-    offline: 'Riêng tư',
-    connecting: 'Đang kết nối…',
-    online: 'Đồng bộ',
-    error: 'Lỗi',
-  }[status]
 
   return (
     <section className="pane journal">
