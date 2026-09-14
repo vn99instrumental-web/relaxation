@@ -17,7 +17,6 @@ export const IconImmersive = (p) => (
 export const IconPoem = (p) => (
   <svg {...base} {...p}><path d="M12 21s-7-4.35-7-10a4 4 0 017-2.65A4 4 0 0119 11c0 5.65-7 10-7 10z" /><path d="M9 10h4M9 13h6" /></svg>
 )
-// Điều khiển phát nhạc (dạng đặc, currentColor -> theo theme)
 export const IconPlay = (p) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M8 5.5v13a1 1 0 001.52.85l10.5-6.5a1 1 0 000-1.7L9.52 4.65A1 1 0 008 5.5z" /></svg>
 )
@@ -30,16 +29,9 @@ export const IconPrev = (p) => (
 export const IconNext = (p) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M6 6.2v11.6a1 1 0 001.53.85l8.8-5.8a1 1 0 000-1.7L7.53 5.35A1 1 0 006 6.2z" /><rect x="15.6" y="5.5" width="2.4" height="13" rx="1.2" /></svg>
 )
-
 export const IconShuffle = (p) => (
-  <svg {...base} {...p}>
-    <path d="M4 7h2.5c5 0 5 10 10 10H21" />
-    <path d="m18 14 3 3-3 3" />
-    <path d="M4 17h2.5c5 0 5-10 10-10H21" />
-    <path d="m18 4 3 3-3 3" />
-  </svg>
+  <svg {...base} {...p}><path d="M4 7h2.5c5 0 5 10 10 10H21" /><path d="m18 14 3 3-3 3" /><path d="M4 17h2.5c5 0 5-10 10-10H21" /><path d="m18 4 3 3-3 3" /></svg>
 )
-
 export const IconSettings = (p) => (
   <svg {...base} {...p}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 00-1.88-.34 1.7 1.7 0 00-1.04 1.55V20h-3v-.09a1.7 1.7 0 00-1.04-1.55 1.7 1.7 0 00-1.88.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 007 14.7a1.7 1.7 0 00-1.55-1.04H5.3v-3h.09A1.7 1.7 0 006.94 9.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.12-2.12.06.06a1.7 1.7 0 001.88.34A1.7 1.7 0 0011.64 4.4V4.3h3v.09a1.7 1.7 0 001.04 1.55 1.7 1.7 0 001.88-.34l.06-.06 2.12 2.12-.06.06a1.7 1.7 0 00-.34 1.88 1.7 1.7 0 001.55 1.04H21v3h-.09A1.7 1.7 0 0019.4 15z" /></svg>
 )
@@ -51,4 +43,10 @@ export const IconImage = (p) => (
 )
 export const IconShield = (p) => (
   <svg {...base} {...p}><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6l-7-3z" /><path d="m9 12 2 2 4-4" /></svg>
+)
+export const IconLock = (p) => (
+  <svg {...base} {...p}><rect x="5" y="10" width="14" height="11" rx="2.5" /><path d="M8 10V7a4 4 0 018 0v3" /><path d="M12 14v3" /></svg>
+)
+export const IconUserSwitch = (p) => (
+  <svg {...base} {...p}><circle cx="9" cy="8" r="3" /><path d="M3.5 19c.7-3.3 2.6-5 5.5-5 1.5 0 2.7.4 3.6 1.1" /><path d="M15 9h5m0 0-2-2m2 2-2 2" /><path d="M20 15h-5m0 0 2-2m-2 2 2 2" /></svg>
 )
