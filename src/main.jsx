@@ -4,6 +4,8 @@ import App from './App.jsx'
 import './styles.css'
 import './journal-lock.css'
 import './brand-embrace.css'
+import './static-header.css'
+import './static-header.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
