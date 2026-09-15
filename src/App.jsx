@@ -96,6 +96,24 @@ function normalizeQueueMetadata(tracks, updatedAt = Date.now()) {
   }))
 }
 
+// Đảm bảo MỌI bài trong mọi playlist đều có mốc addedAt ỔN ĐỊNH để luôn xếp
+// được "mới nhất lên đầu" mà không bị lật thứ tự. Bài cũ (chưa có addedAt) được
+// gán mốc nhỏ theo vị trí lưu (cuối mảng = mới hơn) — luôn nhỏ hơn bài thêm sau
+// này (mốc thời gian thật), nên bài mới thêm luôn nổi lên trên. Không đổi thứ tự
+// mảng lưu (chỉ thêm trường), nên các thao tác theo chỉ số vẫn đúng.
+function withStablePlaylistOrder(playlists) {
+  return (playlists || []).map((pl) => {
+    const list = Array.isArray(pl.tracks) ? pl.tracks : []
+    let changed = false
+    const tracks = list.map((track, index) => {
+      if (trackAddedTime(track, -1) > 0) return track
+      changed = true
+      return { ...track, addedAt: index + 1 }
+    })
+    return changed ? { ...pl, tracks } : pl
+  })
+}
+
 // Các giao diện (độc lập với ảnh nền) — bộ màu từ thiết kế Stitch
 const THEMES = [
   { id: 'dusk', label: 'Hoàng hôn' },
@@ -183,7 +201,9 @@ export default function App() {
   const poemsApi = usePoems(supaConfig, username)
   const [roomHydrated, setRoomHydrated] = useState(false)
   const journal = supa.enabled ? supa.journal : gist
-  const playlists = supa.enabled ? supa.playlists : localPlaylists
+  const rawPlaylists = supa.enabled ? supa.playlists : localPlaylists
+  // Chuẩn hoá addedAt để mọi playlist luôn xếp bài mới nhất lên đầu, ổn định.
+  const playlists = useMemo(() => withStablePlaylistOrder(rawPlaylists), [rawPlaylists])
 
   const featuredPoem = useMemo(
     () => (poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null,
@@ -514,8 +534,12 @@ export default function App() {
     else setLocalPlaylists((list) => list.map((p) => (p.id === id ? { ...p, name, ts: Date.now() } : p)))
   }, [])
 
-  const tracksFromParsed = (parsedList) =>
-    parsedList.map((p) => { const { key, ...rest } = trackFromParsed(p); return rest })
+  const tracksFromParsed = (parsedList) => {
+    const stamp = Date.now()
+    // Mỗi bài một mốc addedAt tăng dần để khi thêm nhiều link cùng lúc, thứ tự
+    // rõ ràng (bài sau mới hơn) thay vì trùng mốc rồi xếp lộn xộn.
+    return parsedList.map((p, offset) => { const { key, ...rest } = trackFromParsed(p, '', stamp + offset); return rest })
+  }
 
   // Thêm link vào một playlist đã tạo
   const addToPlaylist = useCallback((playlistId, parsedList) => {
