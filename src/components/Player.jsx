@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { parseYouTube, videoThumb, trackName } from '../lib/youtube'
 import { IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
 
@@ -15,7 +15,7 @@ const addedTime = (track, fallback) => {
 //  • Thêm nhạc: dán link (vào hàng chờ / playlist có sẵn / playlist mới) + lưu playlist.
 export default function Player({
   queue, index, yt, playlistName, onNext, onPrev, ytVolume, setYtVolume,
-  onAddMany, onSelect, onSelectRecent, onRemove, onClear,
+  onAddMany, onSelect, onSelectRecent, onPlayRecent, onRemove, onClear,
   showVideo, onToggleVideo, shuffle, onToggleShuffle,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
   onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist, onRenamePlaylist,
@@ -78,10 +78,23 @@ export default function Player({
   }
 
   const targetValid = target === '__queue__' || target === '__new__' || playlists.some((p) => p.id === target)
-  const recentTracks = queue
-    .map((track, queueIndex) => ({ track, queueIndex }))
-    .sort((a, b) => addedTime(b.track, b.queueIndex) - addedTime(a.track, a.queueIndex))
-    .slice(0, recentLimit)
+  // "Mới đăng": gộp bài mới nhất từ HÀNG CHỜ + TẤT CẢ playlist đã lưu (bỏ trùng
+  // theo videoId/playlistId, giữ mốc mới nhất), xếp mới nhất lên đầu. Cắt theo filter.
+  const recentPool = useMemo(() => {
+    const seen = new Map()
+    const keyOf = (t) => (t.kind === 'playlist' ? `pl:${t.playlistId}` : `v:${t.videoId}`)
+    const consider = (t) => {
+      if (!t || (t.kind === 'playlist' ? !t.playlistId : !t.videoId)) return
+      const k = keyOf(t)
+      const at = addedTime(t, 0)
+      const prev = seen.get(k)
+      if (!prev || at > prev.at) seen.set(k, { track: t, at })
+    }
+    ;(queue || []).forEach(consider)
+    ;(playlists || []).forEach((pl) => (pl.tracks || []).forEach(consider))
+    return [...seen.values()].sort((a, b) => b.at - a.at).map((x) => x.track)
+  }, [queue, playlists])
+  const recentTracks = recentPool.slice(0, recentLimit)
   const currentTracks = queue
     .map((track, queueIndex) => ({ track, queueIndex }))
     .sort((a, b) => addedTime(b.track, b.queueIndex) - addedTime(a.track, a.queueIndex))
@@ -190,25 +203,29 @@ export default function Player({
           </div>
           <p className="recent__hint">Khi chưa ghim bài mặc định, trang sẽ bắt đầu từ bài mới nhất trong danh sách này.</p>
           <ul className="queue queue--recent">
-            {recentTracks.map(({ track, queueIndex }, rank) => (
-              <li key={track.key} className={`queue__item ${queueIndex === index ? 'is-current' : ''}`} aria-current={queueIndex === index ? 'true' : undefined}>
-                <span className="recent__rank">{String(rank + 1).padStart(2, '0')}</span>
-                <button className="queue__play" onClick={() => onSelectRecent(queueIndex)}>
-                  {track.kind === 'playlist'
-                    ? <span className="queue__thumb queue__thumb--list">≡</span>
-                    : <img className="queue__thumb" src={videoThumb(track.videoId, 'default')} alt="" loading="lazy" />}
-                  <span className="queue__label"><span className="queue__name">{trackName(track, titles) || (track.kind === 'playlist' ? 'Playlist' : 'Video')}</span></span>
-                </button>
-                {admin && queueIndex === index && (
-                  <button className={`queue__default ${sameTrack(track, defaultTrack) ? 'is-on' : ''}`}
-                    onClick={() => sameTrack(track, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(track)}
-                    title={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}
-                    aria-label={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định' : 'Đặt bài hát mặc định'}>
-                    {sameTrack(track, defaultTrack) ? '★' : '☆'}
+            {recentTracks.map((track, rank) => {
+              const isCurrent = currentTrack && sameTrack(track, currentTrack)
+              return (
+                <li key={track.recordId || track.key || `${track.videoId || track.playlistId}-${rank}`}
+                  className={`queue__item ${isCurrent ? 'is-current' : ''}`} aria-current={isCurrent ? 'true' : undefined}>
+                  <span className="recent__rank">{String(rank + 1).padStart(2, '0')}</span>
+                  <button className="queue__play" onClick={() => (onPlayRecent ? onPlayRecent(track) : onSelectRecent?.(index))}>
+                    {track.kind === 'playlist'
+                      ? <span className="queue__thumb queue__thumb--list">≡</span>
+                      : <img className="queue__thumb" src={videoThumb(track.videoId, 'default')} alt="" loading="lazy" />}
+                    <span className="queue__label"><span className="queue__name">{trackName(track, titles) || (track.kind === 'playlist' ? 'Playlist' : 'Video')}</span></span>
                   </button>
-                )}
-              </li>
-            ))}
+                  {admin && (
+                    <button className={`queue__default ${sameTrack(track, defaultTrack) ? 'is-on' : ''}`}
+                      onClick={() => sameTrack(track, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(track)}
+                      title={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}
+                      aria-label={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định' : 'Đặt bài hát mặc định'}>
+                      {sameTrack(track, defaultTrack) ? '★' : '☆'}
+                    </button>
+                  )}
+                </li>
+              )
+            })}
             {!recentTracks.length && <li className="queue__empty">Chưa có bài nào được đăng.</li>}
           </ul>
         </div>

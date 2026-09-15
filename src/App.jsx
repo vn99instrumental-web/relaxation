@@ -468,6 +468,28 @@ export default function App() {
     })
   }, [yt])
 
+  // Chạm 1 bài trong "Mới đăng" (gộp từ mọi playlist): nếu đã có trong hàng chờ
+  // thì phát ngay bài đó; nếu chưa, thêm vào cuối hàng chờ rồi phát. Bỏ liên kết
+  // playlist nguồn để chỉ thêm đúng 1 bài (không tự kéo cả playlist vào hàng chờ).
+  const playFromLibrary = useCallback((track) => {
+    if (!track) return
+    setRecentPlayback(true)
+    setQueue((q) => {
+      const existing = q.findIndex((t) => sameTrack(t, track))
+      if (existing >= 0) {
+        indexRef.current = existing; setIndex(existing)
+        setTimeout(() => yt.playTrack(q[existing]), 0)
+        return q
+      }
+      const { sourcePlaylistId, sourcePlaylistName, sourceTrackIndex, ...rest } = portableTrack(track)
+      const nt = { key: nextKey(), ...rest }
+      const nq = [...q, nt]
+      indexRef.current = nq.length - 1; setIndex(nq.length - 1)
+      setTimeout(() => yt.playTrack(nt), 0)
+      return nq
+    })
+  }, [yt])
+
   const setOpeningTrack = useCallback((track) => { setRecentPlayback(true); setDefaultTrack(portableTrack(track)) }, [])
   const clearOpeningTrack = useCallback(() => setDefaultTrack(null), [])
 
@@ -1030,7 +1052,7 @@ export default function App() {
             <Player
                 queue={queue} index={index} yt={yt} playlistName={activePlaylistName} titles={titles}
                 onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
-                onAddMany={onAddMany} onSelect={playAt} onSelectRecent={playRecentAt} onRemove={onRemove} onClear={onClear}
+                onAddMany={onAddMany} onSelect={playAt} onSelectRecent={playRecentAt} onPlayRecent={playFromLibrary} onRemove={onRemove} onClear={onClear}
                 showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
                 shuffle={shuffle} onToggleShuffle={onToggleShuffle}
                 playlists={playlists} onSavePlaylist={savePlaylist}
