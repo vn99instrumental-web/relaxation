@@ -240,10 +240,12 @@ export default function App() {
     }))
     if (queueSignature(syncedQueue) === queueSignature(queue)) return
 
-    const currentTrack = queue[index]
+    const currentQueueIndex = Math.max(0, Math.min(indexRef.current, queue.length - 1))
+    const currentTrack = queue[currentQueueIndex]
     const matchingIndex = currentTrack ? syncedQueue.findIndex((track) => sameTrack(track, currentTrack)) : -1
-    const nextIndex = matchingIndex >= 0 ? matchingIndex : Math.min(index, Math.max(0, syncedQueue.length - 1))
+    const nextIndex = matchingIndex >= 0 ? matchingIndex : Math.min(currentQueueIndex, Math.max(0, syncedQueue.length - 1))
     setQueue(syncedQueue)
+    indexRef.current = nextIndex
     setIndex(nextIndex)
     if (currentTrack && matchingIndex < 0) {
       if (syncedQueue[nextIndex]) setTimeout(() => yt.playTrack(syncedQueue[nextIndex]), 0)
@@ -390,7 +392,7 @@ export default function App() {
     setRecentPlayback(false)
     setQueue((q) => {
       const t = q[i]
-      if (t) { setIndex(i); yt.playTrack(t) }
+      if (t) { indexRef.current = i; setIndex(i); yt.playTrack(t) }
       return q
     })
   }, [yt])
@@ -399,7 +401,7 @@ export default function App() {
     setRecentPlayback(true)
     setQueue((q) => {
       const track = q[i]
-      if (track) { setIndex(i); yt.playTrack(track) }
+      if (track) { indexRef.current = i; setIndex(i); yt.playTrack(track) }
       return q
     })
   }, [yt])
@@ -570,20 +572,17 @@ export default function App() {
     setQueue((q) => {
       if (!q.length) return q
       let ni
-      const recent = recentPlayback ? recentQueueIndexes(q, recentLimit) : []
-      if (recent.length) {
-        const position = Math.max(0, recent.indexOf(index))
-        if (shuffle && recent.length > 1) {
-          do { ni = recent[Math.floor(Math.random() * recent.length)] } while (ni === index)
-        } else ni = recent[(position + 1) % recent.length]
-      } else if (shuffle && q.length > 1) {
-        do { ni = Math.floor(Math.random() * q.length) } while (ni === index)
-      } else {
-        ni = (index + 1) % q.length
-      }
+      // Navigate in the same newest-first order rendered by Player, regardless
+      // of the queue's internal storage order.
+      const visibleOrder = recentQueueIndexes(q, recentPlayback ? recentLimit : q.length)
+      const position = visibleOrder.indexOf(index)
+      if (shuffle && visibleOrder.length > 1) {
+        do { ni = visibleOrder[Math.floor(Math.random() * visibleOrder.length)] } while (ni === index)
+      } else ni = visibleOrder[((position < 0 ? -1 : position) + 1) % visibleOrder.length]
+      indexRef.current = ni
       setIndex(ni); yt.playTrack(q[ni]); return q
     })
-  }, [index, yt, shuffle, recentPlayback, defaultTrack, recentLimit])
+  }, [index, yt, shuffle, recentPlayback, recentLimit])
 
   // Trộn thứ tự hàng chờ ngay (giữ bài đang phát lên đầu để không ngắt nhạc)
   const shuffleNow = useCallback(() => {
@@ -611,14 +610,13 @@ export default function App() {
   const onPrev = useCallback(() => {
     setQueue((q) => {
       if (!q.length) return q
-      const recent = recentPlayback ? recentQueueIndexes(q, recentLimit) : []
-      const position = recent.indexOf(index)
-      const pi = recent.length
-        ? recent[(position <= 0 ? recent.length : position) - 1]
-        : (index - 1 + q.length) % q.length
+      const visibleOrder = recentQueueIndexes(q, recentPlayback ? recentLimit : q.length)
+      const position = visibleOrder.indexOf(index)
+      const pi = visibleOrder[(position <= 0 ? visibleOrder.length : position) - 1]
+      indexRef.current = pi
       setIndex(pi); yt.playTrack(q[pi]); return q
     })
-  }, [index, yt, recentPlayback, defaultTrack, recentLimit])
+  }, [index, yt, recentPlayback, recentLimit])
 
   useEffect(() => { yt.setOnEnded(onNext) }, [yt, onNext])
   useEffect(() => { yt.setOnError(onPlaybackError) }, [yt, onPlaybackError])
