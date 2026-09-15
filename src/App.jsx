@@ -17,6 +17,7 @@ import { useSupabaseGallery } from './hooks/useSupabaseGallery'
 import { useRoomSettings } from './hooks/useRoomSettings'
 import { usePoems } from './hooks/usePoems'
 import { load, save } from './lib/storage'
+import { fetchVideoTitle } from './lib/youtube'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, BUILTIN_SCENES } from './lib/backgrounds'
 import { pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
@@ -122,6 +123,14 @@ export default function App() {
   const [autoplay, setAutoplay] = useState(() => load('vibe.autoplay', true))
   const [defaultTrack, setDefaultTrack] = useState(() => load('vibe.defaultTrack', null))
   const [recentLimit, setRecentLimit] = useState(() => load('vibe.recentLimit', 10))
+  // Bộ nhớ đệm TÊN bài theo videoId (dùng chung cho hàng chờ & mọi playlist,
+  // để tên hiển thị đồng nhất ở mọi nơi và không mất khi tải lại trang).
+  const [titles, setTitles] = useState(() => { const t = load('vibe.titleCache', {}); return t && typeof t === 'object' ? t : {} })
+  const rememberTitle = useCallback((videoId, title) => {
+    const name = (title || '').trim()
+    if (!videoId || !name) return
+    setTitles((cur) => (cur[videoId] === name ? cur : { ...cur, [videoId]: name }))
+  }, [])
 
   const [scene, setScene] = useState(() => load('vibe.scene', 'fog'))
   const [userBgs, setUserBgs] = useState(() => load('vibe.userBgs', []))
@@ -259,6 +268,39 @@ export default function App() {
   useEffect(() => save('vibe.autoplay', autoplay), [autoplay])
   useEffect(() => save('vibe.defaultTrack', defaultTrack), [defaultTrack])
   useEffect(() => save('vibe.recentLimit', recentLimit), [recentLimit])
+  useEffect(() => save('vibe.titleCache', titles), [titles])
+
+  // Tự lấy TÊN cho các bài còn thiếu (trong hàng chờ + mọi playlist) qua oEmbed,
+  // theo lô, mỗi videoId chỉ thử một lần/phiên. Không ghi vào playlist đã lưu
+  // (tránh làm xáo trộn thứ tự do updated_at), chỉ nạp vào bộ nhớ đệm để hiển thị.
+  const triedTitlesRef = useRef(new Set())
+  useEffect(() => {
+    const ids = []
+    const seen = new Set()
+    const consider = (t) => {
+      if (t?.kind === 'video' && t.videoId && !t.title
+        && !titles[t.videoId] && !triedTitlesRef.current.has(t.videoId) && !seen.has(t.videoId)) {
+        seen.add(t.videoId); ids.push(t.videoId)
+      }
+    }
+    ;(queue || []).forEach(consider)
+    ;(playlists || []).forEach((pl) => (pl.tracks || []).forEach(consider))
+    if (!ids.length) return undefined
+    let cancelled = false
+    const controller = new AbortController()
+    const batch = ids.slice(0, 30)
+    batch.forEach((id) => triedTitlesRef.current.add(id))
+    ;(async () => {
+      const found = {}
+      for (const id of batch) {
+        if (cancelled) break
+        const name = await fetchVideoTitle(id, controller.signal)
+        if (name) found[id] = name
+      }
+      if (!cancelled && Object.keys(found).length) setTitles((prev) => ({ ...prev, ...found }))
+    })()
+    return () => { cancelled = true; controller.abort() }
+  }, [queue, playlists, titles])
   useEffect(() => save('vibe.supabase', supaConfig), [supaConfig])
   useEffect(() => save('vibe.ytVolume', ytVolume), [ytVolume])
   useEffect(() => save('vibe.scene', scene), [scene])
@@ -701,6 +743,7 @@ export default function App() {
     if (!yt.nowTitle) return
     const track = queueRef.current[index]
     if (!track) return
+    if (track.kind === 'video' && track.videoId) rememberTitle(track.videoId, yt.nowTitle) // lưu tên để dùng lại mọi nơi
     setQueue((q) => {
       if (!q[index] || q[index].title === yt.nowTitle) return q
       const nq = [...q]; nq[index] = { ...nq[index], title: yt.nowTitle }; return nq
@@ -961,7 +1004,7 @@ export default function App() {
           </div>
           <div className="drawer__body">
             <Player
-                queue={queue} index={index} yt={yt} playlistName={activePlaylistName}
+                queue={queue} index={index} yt={yt} playlistName={activePlaylistName} titles={titles}
                 onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
                 onAddMany={onAddMany} onSelect={playAt} onSelectRecent={playRecentAt} onRemove={onRemove} onClear={onClear}
                 showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
@@ -1001,7 +1044,7 @@ export default function App() {
       </div>
 
       <Dock
-        yt={yt} queue={queue} index={index}
+        yt={yt} queue={queue} index={index} titles={titles}
         playlistName={activePlaylistName}
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
         shuffle={shuffle} onToggleShuffle={onToggleShuffle}

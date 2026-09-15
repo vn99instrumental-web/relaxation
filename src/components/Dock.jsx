@@ -1,14 +1,15 @@
 // Thanh điều khiển mỏng ở đáy màn hình: thông tin bài đang phát + nút phát,
 // âm lượng, và các nút mở/đóng panel (Nhạc / Không gian / Nhật ký).
 import { IconMusic, IconJournal, IconImmersive, IconPoem, IconSettings, IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
+import { trackName } from '../lib/youtube'
 
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
-  playlistName = '',
+  playlistName = '', titles,
   shuffle, onToggleShuffle, unread = 0, unreadPoems = 0,
   leftTab, onToggleLeft, journalOpen, onToggleJournal, poemsOpen, onTogglePoems, onOpenSettings, onHideUI,
 }) {
-  const title = yt.nowTitle || queue[index]?.title || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
+  const title = yt.nowTitle || trackName(queue[index], titles) || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
   const duration = Number(yt.duration) || 0
   const currentTime = Math.min(Number(yt.currentTime) || 0, duration || Infinity)
   const timeLabel = (seconds) => {

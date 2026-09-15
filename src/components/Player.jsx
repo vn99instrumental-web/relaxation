@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { parseYouTube, videoThumb } from '../lib/youtube'
+import { parseYouTube, videoThumb, trackName } from '../lib/youtube'
 import { IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
 
 const addedTime = (track, fallback) => {
@@ -21,7 +21,7 @@ export default function Player({
   onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist, onRenamePlaylist,
   admin, defaultTrack, onSetDefaultTrack, onClearDefaultTrack,
   recentLimit, onRecentLimitChange,
-  onTabChange,
+  onTabChange, titles,
 }) {
   const [tab, setTab] = useState('now')            // 'now' | 'recent' | 'library' | 'add'
   const [editPlId, setEditPlId] = useState(null)   // id playlist đang đổi tên
@@ -90,7 +90,7 @@ export default function Player({
     .sort((a, b) => addedTime(b.track, b.sourceIndex) - addedTime(a.track, a.sourceIndex))
   const displayedPlaylists = [...(playlists || [])].sort((a, b) => (b.ts || 0) - (a.ts || 0))
   const currentTrack = queue[index]
-  const currentTitle = yt?.nowTitle || currentTrack?.title || 'Chưa chọn bài hát'
+  const currentTitle = yt?.nowTitle || trackName(currentTrack, titles) || 'Chưa chọn bài hát'
   const duration = Number(yt?.duration) || 0
   const currentTime = Math.min(Number(yt?.currentTime) || 0, duration || Infinity)
   const selectTab = (next) => { setTab(next); onTabChange?.(next) }
@@ -127,12 +127,12 @@ export default function Player({
                   <span className="recent__rank">{String(displayIndex + 1).padStart(2, '0')}</span>
                   <button className="queue__play" onClick={() => onSelect(queueIndex)}>
                     {track.videoId ? <img className="queue__thumb" src={videoThumb(track.videoId, 'default')} alt="" loading="lazy" /> : <span className="queue__thumb queue__thumb--list">≡</span>}
-                    <span className="queue__label"><span className="queue__name">{track.title || 'Video'}</span></span>
+                    <span className="queue__label"><span className="queue__name">{trackName(track, titles) || 'Video'}</span></span>
                   </button>
                   {admin && <button className={`queue__default ${sameTrack(track, defaultTrack) ? 'is-on' : ''}`}
                     onClick={() => sameTrack(track, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(track)}
                     title={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}
-                    aria-label={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định' : `Đặt ${track.title || 'bài hát'} làm mặc định`}>
+                    aria-label={sameTrack(track, defaultTrack) ? 'Bỏ bài hát mặc định' : `Đặt ${trackName(track, titles) || 'bài hát'} làm mặc định`}>
                     {sameTrack(track, defaultTrack) ? '★' : '☆'}
                   </button>}
                 </li>
@@ -197,7 +197,7 @@ export default function Player({
                   {track.kind === 'playlist'
                     ? <span className="queue__thumb queue__thumb--list">≡</span>
                     : <img className="queue__thumb" src={videoThumb(track.videoId, 'default')} alt="" loading="lazy" />}
-                  <span className="queue__label"><span className="queue__name">{track.title || (track.kind === 'playlist' ? 'Playlist' : 'Video')}</span></span>
+                  <span className="queue__label"><span className="queue__name">{trackName(track, titles) || (track.kind === 'playlist' ? 'Playlist' : 'Video')}</span></span>
                 </button>
                 {admin && queueIndex === index && (
                   <button className={`queue__default ${sameTrack(track, defaultTrack) ? 'is-on' : ''}`}
@@ -282,7 +282,7 @@ export default function Player({
                           {p.tracks.length === 0 && <li className="pl-track pl-track--empty">Playlist trống.</li>}
                           {sortedPlaylistTracks(p.tracks).map(({ track: t, sourceIndex: i }) => (
                             <li key={t.recordId || `${t.videoId || t.playlistId}-${i}`} className="pl-track">
-                              <span className="pl-track__name">{t.kind === 'playlist' ? '≡ ' : ''}{t.title || 'Video'}</span>
+                              <span className="pl-track__name">{t.kind === 'playlist' ? '≡ ' : ''}{trackName(t, titles) || 'Video'}</span>
                               {admin && <button className={`queue__default ${sameTrack(t, defaultTrack) ? 'is-on' : ''}`}
                                 onClick={() => sameTrack(t, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(t)}
                                 title={sameTrack(t, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}

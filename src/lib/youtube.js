@@ -53,6 +53,29 @@ export function videoThumb(videoId, quality = 'hqdefault') {
   return `https://i.ytimg.com/vi/${videoId}/${quality}.jpg`
 }
 
+// Lấy TÊN bài từ endpoint oEmbed công khai của YouTube (không cần API key, có
+// CORS). Dùng để hiện tên ngay khi thêm bài, không phải chờ phát. Lỗi/không lấy
+// được -> trả '' (app tự quay về cách cũ: lấy tên khi phát).
+export async function fetchVideoTitle(videoId, signal) {
+  if (!videoId) return ''
+  try {
+    const src = `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`
+    const res = await fetch(src, { signal })
+    if (!res.ok) return ''
+    const data = await res.json()
+    return typeof data?.title === 'string' ? data.title.trim() : ''
+  } catch { return '' }
+}
+
+// Tên hiển thị của một bài: ưu tiên tên đã lưu trong bài, rồi tới tên trong
+// bộ nhớ đệm (theo videoId). Trả '' nếu chưa biết -> nơi gọi tự thêm chữ tạm.
+export function trackName(track, titles) {
+  if (!track) return ''
+  if (track.title) return track.title
+  if (track.kind === 'video' && track.videoId && titles && titles[track.videoId]) return titles[track.videoId]
+  return ''
+}
+
 export function shortId(id) {
   if (!id) return ''
   return id.length > 10 ? id.slice(0, 6) + '…' : id
