@@ -906,7 +906,7 @@ input[type='range']:disabled { opacity: 0.4; }
   .pip { top: auto; bottom: 88px; right: 10px; width: 210px; }
   .dock { gap: 10px; padding: 7px 10px; overflow: visible; }
   .dock__now { display: flex; }
-  .dock__btn span { display: none; }
+  .dock__btn span:not(.dock__notif) { display: none; } /* ẩn nhãn chữ nhưng GIỮ pill noti "… mới" */
   .dock__btn:not(.dock__btn--icon) { min-width: 0; }
   .dock__vol { display: none; }
   .app.is-left-open .dock__now, .app.is-right-open .dock__now { display: none; }

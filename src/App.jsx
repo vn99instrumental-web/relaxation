@@ -156,7 +156,7 @@ export default function App() {
   const [featuredPoemId, setFeaturedPoemId] = useState(null)
   const [admin, setAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
-  const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', 0)) // mốc tin đã xem
+  const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', Date.now())) // mốc tin đã xem (máy mới: tính từ lúc mở, tránh báo dồn tin cũ như seenPoemTs)
   const [seenPoemTs, setSeenPoemTs] = useState(() => load('vibe.seenPoemTs', Date.now())) // mốc thơ đã xem
   const [seenHeartTs, setSeenHeartTs] = useState(() => load('vibe.seenHeartTs', Date.now()))
   const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // mảng: leaves|petals|rain
