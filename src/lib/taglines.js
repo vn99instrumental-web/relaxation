@@ -102,5 +102,6 @@ export function pickTagline(theme) {
     ...(BY_TIME[bucket(new Date().getHours())] || []),
     ...(BY_THEME[theme] || []),
   ]
-  return pool[Math.floor(Math.random() * pool.length)] || 'nghe mưa, viết cho nhau'
+  const tagline = pool[Math.floor(Math.random() * pool.length)] || 'nghe mưa, viết cho nhau'
+  return tagline.charAt(0).toLocaleUpperCase('vi-VN') + tagline.slice(1)
 }
