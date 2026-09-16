@@ -118,9 +118,12 @@ function withStablePlaylistOrder(playlists) {
 const THEMES = [
   { id: 'dusk', label: 'Hoàng hôn' },
   { id: 'rain', label: 'Đêm mưa' },
-  { id: 'morning', label: 'Sáng sớm' },
   { id: 'film', label: 'Phim xưa' },
+  { id: 'retro', label: 'Cam cháy' },   // retro 70s: cam cháy + mù tạt
+  { id: 'rose', label: 'Hồng phai' },    // hồng phấn hoài cổ
+  { id: 'plum', label: 'Tím hoài niệm' },// tím phai vintage
 ]
+const THEME_IDS = THEMES.map((t) => t.id)
 
 function trackFromParsed(p, title = '', addedAt = Date.now()) {
   if (p.type === 'playlist') {
@@ -155,7 +158,10 @@ export default function App() {
   const [bgLabels, setBgLabels] = useState(() => load('vibe.bgLabels', {}))
   const [hiddenBg, setHiddenBg] = useState(() => load('vibe.hiddenBg', []))
   const [bgId, setBgId] = useState(() => load('vibe.bgId', DEFAULT_BG_ID))
-  const [theme, setTheme] = useState(() => load('vibe.theme', 'dusk')) // giao diện, độc lập ảnh nền
+  const [theme, setTheme] = useState(() => { // giao diện, độc lập ảnh nền
+    const saved = load('vibe.theme', 'dusk')
+    return THEME_IDS.includes(saved) ? saved : 'dusk' // theme cũ đã bỏ (vd 'morning') -> về Hoàng hôn
+  })
 
   const [username, setUsername] = useState(() => load('vibe.username', ''))
   const [syncConfig, setSyncConfig] = useState(() =>

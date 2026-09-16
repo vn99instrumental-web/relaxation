@@ -67,22 +67,53 @@
   --surface: rgba(200, 225, 232, 0.05); --surface-2: rgba(200, 225, 232, 0.1);
   --bubble-bg: rgba(200, 225, 232, 0.06); --track: rgba(200, 225, 232, 0.16);
 }
-/* Chủ đề 3 — Sáng sớm (SÁNG, kem sương, chữ đậm) */
-.app[data-theme='morning'] {
-  --ink: #24241e; --ink-dim: #6f6a58; --paper: #1c1a14;
-  --panel: rgba(246, 243, 235, 0.9);
-  --panel-solid: rgba(248, 245, 238, 0.98);
-  --dock-bg: rgba(245, 242, 233, 0.92);
-  --border: rgba(150, 132, 92, 0.42);
-  --border-strong: rgba(120, 104, 70, 0.55);
-  --gold: #6f8a4e; --gold-soft: #8ba368;
-  --pine-soft: #6f8a4e;
-  --mine: rgba(174, 196, 140, 0.7);
-  --sel: rgba(117, 139, 83, 0.2); --sel-strong: rgba(117, 139, 83, 0.34);
-  --shadow: 0 20px 60px rgba(60, 48, 28, 0.28);
-  --field-bg: rgba(255, 255, 255, 0.62);
-  --surface: rgba(90, 78, 45, 0.06); --surface-2: rgba(90, 78, 45, 0.12);
-  --bubble-bg: rgba(255, 255, 255, 0.55); --track: rgba(90, 78, 45, 0.2);
+/* Chủ đề 3 — Cam cháy (retro 70s: cam đất + mù tạt olive, tối ấm) */
+.app[data-theme='retro'] {
+  --ink: #f6e9d4; --ink-dim: #c4ab86; --paper: #f8ecd8;
+  --panel: rgba(46, 32, 20, 0.68);
+  --panel-solid: rgba(32, 22, 13, 0.97);
+  --dock-bg: rgba(40, 28, 16, 0.8);
+  --border: rgba(214, 150, 84, 0.3);
+  --border-strong: rgba(214, 150, 84, 0.52);
+  --gold: #d67b39; --gold-soft: #e8a25f;
+  --pine-soft: #7f7a3c;
+  --mine: rgba(176, 92, 40, 0.46);
+  --sel: rgba(214, 123, 57, 0.2); --sel-strong: rgba(214, 123, 57, 0.34);
+  --field-bg: rgba(0, 0, 0, 0.32);
+  --surface: rgba(240, 224, 196, 0.05); --surface-2: rgba(240, 224, 196, 0.1);
+  --bubble-bg: rgba(240, 224, 196, 0.06); --track: rgba(240, 224, 196, 0.16);
+}
+/* Chủ đề 5 — Hồng phai (hồng phấn hoài cổ, tối ấm) */
+.app[data-theme='rose'] {
+  --ink: #f6e7e4; --ink-dim: #c6a9a6; --paper: #f8ece9;
+  --panel: rgba(46, 30, 32, 0.66);
+  --panel-solid: rgba(32, 20, 22, 0.97);
+  --dock-bg: rgba(40, 26, 28, 0.78);
+  --border: rgba(214, 158, 156, 0.3);
+  --border-strong: rgba(214, 158, 156, 0.5);
+  --gold: #cf8a86; --gold-soft: #e3aba6;
+  --pine-soft: #8a6b6e;
+  --mine: rgba(160, 92, 96, 0.46);
+  --sel: rgba(207, 138, 134, 0.2); --sel-strong: rgba(207, 138, 134, 0.34);
+  --field-bg: rgba(0, 0, 0, 0.3);
+  --surface: rgba(240, 216, 214, 0.05); --surface-2: rgba(240, 216, 214, 0.1);
+  --bubble-bg: rgba(240, 216, 214, 0.06); --track: rgba(240, 216, 214, 0.16);
+}
+/* Chủ đề 6 — Tím hoài niệm (tím phai vintage, tối mát) */
+.app[data-theme='plum'] {
+  --ink: #efe7f2; --ink-dim: #b6a6c0; --paper: #f2eaf4;
+  --panel: rgba(38, 28, 46, 0.66);
+  --panel-solid: rgba(26, 19, 33, 0.97);
+  --dock-bg: rgba(32, 23, 40, 0.78);
+  --border: rgba(184, 158, 210, 0.3);
+  --border-strong: rgba(184, 158, 210, 0.5);
+  --gold: #b48cc8; --gold-soft: #cdaede;
+  --pine-soft: #6f6a86;
+  --mine: rgba(120, 92, 150, 0.48);
+  --sel: rgba(180, 140, 200, 0.2); --sel-strong: rgba(180, 140, 200, 0.34);
+  --field-bg: rgba(0, 0, 0, 0.32);
+  --surface: rgba(226, 216, 236, 0.05); --surface-2: rgba(226, 216, 236, 0.1);
+  --bubble-bg: rgba(226, 216, 236, 0.06); --track: rgba(226, 216, 236, 0.16);
 }
 /* Chủ đề 4 — Phim xưa (retro, màu film hết đát: khói nâu, ám rêu, hổ phách) */
 .app[data-theme='film'] {
@@ -296,8 +327,6 @@ input, textarea { font-family: inherit; }
 .brand__poem-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px; margin-bottom: 1px; color: var(--gold-soft); font-size: 0.45rem; line-height: 1.2; }
 .brand__poem-head strong { font-family: var(--serif); font-size: 0.48rem; letter-spacing: 0.01em; }
 .brand__poem-body { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; white-space: pre-line; overflow-wrap: anywhere; font-size: 0.58rem; font-style: italic; line-height: 1.3; letter-spacing: 0.01em; }
-.app[data-theme='morning'] .brand__poem { background: rgba(246,243,235,0.72); text-shadow: none; }
-.app[data-theme='morning'] .brand__tagline { background: rgba(246,243,235,0.72); text-shadow: none; }
 
 .topbar__actions { display: flex; align-items: center; gap: 10px; }
 .scene-tabs { display: flex; gap: 3px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 4px; backdrop-filter: blur(8px); }
@@ -317,8 +346,10 @@ input, textarea { font-family: inherit; }
 .theme-dot { width: 16px; height: 16px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.28); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35); }
 .theme-dot--dusk { background: linear-gradient(135deg, #f0c08a, #b8662a); }
 .theme-dot--rain { background: linear-gradient(135deg, #86cfcd, #27505e); }
-.theme-dot--morning { background: linear-gradient(135deg, #f6f3eb 45%, #8ba368); }
 .theme-dot--film { background: linear-gradient(135deg, #e8b57e 40%, #8f9e7c); }
+.theme-dot--retro { background: linear-gradient(135deg, #e8a25f 45%, #7f7a3c); }
+.theme-dot--rose { background: linear-gradient(135deg, #e3aba6, #7a4a4e); }
+.theme-dot--plum { background: linear-gradient(135deg, #cdaede, #4e3a5e); }
 .theme-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; min-width: 170px; margin: 0; padding: 6px; list-style: none; background: var(--panel-solid); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: var(--shadow); }
 .theme-menu li { margin: 0; }
 .theme-menu__item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: none; background: none; color: var(--ink); border-radius: 8px; font-size: 0.86rem; text-align: left; transition: 0.15s; }

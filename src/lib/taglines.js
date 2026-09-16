@@ -72,10 +72,6 @@ const BY_THEME = {
     'ngồi nghe mưa ở Cà phê Tùng',
     'mưa Đà Lạt, buồn mà thương',
   ],
-  morning: [
-    'sương sớm còn vương trên đồi thông',
-    'bình minh mờ sau màn sương',
-  ],
   dusk: [
     'hoàng hôn nhuộm vàng mặt hồ',
     'chiều tà bên khung cửa cũ',
@@ -85,6 +81,18 @@ const BY_THEME = {
     'ký ức ngả màu thời gian',
     'tua chậm những ngày xưa cũ',
     'Đà Lạt trong khung hình cũ',
+  ],
+  retro: [
+    'gam màu bảy mươi, ấm một thời',
+    'cam cháy và mù tạt, xưa mà thương',
+  ],
+  rose: [
+    'hồng phai như trang thư cũ',
+    'chút phấn hồng của ngày xưa',
+  ],
+  plum: [
+    'tím phai màu hoài niệm',
+    'sắc tím cũ, ru ngày chậm lại',
   ],
 }
 
