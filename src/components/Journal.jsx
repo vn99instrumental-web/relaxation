@@ -10,6 +10,16 @@ const withProtocol = (url) => (/^https?:\/\//i.test(url) ? url : `https://${url}
 // NGHE NGAY trong khung chat (mở trình phát nhúng), bấm lần nữa thì đóng lại.
 function ChatLink({ url }) {
   const [open, setOpen] = useState(false)
+  const playerRef = useRef(null)
+  // Khi mở trình phát (nằm dưới link), cuộn khung chat để lộ nó ra -> tránh cảm
+  // giác "bấm mà không chạy" vì video mở ngoài tầm nhìn.
+  useEffect(() => {
+    if (!open) return undefined
+    const id = setTimeout(() => {
+      playerRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }, 70)
+    return () => clearTimeout(id)
+  }, [open])
   const yt = parseYouTube(url)
   const href = withProtocol(url)
   if (!yt) {
@@ -27,7 +37,7 @@ function ChatLink({ url }) {
         <span className="chat-yt__ico">{open ? '✕' : '▶'}</span>{url}
       </a>
       {open && (
-        <span className="chat-yt__player">
+        <span className="chat-yt__player" ref={playerRef}>
           <iframe src={embed} title="Trình phát YouTube" loading="lazy"
             allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
         </span>
