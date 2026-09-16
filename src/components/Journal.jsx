@@ -1,5 +1,55 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { IconLock, IconUserSwitch } from './icons'
+import { parseYouTube } from '../lib/youtube'
+
+// Bắt các đường link trong tin nhắn (kể cả youtu.be / youtube.com chưa có http)
+const LINK_RE = /((?:https?:\/\/|www\.)[^\s]+|(?:youtu\.be|(?:music\.|m\.)?youtube\.com)\/[^\s]+)/gi
+const withProtocol = (url) => (/^https?:\/\//i.test(url) ? url : `https://${url}`)
+
+// Một đường link trong chat: link thường -> hyperlink; link YouTube -> bấm để
+// NGHE NGAY trong khung chat (mở trình phát nhúng), bấm lần nữa thì đóng lại.
+function ChatLink({ url }) {
+  const [open, setOpen] = useState(false)
+  const yt = parseYouTube(url)
+  const href = withProtocol(url)
+  if (!yt) {
+    return <a className="chat-link" href={href} target="_blank" rel="noopener noreferrer">{url}</a>
+  }
+  const embed = yt.type === 'playlist'
+    ? `https://www.youtube-nocookie.com/embed/videoseries?list=${yt.playlistId}&autoplay=1`
+    : `https://www.youtube-nocookie.com/embed/${yt.videoId}?autoplay=1${yt.playlistId ? `&list=${yt.playlistId}` : ''}`
+  return (
+    <span className="chat-yt">
+      <a className={`chat-link chat-link--yt ${open ? 'is-open' : ''}`} href={href}
+        target="_blank" rel="noopener noreferrer"
+        title={open ? 'Đóng trình phát' : 'Nghe ngay trong khung chat'}
+        onClick={(e) => { e.preventDefault(); setOpen((o) => !o) }}>
+        <span className="chat-yt__ico">{open ? '✕' : '▶'}</span>{url}
+      </a>
+      {open && (
+        <span className="chat-yt__player">
+          <iframe src={embed} title="Trình phát YouTube" loading="lazy"
+            allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+        </span>
+      )}
+    </span>
+  )
+}
+
+// Render nội dung tin: chèn link thành hyperlink/trình phát, giữ nguyên chữ.
+function MessageText({ text }) {
+  const nodes = []
+  const s = String(text || '')
+  let last = 0
+  s.replace(LINK_RE, (match, _g, offset) => {
+    if (offset > last) nodes.push(s.slice(last, offset))
+    nodes.push(<ChatLink key={offset} url={match} />)
+    last = offset + match.length
+    return match
+  })
+  if (last < s.length) nodes.push(s.slice(last))
+  return <div className="bubble__text">{nodes}</div>
+}
 
 const EMOJIS = [
   '😊', '🙂', '😌', '🥰', '😍', '😘', '🤗', '😴', '😆', '😂',
@@ -229,7 +279,7 @@ export default function Journal({ journal, username, setUsername, onClose }) {
                         <button type="button" className="bubble__save" onClick={saveEdit} disabled={!editText.trim()}>Lưu</button>
                       </div>
                     </div>
-                  ) : <div className="bubble__text">{m.text}</div>}
+                  ) : <MessageText text={m.text} />}
                   {reactId === m.id && (
                     <div className="react-picker">{REACTIONS.map((e) => (
                       <button key={e} type="button" className="react-pick" onClick={() => toggleReaction(m, e)}>{e}</button>
