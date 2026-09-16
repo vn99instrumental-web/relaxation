@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
+// iOS chặn phát nhạc nền của web/YouTube ở mức hệ điều hành. Gọi playVideo()
+// khi trang đang ẩn (không do người dùng bấm) dễ bị iOS từ chối và sập luôn
+// phiên audio -> KHÔNG tự-phát-lại-khi-ẩn trên iOS (chỉ làm ở Android...).
+const IS_IOS = (() => {
+  try {
+    const ua = navigator.userAgent || ''
+    return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  } catch { return false }
+})()
+
 // Nạp script IFrame API của YouTube đúng 1 lần.
 let apiPromise = null
 function loadYouTubeAPI() {
@@ -88,8 +98,9 @@ export function useYouTube(mountId) {
             } else if (e.data === S.PAUSED) {
               setPlaying(false)
               // Bị trình duyệt tự dừng khi tab ẩn/khóa màn -> thử phát tiếp.
+              // Bỏ qua trên iOS (playVideo lúc ẩn dễ làm sập phiên audio nền).
               const hidden = typeof document !== 'undefined' && document.visibilityState !== 'visible'
-              if (hidden && intendedPlayingRef.current && resumeTriesRef.current < 10) {
+              if (!IS_IOS && hidden && intendedPlayingRef.current && resumeTriesRef.current < 10) {
                 resumeTriesRef.current += 1
                 clearTimeout(resumeTimerRef.current)
                 resumeTimerRef.current = setTimeout(() => {
