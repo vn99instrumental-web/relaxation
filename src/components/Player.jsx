@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { parseYouTube, videoThumb, trackName } from '../lib/youtube'
-import { IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
+import { IconPrev, IconNext, IconPlay, IconPause } from './icons'
 
 const addedTime = (track, fallback) => {
   const numeric = Number(track?.addedAt)
@@ -16,7 +16,7 @@ const addedTime = (track, fallback) => {
 export default function Player({
   queue, index, yt, playlistName, onNext, onPrev, ytVolume, setYtVolume,
   onAddMany, onSelect, onSelectRecent, onPlayRecent, onRemove, onClear,
-  showVideo, onToggleVideo, shuffle, onToggleShuffle,
+  showVideo, onToggleVideo, queueOrder, queueSort, onQueueSortChange, onReshuffleQueue,
   playlists, onSavePlaylist, onLoadPlaylist, onDeletePlaylist,
   onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist, onRenamePlaylist,
   admin, defaultTrack, onSetDefaultTrack, onClearDefaultTrack,
@@ -94,10 +94,9 @@ export default function Player({
     ;(playlists || []).forEach((pl) => (pl.tracks || []).forEach(consider))
     return [...seen.values()].sort((a, b) => b.at - a.at).map((x) => x.track)
   }, [queue, playlists])
-  const recentTracks = recentPool.slice(0, recentLimit)
-  const currentTracks = queue
-    .map((track, queueIndex) => ({ track, queueIndex }))
-    .sort((a, b) => addedTime(b.track, b.queueIndex) - addedTime(a.track, a.queueIndex))
+  const recentTracks = recentPool.slice(0, Math.max(1, Number(recentLimit) || 10))
+  const currentTracks = (queueOrder?.length === queue.length ? queueOrder : queue.map((_, queueIndex) => queueIndex))
+    .map((queueIndex) => ({ track: queue[queueIndex], queueIndex }))
   const sortedPlaylistTracks = (tracks) => (tracks || [])
     .map((track, sourceIndex) => ({ track, sourceIndex }))
     .sort((a, b) => addedTime(b.track, b.sourceIndex) - addedTime(a.track, a.sourceIndex))
@@ -131,9 +130,23 @@ export default function Player({
 
       {note && <div className="form-note">{note}</div>}
 
-      <section className={`now-player ${tab === 'now' ? '' : 'is-tab-hidden'}`} aria-label="Trình phát nhạc">
+      <section className={`now-player ${tab === 'now' ? '' : 'is-tab-hidden'}`} aria-label="Trình phát nhạc"
+        aria-hidden={tab !== 'now'} inert={tab !== 'now' ? '' : undefined}>
           <aside className="now-player__queue">
-            <div className="now-player__queue-head"><strong>{playlistName || 'Mới đăng'}</strong><span>{queue.length} bài</span></div>
+            <div className="now-player__queue-head">
+              <div className="now-player__queue-title"><strong>{playlistName || 'Mới đăng'}</strong><span>{queue.length} bài</span></div>
+              <div className="now-player__sort">
+                <label htmlFor="now-playlist-sort">Sắp xếp</label>
+                <select id="now-playlist-sort" value={queueSort} onChange={(event) => onQueueSortChange(event.target.value)}>
+                  <option value="latest">Mới nhất</option>
+                  <option value="name">Tên A–Z</option>
+                  <option value="random">Ngẫu nhiên</option>
+                </select>
+                {queueSort === 'random' && (
+                  <button type="button" onClick={onReshuffleQueue} title="Xáo lại thứ tự ngẫu nhiên" aria-label="Xáo lại playlist đang nghe">↻</button>
+                )}
+              </div>
+            </div>
             <ul className="queue">
               {currentTracks.map(({ track, queueIndex }, displayIndex) => (
                 <li key={track.key || `${track.videoId}-${queueIndex}`} className={`queue__item ${queueIndex === index ? 'is-current' : ''}`}>
@@ -162,7 +175,7 @@ export default function Player({
             <div className="now-player__meta">
               <span>{playlistName ? `Playlist · ${playlistName}` : 'Playlist · Mới đăng'}</span>
               <h3 title={currentTitle}>{currentTitle}</h3>
-              <small>{queue.length ? `${index + 1} / ${queue.length}` : 'Chưa có bài'}</small>
+              <small>{queue.length ? `${Math.max(0, currentTracks.findIndex((item) => item.queueIndex === index)) + 1} / ${queue.length}` : 'Chưa có bài'}</small>
             </div>
             <div className="now-player__controls">
               <div className="now-player__seek">
@@ -173,8 +186,6 @@ export default function Player({
               </div>
               <div className="now-player__control-row">
                 <div className="now-player__transport">
-                  <button className={`ctrl ctrl--sm shuffle ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
-                    aria-label="Phát ngẫu nhiên" aria-pressed={shuffle} disabled={queue.length < 2}><IconShuffle /></button>
                   <button className="ctrl" onClick={onPrev} aria-label="Bài trước" disabled={!queue.length}><IconPrev /></button>
                   <button className="ctrl ctrl--main" onClick={yt?.toggle} aria-label={yt?.playing ? 'Dừng' : 'Phát'} disabled={!yt?.current}>
                     {yt?.playing ? <IconPause /> : <IconPlay />}

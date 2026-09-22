@@ -39,19 +39,19 @@ export default function RainField({ speed = 50, sizeLevel = 50, preset = 'breeze
   // Thanh tốc độ: điều tiết cường độ mưa + gió nền (mưa hơi xiên theo gió)
   useEffect(() => {
     const s = Math.min(100, Math.max(0, Number(speed) || 0)) / 100
-    rig.sim.setIntensity(0.5 + s * 1.2)   // 0.5 .. 1.7
-    rig.wind.setBase(28 + s * 34)         // gió nhẹ, tăng theo tốc độ
-  }, [rig, speed])
+    rig.sim.setIntensity(variant === 'drizzle' ? 0.5 + s * 1.2 : 0.62 + s * 0.96)
+    rig.wind.setBase(variant === 'drizzle' ? 28 + s * 34 : 18 + s * 24)
+  }, [rig, speed, variant])
   useEffect(() => {
     const s = Math.min(100, Math.max(0, Number(sizeLevel) || 0)) / 100
-    rig.sim.setSizeScale(0.6 + s * 0.8)   // 0.6 .. 1.4 (=1.0 tại 50)
-  }, [rig, sizeLevel])
+    rig.sim.setSizeScale(variant === 'drizzle' ? 0.6 + s * 0.8 : 0.75 + s * 0.5)
+  }, [rig, sizeLevel, variant])
   useEffect(() => { rig.wind.setPreset(preset) }, [rig, preset]) // hướng/độ nhiễu theo preset
   useEffect(() => { rig.wind.setDirectionMode(windDir) }, [rig, windDir])
   useEffect(() => {
     const s = Math.min(100, Math.max(0, Number(swirl) || 0)) / 100
-    rig.wind.setTurbulenceScale(0.3 + s * 1.5) // mưa xiên/loạn theo độ chao
-  }, [rig, swirl])
+    rig.wind.setTurbulenceScale(variant === 'drizzle' ? 0.3 + s * 1.5 : 0.12 + s * 0.58)
+  }, [rig, swirl, variant])
 
   const tRef = useRef(0)
 

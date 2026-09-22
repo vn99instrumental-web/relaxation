@@ -1,12 +1,12 @@
 // Thanh điều khiển mỏng ở đáy màn hình: thông tin bài đang phát + nút phát,
 // âm lượng, và các nút mở/đóng panel (Nhạc / Không gian / Nhật ký).
-import { IconMusic, IconJournal, IconImmersive, IconPoem, IconSettings, IconShuffle, IconPrev, IconNext, IconPlay, IconPause } from './icons'
+import { IconMusic, IconJournal, IconImmersive, IconPoem, IconSettings, IconPrev, IconNext, IconPlay, IconPause } from './icons'
 import { trackName } from '../lib/youtube'
 
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
   playlistName = '', titles,
-  shuffle, onToggleShuffle, unread = 0, unreadPoems = 0,
+  queuePosition = -1, unread = 0, unreadPoems = 0,
   leftTab, onToggleLeft, journalOpen, onToggleJournal, poemsOpen, onTogglePoems, onOpenSettings, onHideUI,
 }) {
   const title = yt.nowTitle || trackName(queue[index], titles) || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
@@ -25,7 +25,7 @@ export default function Dock({
           {playlistName && <div className="dock__playlist" title={playlistName}>♫ {playlistName}</div>}
           <div className="dock__title" title={title}>
             {title}
-            {queue.length > 0 && <span className="dock__count"> · {index + 1}/{queue.length}</span>}
+            {queue.length > 0 && <span className="dock__count"> · {(queuePosition >= 0 ? queuePosition : index) + 1}/{queue.length}</span>}
           </div>
           <div className="dock__seek-row">
             <span>{timeLabel(currentTime)}</span>
@@ -38,10 +38,6 @@ export default function Dock({
       </div>
 
       <div className="dock__transport">
-        <button className={`ctrl ctrl--sm shuffle ${shuffle ? 'is-on' : ''}`} onClick={onToggleShuffle}
-          title={shuffle ? 'Trộn ngẫu nhiên: BẬT' : 'Trộn ngẫu nhiên: tắt'}
-          aria-label={shuffle ? 'Tắt phát ngẫu nhiên' : 'Bật phát ngẫu nhiên'}
-          aria-pressed={shuffle} disabled={queue.length < 2}><IconShuffle /></button>
         <button className="ctrl" onClick={onPrev} title="Bài trước" disabled={!queue.length} aria-label="Bài trước"><IconPrev /></button>
         <button className="ctrl ctrl--main" onClick={yt.toggle} title="Phát / Dừng" disabled={!yt.current}
           aria-label={yt.playing ? 'Dừng' : 'Phát'}>

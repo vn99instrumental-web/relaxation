@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { WIND_PRESETS, PRESET_ORDER } from '../leaf-engine/config'
 import { IconImage, IconMusic, IconPalette, IconSettings, IconShield } from './icons'
+import { createPlaylistBackup, parsePlaylistBackup } from '../lib/playlistBackup'
 
 const isVector = (id) => id === 'vector' || id.endsWith('__vector')
 const isUserImg = (id) => id.startsWith('u') || id.includes('__u')
@@ -13,15 +14,19 @@ export default function SettingsModal({
   theme, setTheme, themes,
   fx, setFx, fxSpeed, setFxSpeed, fxDensity, setFxDensity, fxSize, setFxSize, fxPreset, setFxPreset,
   fxWindDir, setFxWindDir, fxSwirl, setFxSwirl,
+  playlists = [], onImportPlaylists,
 }) {
   const [tab, setTab] = useState('appearance')
   const [msg, setMsg] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const fileRef = useRef(null)
+  const backupFileRef = useRef(null)
   const lastFxRef = useRef(fx.length ? fx : ['leaves'])
   if (fx.length) lastFxRef.current = fx
   const [selectMode, setSelectMode] = useState(false)
   const [selectedBg, setSelectedBg] = useState([])
+  const [importMode, setImportMode] = useState('merge')
+  const [backupBusy, setBackupBusy] = useState(false)
 
   if (!open) return null
 
@@ -53,6 +58,37 @@ export default function SettingsModal({
     setMsg(ok === false ? 'Không thể đổi tên ảnh.' : 'Đã đổi tên ảnh.')
   }
   const toggleEffects = (enabled) => setFx(enabled ? (lastFxRef.current.length ? lastFxRef.current : ['leaves']) : [])
+
+  const exportPlaylists = () => {
+    const payload = createPlaylistBackup(playlists)
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `duoi-tan-thong-playlists-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 0)
+    setMsg(`Đã xuất ${payload.playlists.length} playlist.`)
+  }
+
+  const importPlaylistFile = async (file) => {
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) { setMsg('Tệp backup vượt quá 5 MB.'); return }
+    setBackupBusy(true)
+    try {
+      const incoming = parsePlaylistBackup(await file.text())
+      if (importMode === 'replace' && !window.confirm(`Thay toàn bộ playlist hiện tại bằng ${incoming.length} playlist trong backup?`)) return
+      const count = await onImportPlaylists(incoming, importMode)
+      setMsg(`Đã khôi phục ${count} playlist${importMode === 'replace' ? ' và thay thư viện cũ' : ''}.`)
+    } catch (error) {
+      setMsg(error.message || 'Không thể đọc tệp backup.')
+    } finally {
+      setBackupBusy(false)
+      if (backupFileRef.current) backupFileRef.current.value = ''
+    }
+  }
 
   const tabs = [
     { id: 'appearance', label: 'Giao diện', Icon: IconPalette },
@@ -171,6 +207,21 @@ export default function SettingsModal({
           {tab === 'admin' && <section className="settings-block">
             <h3><IconShield /> Quyền admin</h3>
             <label className="admin-row"><input type="checkbox" checked={!!admin} onChange={(event) => setAdmin(event.target.checked)} /><span>Cho phép quản lý nội dung chung và đặt cấu hình mặc định cho phòng.</span></label>
+            <div className="settings-backup">
+              <h3><IconMusic /> Backup playlist</h3>
+              <p className="settings-note">Xuất toàn bộ {playlists.length} playlist thành một tệp JSON, hoặc khôi phục lại vào thư viện hiện tại.</p>
+              <div className="settings-backup__actions">
+                <button type="button" className="btn btn--ghost" onClick={exportPlaylists} disabled={!playlists.length || backupBusy}>Xuất backup</button>
+                <select value={importMode} onChange={(event) => setImportMode(event.target.value)} aria-label="Cách nhập playlist" disabled={!admin || backupBusy}>
+                  <option value="merge">Gộp với thư viện</option>
+                  <option value="replace">Thay thế thư viện</option>
+                </select>
+                <button type="button" className="btn btn--primary" onClick={() => backupFileRef.current?.click()} disabled={!admin || backupBusy}>{backupBusy ? 'Đang nhập…' : 'Nhập backup'}</button>
+                <input ref={backupFileRef} type="file" accept="application/json,.json" hidden onChange={(event) => importPlaylistFile(event.target.files?.[0])} />
+              </div>
+              {!admin && <p className="settings-note">Bật quyền admin để nhập và thay đổi thư viện playlist.</p>}
+              {msg && <p className="settings-msg" role="status">{msg}</p>}
+            </div>
           </section>}
         </div>
       </div>

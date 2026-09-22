@@ -53,13 +53,13 @@ export default function FallingFx({ modes = [], speed = 50, density = 50, size =
         arr.push({
           id: id++, type,
           left: rand(0, 100),
-          size: (type === 'petal' ? rand(11, 17) : rand(13, 22)) * sz,
-          fall: rand(15, 27),
+          size: (type === 'petal' ? rand(8, 14) : rand(10, 19)) * sz,
+          fall: type === 'petal' ? rand(13, 22) : rand(9, 17),
           delay: -rand(0, 27),
           sway: rand(2.6, 4.6),
-          drift: rand(-16, 16),
-          spin: rand(160, 520) * (Math.random() < 0.5 ? -1 : 1),
-          opacity: rand(0.5, 0.82),
+          drift: type === 'petal' ? rand(-34, 34) : rand(-24, 24),
+          spin: rand(120, 390) * (Math.random() < 0.5 ? -1 : 1),
+          opacity: rand(0.52, 0.86),
           color: pick(type === 'petal' ? PETAL_COLORS : LEAF_COLORS),
         })
       }
@@ -70,11 +70,11 @@ export default function FallingFx({ modes = [], speed = 50, density = 50, size =
       arr.push({
         id: id++, type: 'rain',
         left: rand(-4, 100),
-        streak: rand(38, 86) * sz,
-        fall: rand(0.7, 1.5),
+        streak: rand(18, 48) * sz,
+        fall: rand(0.55, 1.05),
         delay: -rand(0, 2),
-        drift: rand(-10, 10),
-        opacity: rand(0.25, 0.6),
+        drift: rand(-7, 7),
+        opacity: rand(0.2, 0.48),
       })
     }
     // mưa phùn: vệt rất ngắn, mảnh, mờ, rơi chậm & bay lất phất nhiều hơn

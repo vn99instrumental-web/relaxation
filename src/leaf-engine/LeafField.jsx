@@ -54,12 +54,16 @@ export default function LeafField({ mode = 'leaves', speed = 50, sizeLevel = 50,
   }, [rig])
 
   useEffect(() => { rig.sim.setMode(mode) }, [rig, mode])
-  useEffect(() => { rig.wind.setStrength(speed) }, [rig, speed])
+  useEffect(() => {
+    const s = Math.min(100, Math.max(0, Number(speed) || 0)) / 100
+    rig.wind.setStrength(speed)
+    rig.sim.setFallSpeedScale(0.65 + s * 0.7)
+  }, [rig, speed])
   useEffect(() => { rig.wind.setPreset(preset) }, [rig, preset])
   useEffect(() => { rig.wind.setDirectionMode(windDir) }, [rig, windDir])
   useEffect(() => {
     const s = Math.min(100, Math.max(0, Number(sizeLevel) || 0)) / 100
-    rig.sim.setSizeScale(0.6 + s * 0.8)   // 0.6 .. 1.4 (=1.0 tại 50)
+    rig.sim.setSizeScale(0.7 + s * 0.6)   // 0.7 .. 1.3 (=1.0 tại 50)
   }, [rig, sizeLevel])
   useEffect(() => {
     const s = Math.min(100, Math.max(0, Number(swirl) || 0)) / 100

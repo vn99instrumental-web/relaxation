@@ -6,10 +6,10 @@ const rand = (a, b) => a + Math.random() * (b - a)
 // chậm, mờ, bay lất phất theo gió). Giữ cùng một bộ máy để nhẹ máy.
 const VARIANTS = {
   rain: {
-    lenMin: 0.55, lenMax: 1.2, widMin: 0.016, widMax: 0.034,
-    vyMin: 9, vyMax: 15, vyGain: 0.6, near: 1.35,
-    alphaNear: 0.42, alphaMin: 0.52, alphaMax: 0.85,
-    rateBase: 60, rateWind: 30, windPush: 0.4, drift: 0, sway: 0,
+    lenMin: 0.18, lenMax: 0.46, widMin: 0.006, widMax: 0.013,
+    vyMin: 15, vyMax: 22, vyGain: 0.36, near: 1.25,
+    alphaNear: 0.22, alphaMin: 0.24, alphaMax: 0.5,
+    rateBase: 62, rateWind: 18, windPush: 0.24, drift: 0, sway: 0,
   },
   drizzle: {
     // hạt ngắn & mảnh hơn nhiều, rơi chậm, mờ -> cảm giác sương mưa lất phất
@@ -34,7 +34,7 @@ export class RainSimulation {
     this.sizeScale = 1   // kích thước hạt (từ thanh kích thước)
     this.drops = Array.from({ length: max }, () => ({
       active: false, px: 0, py: 0, pz: 0, vx: 0, vy: 0, phase: 0,
-      len: 1, wid: 0.02, tilt: 0, alpha: 0, targetAlpha: 1,
+      len: 1, wid: 0.02, tilt: 0, alpha: 0, targetAlpha: 1, windBias: 1,
     }))
     this.camZ = 14; this.tanHalf = Math.tan((45 * Math.PI / 180) / 2); this.aspect = 1
     this._m = new THREE.Matrix4(); this._q = new THREE.Quaternion(); this._s = new THREE.Vector3()
@@ -53,16 +53,20 @@ export class RainSimulation {
     const z = rand(-2, 7)
     const hh = this.halfH(z), hw = hh * this.aspect
     const near = z > 5
+    const rainDepth = 0.55 + ((z + 2) / 9) * 0.6
     d.active = true
     d.pz = z
     d.px = rand(-hw * 1.1, hw * 1.1)
     d.py = hh + rand(0.3, 4)
     d.phase = rand(0, Math.PI * 2)
-    d.len = rand(V.lenMin, V.lenMax) * (near ? V.near : 1) * (0.8 + 0.5 * this.intensity) * this.sizeScale
-    d.wid = rand(V.widMin, V.widMax) * (near ? 1.4 : 1) * this.sizeScale
+    const depthScale = this.variant === 'rain' ? rainDepth : (near ? V.near : 1)
+    const intensityLength = this.variant === 'rain' ? 0.86 + 0.18 * this.intensity : 0.8 + 0.5 * this.intensity
+    d.len = rand(V.lenMin, V.lenMax) * depthScale * intensityLength * this.sizeScale
+    d.wid = rand(V.widMin, V.widMax) * (this.variant === 'rain' ? rainDepth : (near ? 1.4 : 1)) * this.sizeScale
     d.vy = -rand(V.vyMin, V.vyMax) * (0.7 + V.vyGain * this.intensity)
     d.vx = 0
     d.tilt = 0
+    d.windBias = rand(0.82, 1.18)
     d.alpha = 0
     d.targetAlpha = near ? V.alphaNear : rand(V.alphaMin, V.alphaMax)
   }
@@ -70,7 +74,8 @@ export class RainSimulation {
   update(dt, cap, t) {
     const wind = this.wind
     const V = VARIANTS[this.variant]
-    const rate = (V.rateBase + wind.magnitude * V.rateWind) * this.intensity
+    const showerPulse = this.variant === 'rain' ? 0.92 + Math.sin(t * 0.43) * 0.08 : 1
+    const rate = (V.rateBase + wind.magnitude * V.rateWind) * this.intensity * showerPulse
     this.spawnAcc += dt * rate
     let active = 0
     for (const d of this.drops) if (d.active) active++
@@ -84,7 +89,10 @@ export class RainSimulation {
       // gió đẩy ngang; mưa phùn nhẹ nên bị cuốn nhiều hơn, lại thêm chút lất phất
       wind.force(d.px, d.py, d.pz, this._f)
       const drift = V.sway ? Math.sin(t * 1.6 + d.phase) * V.sway : 0
-      d.vx += (this._f.x * V.windPush + drift - d.vx) * Math.min(1, dt * 3)
+      const windTarget = this.variant === 'rain'
+        ? this._f.x * V.windPush * d.windBias + drift
+        : this._f.x * V.windPush + drift
+      d.vx += (windTarget - d.vx) * Math.min(1, dt * (this.variant === 'rain' ? 1.7 : 3))
       d.px += (d.vx + V.drift * this._f.x) * dt
       d.py += d.vy * dt
       d.tilt = Math.atan2(d.vx, -d.vy)   // nghiêng theo hướng rơi

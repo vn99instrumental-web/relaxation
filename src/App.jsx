@@ -67,18 +67,34 @@ function trackAddedTime(track, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
-function recentQueueIndexes(queue, limit) {
-  return queue
-    .map((track, queueIndex) => ({ track, queueIndex }))
-    .sort((a, b) => trackAddedTime(b.track, b.queueIndex) - trackAddedTime(a.track, a.queueIndex))
-    .slice(0, limit)
-    .map(({ queueIndex }) => queueIndex)
-}
-
 function sortTracksNewest(tracks) {
   return (tracks || [])
     .map((track, originalIndex) => ({ track, originalIndex }))
     .sort((a, b) => trackAddedTime(b.track, b.originalIndex) - trackAddedTime(a.track, a.originalIndex))
+}
+
+function queueIndexesBySort(tracks, mode = 'latest', randomSeed = 0) {
+  return (tracks || [])
+    .map((track, queueIndex) => ({ track, queueIndex }))
+    .sort((a, b) => {
+      if (mode === 'name') {
+        const byName = (a.track?.title || 'Video').localeCompare(b.track?.title || 'Video', 'vi', { sensitivity: 'base', numeric: true })
+        return byName || trackAddedTime(b.track, b.queueIndex) - trackAddedTime(a.track, a.queueIndex)
+      }
+      if (mode === 'random') return seededTrackRank(a, randomSeed) - seededTrackRank(b, randomSeed)
+      return trackAddedTime(b.track, b.queueIndex) - trackAddedTime(a.track, a.queueIndex)
+    })
+    .map(({ queueIndex }) => queueIndex)
+}
+
+function seededTrackRank({ track, queueIndex }, seed) {
+  const identity = `${seed}:${track?.key || track?.recordId || track?.videoId || track?.playlistId || track?.title || ''}:${queueIndex}`
+  let hash = 2166136261
+  for (let index = 0; index < identity.length; index += 1) {
+    hash ^= identity.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
 }
 
 let keySeed = 1
@@ -140,7 +156,8 @@ export default function App() {
   const [index, setIndex] = useState(0)
   const [ytVolume, setYtVolume] = useState(() => load('vibe.ytVolume', 70))
   const [localPlaylists, setLocalPlaylists] = useState(() => load('vibe.playlists', []))
-  const [shuffle, setShuffle] = useState(() => load('vibe.shuffle', false))
+  const [queueSort, setQueueSort] = useState('latest')
+  const [queueRandomSeed, setQueueRandomSeed] = useState(0)
   const [autoplay, setAutoplay] = useState(() => load('vibe.autoplay', true))
   const [defaultTrack, setDefaultTrack] = useState(() => load('vibe.defaultTrack', null))
   const [recentLimit, setRecentLimit] = useState(() => load('vibe.recentLimit', 10))
@@ -290,7 +307,6 @@ export default function App() {
 
   useEffect(() => save('vibe.queue', queue), [queue])
   useEffect(() => save('vibe.playlists', localPlaylists), [localPlaylists])
-  useEffect(() => save('vibe.shuffle', shuffle), [shuffle])
   useEffect(() => save('vibe.autoplay', autoplay), [autoplay])
   useEffect(() => save('vibe.defaultTrack', defaultTrack), [defaultTrack])
   useEffect(() => save('vibe.recentLimit', recentLimit), [recentLimit])
@@ -544,7 +560,8 @@ export default function App() {
     }))
     setQueue((q) => {
       const nq = mode === 'append' ? [...q, ...tracks] : tracks
-      if (mode !== 'append' || q.length === 0) {
+      if ((mode !== 'append' || q.length === 0) && nq[0]) {
+        indexRef.current = 0
         setIndex(0)
         setTimeout(() => yt.playTrack(nq[0]), 0)
       }
@@ -561,6 +578,26 @@ export default function App() {
     if (supaRef.current.enabled) supaRef.current.renamePlaylistRow(id, name)
     else setLocalPlaylists((list) => list.map((p) => (p.id === id ? { ...p, name, ts: Date.now() } : p)))
   }, [])
+
+  const importPlaylists = useCallback(async (incoming, mode = 'merge') => {
+    if (!admin) throw new Error('Cần bật quyền admin để khôi phục playlist.')
+    const source = Array.isArray(incoming) ? incoming : []
+    if (supaRef.current.enabled) {
+      const result = await supaRef.current.importPlaylistRows(source, { replace: mode === 'replace' })
+      if (!result?.ok) throw new Error(result?.error || 'Không thể khôi phục playlist dùng chung.')
+      return result.count
+    }
+
+    const stamp = Date.now()
+    const restored = source.map((playlist, offset) => ({
+      id: `pl${stamp + offset}-${Math.random().toString(36).slice(2, 8)}`,
+      name: playlist.name,
+      tracks: playlist.tracks,
+      ts: stamp + offset,
+    }))
+    setLocalPlaylists((current) => mode === 'replace' ? restored : [...restored, ...current])
+    return restored.length
+  }, [admin])
 
   const tracksFromParsed = (parsedList) => {
     const stamp = Date.now()
@@ -665,52 +702,35 @@ export default function App() {
   const onNext = useCallback(() => {
     setQueue((q) => {
       if (!q.length) return q
-      let ni
-      // Navigate in the same newest-first order rendered by Player, regardless
-      // of the queue's internal storage order.
-      const visibleOrder = recentQueueIndexes(q, recentPlayback ? recentLimit : q.length)
+      const visibleOrder = queueIndexesBySort(q, queueSort, queueRandomSeed)
       const position = visibleOrder.indexOf(index)
-      if (shuffle && visibleOrder.length > 1) {
-        do { ni = visibleOrder[Math.floor(Math.random() * visibleOrder.length)] } while (ni === index)
-      } else ni = visibleOrder[((position < 0 ? -1 : position) + 1) % visibleOrder.length]
+      const ni = visibleOrder[((position < 0 ? -1 : position) + 1) % visibleOrder.length]
       indexRef.current = ni
       setIndex(ni); yt.playTrack(q[ni]); return q
     })
-  }, [index, yt, shuffle, recentPlayback, recentLimit])
+  }, [index, yt, queueSort, queueRandomSeed])
 
-  // Trộn thứ tự hàng chờ ngay (giữ bài đang phát lên đầu để không ngắt nhạc)
-  const shuffleNow = useCallback(() => {
-    setQueue((q) => {
-      if (q.length < 2) return q
-      const cur = q[index]
-      const rest = q.filter((_, i) => i !== index)
-      for (let i = rest.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[rest[i], rest[j]] = [rest[j], rest[i]]
-      }
-      const nq = cur ? [cur, ...rest] : rest
-      setIndex(0)
-      return nq
-    })
-  }, [index])
-
-  const onToggleShuffle = useCallback(() => {
-    setShuffle((s) => {
-      const next = !s
-      if (next) shuffleNow() // bật trộn -> xáo luôn 1 lần cho thấy hiệu quả
-      return next
-    })
-  }, [shuffleNow])
+  const changeQueueSort = useCallback((mode) => {
+    const nextMode = ['latest', 'name', 'random'].includes(mode) ? mode : 'latest'
+    setQueueSort(nextMode)
+    if (nextMode === 'random') {
+      setQueueRandomSeed((seed) => (Number(seed) || Date.now()) + 1)
+    }
+  }, [])
+  const reshuffleQueue = useCallback(() => {
+    setQueueSort('random')
+    setQueueRandomSeed((seed) => (Number(seed) || Date.now()) + 1)
+  }, [])
   const onPrev = useCallback(() => {
     setQueue((q) => {
       if (!q.length) return q
-      const visibleOrder = recentQueueIndexes(q, recentPlayback ? recentLimit : q.length)
+      const visibleOrder = queueIndexesBySort(q, queueSort, queueRandomSeed)
       const position = visibleOrder.indexOf(index)
       const pi = visibleOrder[(position <= 0 ? visibleOrder.length : position) - 1]
       indexRef.current = pi
       setIndex(pi); yt.playTrack(q[pi]); return q
     })
-  }, [index, yt, recentPlayback, recentLimit])
+  }, [index, yt, queueSort, queueRandomSeed])
 
   useEffect(() => { yt.setOnEnded(onNext) }, [yt, onNext])
   useEffect(() => { yt.setOnError(onPlaybackError) }, [yt, onPlaybackError])
@@ -720,6 +740,8 @@ export default function App() {
   // chờ chung thì mới chọn ngẫu nhiên từ playlist. Trình duyệt có thể chặn âm
   // thanh tự phát -> lần chạm đầu tiên sẽ tiếp tục bài đã chuẩn bị.
   const ytLiveRef = useRef(yt); ytLiveRef.current = yt
+  const mediaControlsRef = useRef({ onNext, onPrev })
+  mediaControlsRef.current = { onNext, onPrev }
   const autoStartedRef = useRef(false)
   const pendingAutoRef = useRef(false)
   useEffect(() => {
@@ -819,9 +841,10 @@ export default function App() {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
     const track = queue[index]
     try {
-      if (yt.nowTitle && typeof window.MediaMetadata === 'function') {
+      const mediaTitle = yt.nowTitle || track?.title
+      if (mediaTitle && typeof window.MediaMetadata === 'function') {
         navigator.mediaSession.metadata = new window.MediaMetadata({
-          title: yt.nowTitle,
+          title: mediaTitle,
           artist: 'Dưới Tán Thông',
           album: track?.sourcePlaylistName || 'Mới đăng',
           artwork: track?.videoId
@@ -840,18 +863,34 @@ export default function App() {
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
     const set = (a, fn) => { try { navigator.mediaSession.setActionHandler(a, fn) } catch { /* ignore */ } }
-    set('play', () => yt.play())
-    set('pause', () => yt.pause())
-    set('previoustrack', () => onPrev())
-    set('nexttrack', () => onNext())
-    set('seekbackward', (details) => yt.seekTo(Math.max(0, yt.currentTime - (details.seekOffset || 10))))
-    set('seekforward', (details) => yt.seekTo(Math.min(yt.duration || Infinity, yt.currentTime + (details.seekOffset || 10))))
-    set('seekto', (details) => { if (Number.isFinite(details.seekTime)) yt.seekTo(details.seekTime) })
+    const register = () => {
+      set('play', () => ytLiveRef.current.play())
+      set('pause', () => ytLiveRef.current.pause())
+      set('previoustrack', () => mediaControlsRef.current.onPrev())
+      set('nexttrack', () => mediaControlsRef.current.onNext())
+      set('seekbackward', (details) => {
+        const player = ytLiveRef.current
+        player.seekTo(Math.max(0, player.currentTime - (details.seekOffset || 10)))
+      })
+      set('seekforward', (details) => {
+        const player = ytLiveRef.current
+        player.seekTo(Math.min(player.duration || Infinity, player.currentTime + (details.seekOffset || 10)))
+      })
+      set('seekto', (details) => { if (Number.isFinite(details.seekTime)) ytLiveRef.current.seekTo(details.seekTime) })
+    }
+    register()
+    // Một số trình duyệt/iframe chiếm lại Media Session khi đổi bài hoặc khi
+    // trang chuyển nền. Đăng ký lại ở các mốc này để nút màn hình khóa luôn
+    // gọi đúng state mới nhất của React.
+    document.addEventListener('visibilitychange', register)
+    window.addEventListener('pageshow', register)
     return () => {
+      document.removeEventListener('visibilitychange', register)
+      window.removeEventListener('pageshow', register)
       set('play', null); set('pause', null); set('previoustrack', null); set('nexttrack', null)
       set('seekbackward', null); set('seekforward', null); set('seekto', null)
     }
-  }, [yt, onNext, onPrev])
+  }, [yt.current, yt.playing, yt.nowTitle])
 
   // ---- Mặc định chung của phòng: admin lưu, mọi người nhận khi vào + realtime ----
   const sharedSettingsRef = useRef({ visualSig: '', musicSig: '' })
@@ -959,6 +998,10 @@ export default function App() {
     setLeftTab((cur) => (cur === tab ? null : tab))
   }
   const currentQueueTrack = queue[index]
+  const queueOrder = useMemo(
+    () => queueIndexesBySort(queue, queueSort, queueRandomSeed),
+    [queue, queueSort, queueRandomSeed],
+  )
   const activePlaylistName = currentQueueTrack?.sourcePlaylistId
     ? (playlists.find((p) => p.id === currentQueueTrack.sourcePlaylistId)?.name || currentQueueTrack.sourcePlaylistName || '')
     : (currentQueueTrack?.kind === 'playlist' ? (currentQueueTrack.title || 'Playlist YouTube') : '')
@@ -1060,7 +1103,8 @@ export default function App() {
                 onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
                 onAddMany={onAddMany} onSelect={playAt} onSelectRecent={playRecentAt} onPlayRecent={playFromLibrary} onRemove={onRemove} onClear={onClear}
                 showVideo={showVideo} onToggleVideo={() => setShowVideo((v) => !v)}
-                shuffle={shuffle} onToggleShuffle={onToggleShuffle}
+                queueOrder={queueOrder} queueSort={queueSort}
+                onQueueSortChange={changeQueueSort} onReshuffleQueue={reshuffleQueue}
                 playlists={playlists} onSavePlaylist={savePlaylist}
                 onLoadPlaylist={loadPlaylist} onDeletePlaylist={deletePlaylist}
                 onAddToPlaylist={addToPlaylist} onCreatePlaylist={createPlaylistWith}
@@ -1099,7 +1143,7 @@ export default function App() {
         yt={yt} queue={queue} index={index} titles={titles}
         playlistName={activePlaylistName}
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
-        shuffle={shuffle} onToggleShuffle={onToggleShuffle}
+        queuePosition={queueOrder.indexOf(index)}
         unread={unread} unreadPoems={unreadPoems + unreadHearts}
         leftTab={leftTab} onToggleLeft={toggleLeft}
         journalOpen={journalOpen} onToggleJournal={() => toggleRight('journal')}
@@ -1136,6 +1180,7 @@ export default function App() {
         onAddImage={addImage} onRemoveImage={removeImage} onRenameImage={renameImage}
         shared={useShared} galleryError={gallery.error}
         hiddenCount={hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
+        playlists={playlists} onImportPlaylists={importPlaylists}
       />
     </div>
   )

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { IconLock, IconUserSwitch } from './icons'
+import { IconCameraVintage, IconLock, IconUserSwitch } from './icons'
 import { parseYouTube } from '../lib/youtube'
 
 // Bắt các đường link trong tin nhắn (kể cả youtu.be / youtube.com chưa có http)
@@ -107,8 +107,13 @@ export default function Journal({ journal, username, setUsername, onClose }) {
   const [editText, setEditText] = useState('')
   const [emojiOpen, setEmojiOpen] = useState(false)
   const [reactId, setReactId] = useState(null)
+  const [replyingTo, setReplyingTo] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
+  const [composeError, setComposeError] = useState('')
   const listRef = useRef(null)
   const inputRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   useEffect(() => { setNameInput(username || '') }, [username])
   useEffect(() => {
@@ -120,6 +125,7 @@ export default function Journal({ journal, username, setUsername, onClose }) {
     const el = listRef.current
     if (el && accessAllowed) el.scrollTop = el.scrollHeight
   }, [messages.length, accessAllowed])
+  useEffect(() => () => { if (imagePreview) URL.revokeObjectURL(imagePreview) }, [imagePreview])
 
   const grouped = useMemo(() => groupByDay(messages), [messages])
 
@@ -176,11 +182,49 @@ export default function Journal({ journal, username, setUsername, onClose }) {
     cancelEdit()
   }
 
-  const submit = (e) => {
+  const startReply = (m) => {
+    setReplyingTo({ id: m.id, user: canonicalJournalUser(m.user), text: m.text || '', hasImage: Boolean(m.imageUrl) })
+    setComposeError('')
+    inputRef.current?.focus()
+  }
+
+  const selectImage = (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) { setComposeError('Chỉ có thể đăng tệp ảnh.'); return }
+    if (file.size > 5 * 1024 * 1024) { setComposeError('Ảnh tối đa 5 MB.'); return }
+    if (imagePreview) URL.revokeObjectURL(imagePreview)
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+    setComposeError('')
+  }
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview)
+    setImageFile(null)
+    setImagePreview('')
+  }
+
+  const jumpToQuoted = (id) => {
+    if (!id) return
+    const target = document.getElementById(`journal-message-${id}`)
+    if (!target) return
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    target.classList.remove('is-quote-target')
+    requestAnimationFrame(() => target.classList.add('is-quote-target'))
+    setTimeout(() => target.classList.remove('is-quote-target'), 1300)
+  }
+
+  const submit = async (e) => {
     e.preventDefault()
-    if (!draft.trim() || !username) return
-    send(draft)
+    if ((!draft.trim() && !imageFile) || !username || sending) return
+    setComposeError('')
+    const result = await send({ text: draft, imageFile, replyTo: replyingTo })
+    if (result?.ok === false) { setComposeError(result.error || 'Không gửi được tin nhắn.'); return }
     setDraft('')
+    setReplyingTo(null)
+    clearImage()
     setEmojiOpen(false)
   }
 
@@ -265,13 +309,14 @@ export default function Journal({ journal, username, setUsername, onClose }) {
             <div className="journal__daysep"><span>{group.day}</span></div>
             {group.items.map((m) => {
               const mine = sameJournalUser(m.user, username)
-              const canEdit = (mine || admin) && editMessage
+              const canEdit = (mine || admin) && editMessage && Boolean(m.text)
               const editing = editingId === m.id
               return (
-                <div className={`bubble ${mine ? 'bubble--mine' : ''}`} key={m.id}>
+                <div id={`journal-message-${m.id}`} data-message-id={m.id} className={`bubble ${mine ? 'bubble--mine' : ''}`} key={m.id}>
                   <div className="bubble__meta">
                     {!mine && <span className="bubble__user">{canonicalJournalUser(m.user)}</span>}
                     <span className="bubble__time">{formatTime(m.ts)}{m.edited ? ' · đã sửa' : ''}</span>
+                    {!editing && <button className="bubble__edit" onClick={() => startReply(m)} title="Trả lời tin này" aria-label={`Trả lời tin nhắn của ${canonicalJournalUser(m.user) || 'người dùng'}`}>↩</button>}
                     {!editing && reactMessage && <button className="bubble__edit" onClick={() => setReactId(reactId === m.id ? null : m.id)} title="Thả cảm xúc">☺</button>}
                     {!editing && canEdit && <button className="bubble__edit" onClick={() => startEdit(m)} title="Sửa tin này">✎</button>}
                     {!editing && admin && <button className="bubble__del" onClick={() => removeOne(m.id)} title="Xóa tin này">✕</button>}
@@ -289,7 +334,22 @@ export default function Journal({ journal, username, setUsername, onClose }) {
                         <button type="button" className="bubble__save" onClick={saveEdit} disabled={!editText.trim()}>Lưu</button>
                       </div>
                     </div>
-                  ) : <MessageText text={m.text} />}
+                  ) : (
+                    <>
+                      {m.replyTo && (
+                        <button type="button" className="bubble__quote" onClick={() => jumpToQuoted(m.replyTo.id)} title="Đi tới tin được trả lời">
+                          <b>↩ {canonicalJournalUser(m.replyTo.user) || 'Tin nhắn'}</b>
+                          <span>{m.replyTo.text || (m.replyTo.hasImage ? '📷 Ảnh' : 'Tin nhắn')}</span>
+                        </button>
+                      )}
+                      {m.imageUrl && (
+                        <a className="bubble__image-link" href={m.imageUrl} target="_blank" rel="noopener noreferrer" title="Mở ảnh đầy đủ">
+                          <img className="bubble__image" src={m.imageUrl} alt={m.text || 'Ảnh trong nhật ký'} loading="lazy" />
+                        </a>
+                      )}
+                      {m.text && <MessageText text={m.text} />}
+                    </>
+                  )}
                   {reactId === m.id && (
                     <div className="react-picker">{REACTIONS.map((e) => (
                       <button key={e} type="button" className="react-pick" onClick={() => toggleReaction(m, e)}>{e}</button>
@@ -319,18 +379,38 @@ export default function Journal({ journal, username, setUsername, onClose }) {
           {emojiOpen && <div className="emoji-panel">{EMOJIS.map((e) => (
             <button type="button" key={e} className="emoji-item" onClick={() => addEmoji(e)}>{e}</button>
           ))}</div>}
-          <form className="journal__compose" onSubmit={submit}>
-            <button type="button" className="journal__whoami"
-              onClick={() => { setNameInput(username); setEditingName(true) }} title="Đổi người dùng">
-              <IconUserSwitch />
-              <span>{canonicalJournalUser(username)}</span>
-            </button>
-            <input ref={inputRef} type="text" placeholder="Viết cho người ấy hoặc cho chính mình…"
-              value={draft} onChange={(e) => setDraft(e.target.value)} />
-            <button type="button" className={`emoji-toggle ${emojiOpen ? 'is-on' : ''}`}
-              onClick={() => setEmojiOpen((v) => !v)} title="Chèn emoji">😊</button>
-            <button type="submit" disabled={sending || !draft.trim()}>{sending ? '…' : 'Gửi'}</button>
-          </form>
+          <div className="journal__composer">
+            {replyingTo && (
+              <div className="journal__reply-preview">
+                <div><b>↩ {replyingTo.user || 'Tin nhắn'}</b><span>{replyingTo.text || (replyingTo.hasImage ? '📷 Ảnh' : 'Tin nhắn')}</span></div>
+                <button type="button" onClick={() => setReplyingTo(null)} title="Bỏ trả lời">✕</button>
+              </div>
+            )}
+            {imagePreview && (
+              <div className="journal__image-preview">
+                <img src={imagePreview} alt="Ảnh chuẩn bị đăng" />
+                <button type="button" onClick={clearImage} title="Bỏ ảnh">✕</button>
+              </div>
+            )}
+            <form className="journal__compose" onSubmit={submit}>
+              <button type="button" className="journal__whoami"
+                onClick={() => { setNameInput(username); setEditingName(true) }} title="Đổi người dùng">
+                <IconUserSwitch />
+                <span>{canonicalJournalUser(username)}</span>
+              </button>
+              <input ref={inputRef} type="text" placeholder={imageFile ? 'Thêm lời cho ảnh…' : 'Viết cho người ấy hoặc cho chính mình…'}
+                value={draft} onChange={(e) => setDraft(e.target.value)} />
+              <input ref={fileInputRef} className="journal__file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={selectImage} />
+              <button type="button" className={`emoji-toggle journal__image-btn ${imageFile ? 'is-on' : ''}`}
+                onClick={() => fileInputRef.current?.click()} title="Đăng ảnh" aria-label="Chọn ảnh để đăng">
+                <IconCameraVintage aria-hidden="true" />
+              </button>
+              <button type="button" className={`emoji-toggle ${emojiOpen ? 'is-on' : ''}`}
+                onClick={() => setEmojiOpen((v) => !v)} title="Chèn emoji">😊</button>
+              <button type="submit" disabled={sending || (!draft.trim() && !imageFile)}>{sending ? '…' : 'Gửi'}</button>
+            </form>
+            {composeError && <div className="journal__compose-error">{composeError}</div>}
+          </div>
         </>
       )}
     </section>

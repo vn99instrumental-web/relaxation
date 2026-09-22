@@ -9,11 +9,16 @@ GitHub Gist hiện tại.
 | Bảng | Dùng để | Cột chính |
 |------|---------|-----------|
 | `rooms` | 1 "phòng" = không gian chung của 2 người | `id` (mã phòng khó đoán), `name` |
-| `messages` | nhật ký/chat | `room_id`, `author`, `body`, `created_at` |
+| `messages` | nhật ký/chat, quote và metadata ảnh | `room_id`, `author`, `body`, `created_at` |
 | `playlists` | playlist đã lưu | `room_id`, `name`, `tracks` (JSON), `created_at` |
 
 `tracks` lưu dạng JSON: `[{ "kind":"video", "videoId":"...", "title":"..." }]`
 — khớp đúng với cấu trúc bài hát trong app nên đọc/ghi thẳng, không cần bảng phụ.
+
+Tin chat thường vẫn lưu trực tiếp trong `body`. Tin có quote/ảnh dùng payload có
+phiên bản ngay trong `body`, vì vậy không cần migration và vẫn đọc được toàn bộ
+tin cũ. Ảnh chat được tải vào thư mục `journal/<room>/` trong bucket public
+`backgrounds` đã có sẵn; mỗi ảnh dùng tên duy nhất và không ghi đè file cũ.
 
 ## 2. Các bước tạo (một lần, ~5 phút)
 

@@ -41,6 +41,16 @@ export const IconPalette = (p) => (
 export const IconImage = (p) => (
   <svg {...base} {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9" r="1.5" /><path d="m4 17 5-5 3.5 3 2.5-2 5 4" /></svg>
 )
+export const IconCameraVintage = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="6" width="18" height="14" rx="2" />
+    <path d="M3 10h18M6 6l1-2h5l1 2" />
+    <rect x="5.5" y="7.5" width="3.5" height="2.5" rx=".5" />
+    <circle cx="14" cy="14.5" r="3.5" />
+    <circle cx="14" cy="14.5" r="1.5" />
+    <path d="M17.5 8h1" />
+  </svg>
+)
 export const IconShield = (p) => (
   <svg {...base} {...p}><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6l-7-3z" /><path d="m9 12 2 2 4-4" /></svg>
 )

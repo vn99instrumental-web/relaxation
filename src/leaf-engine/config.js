@@ -37,15 +37,34 @@ export const LEAF_CONFIG = {
 
   // ---- VẬT LÝ TỪNG CHIẾC LÁ ----
   leaf: {
-    gravity: 1.5,              // trọng lực
-    airDrag: 0.7,             // cản không khí (giảm tốc)
-    flutter: [1.5, 3.5],       // biên độ chao/rung (min,max)
-    spin: [-2.2, 2.2],         // tốc độ xoay quanh trục (min,max)
-    drag: [0.5, 1.7],          // độ nhạy gió mỗi lá (min,max)
-    size: [0.4, 1.15],         // kích thước cơ bản (min,max)
+    gravity: 1.15,             // trọng lực
+    airDrag: 0.82,             // cản không khí (giảm tốc)
+    fallSpeed: [0.35, 0.9],    // vận tốc rơi ban đầu
+    flutter: [1.2, 2.8],       // biên độ chao/rung (min,max)
+    flutterForce: 0.7,         // lực lắc ngang theo nhịp riêng của từng lá
+    spin: [-1.7, 1.7],         // tốc độ xoay quanh trục (min,max)
+    drag: [0.65, 1.35],        // độ nhạy gió mỗi lá (min,max)
+    size: [0.34, 0.78],        // kích thước cơ bản (min,max)
+    windResponse: 0.82,
     nearBand: 5,               // z > giá trị này => lá "cận cảnh"
-    nearScale: 1.15,           // lá cận cảnh to hơn
-    nearAlpha: 0.6,            // lá cận cảnh mờ hơn (giả blur)
+    nearScale: 1.12,           // lá cận cảnh to hơn
+    nearAlpha: 0.68,           // lá cận cảnh mờ hơn (giả blur)
+  },
+
+  // Cánh hoa nhẹ hơn lá, rơi chậm và đổi hướng nhiều hơn theo luồng khí.
+  petal: {
+    gravity: 0.58,
+    airDrag: 1.08,
+    fallSpeed: [0.12, 0.48],
+    flutter: [2.0, 4.2],
+    flutterForce: 1.05,
+    spin: [-1.25, 1.25],
+    drag: [0.9, 1.75],
+    size: [0.26, 0.58],
+    windResponse: 1.08,
+    nearBand: 5,
+    nearScale: 1.18,
+    nearAlpha: 0.72,
   },
 
   // ---- HIỆU NĂNG (3 mức chất lượng) ----

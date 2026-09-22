@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { readMessages, writeMessages, mergeMessages } from '../lib/gist'
 import { load, save } from '../lib/storage'
+import { fileToDataUrl, normalizeOutgoingChat } from '../lib/chatMessage'
 
 const LOCAL_KEY = 'vibe.journal.local'
 const POLL_MS = 6000
@@ -50,24 +51,28 @@ export function useGistSync(config) {
     return () => clearInterval(pollRef.current)
   }, [online, refresh])
 
-  const send = useCallback(async (text) => {
-    const clean = String(text || '').trim()
-    if (!clean) return
-    const msg = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      user: username || 'Ẩn danh',
-      text: clean,
-      ts: Date.now(),
-    }
-    // cập nhật lạc quan ngay lập tức
-    const optimistic = [...messagesRef.current, msg]
-    setMessages(optimistic)
-    persistLocal(optimistic)
-
-    if (!online) return
-
+  const send = useCallback(async (value) => {
+    const outgoing = normalizeOutgoingChat(value)
+    if (!outgoing.text && !outgoing.imageFile && !outgoing.imageUrl) return { ok: false }
     setSending(true)
+    let imageUrl = outgoing.imageUrl
     try {
+      if (outgoing.imageFile) imageUrl = await fileToDataUrl(outgoing.imageFile)
+      const msg = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        user: username || 'Ẩn danh',
+        text: outgoing.text,
+        imageUrl,
+        replyTo: outgoing.replyTo,
+        ts: Date.now(),
+      }
+      // cập nhật lạc quan ngay lập tức
+      const optimistic = [...messagesRef.current, msg]
+      setMessages(optimistic)
+      persistLocal(optimistic)
+
+      if (!online) return { ok: true }
+
       // gộp với bản mới nhất trên server để không đè mất tin của người kia
       const { messages: remote } = await readMessages(token, gistId)
       const merged = mergeMessages(remote, optimistic)
@@ -76,9 +81,11 @@ export function useGistSync(config) {
       persistLocal(merged)
       setStatus('online')
       setError('')
+      return { ok: true }
     } catch (e) {
       setStatus('error')
       setError(e.message || 'Gửi thất bại — sẽ thử lại ở lần đồng bộ sau')
+      return { ok: false, error: e.message || 'Gửi thất bại' }
     } finally {
       setSending(false)
     }
