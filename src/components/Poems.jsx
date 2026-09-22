@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconClose, IconEdit, IconTrash } from './icons'
 
 // Góc Hoài Niệm: thơ, tản văn, câu chữ và hình ảnh/video gợi suy tư.
 export default function Poems({ poems, username, admin, onAddPoem, onEditPoem, onDeletePoem, onAddComment, onDeleteComment, onToggleReaction, onClose }) {
@@ -32,7 +33,7 @@ export default function Poems({ poems, username, admin, onAddPoem, onEditPoem, o
     <section className="pane poems">
       <header className="pane__head poem-pane-head">
         <h2>Góc Hoài Niệm</h2>
-        {onClose && <button className="link-btn" onClick={onClose} title="Đóng">✕</button>}
+        {onClose && <button className="link-btn" onClick={onClose} title="Đóng" aria-label="Đóng Hoài niệm"><IconClose /></button>}
       </header>
 
       <div className="poem-tabs" role="tablist">
@@ -64,8 +65,8 @@ export default function Poems({ poems, username, admin, onAddPoem, onEditPoem, o
           {poems.map((poem) => (
             <article className="poem poem--reading" key={poem.id}>
               {canEdit(poem.author) && <div className="poem__actions">
-                <button className="poem__edit" onClick={() => startEdit(poem)} title="Sửa bài viết và media">✎</button>
-                <button className="poem__del" onClick={() => { if (window.confirm('Xoá bài viết này? Không thể hoàn tác.')) onDeletePoem(poem.id) }} title="Xoá bài viết">✕</button>
+                <button className="poem__edit" onClick={() => startEdit(poem)} title="Sửa bài viết và media" aria-label="Sửa hoài niệm"><IconEdit /></button>
+                <button className="poem__del" onClick={() => { if (window.confirm('Xoá bài viết này? Không thể hoàn tác.')) onDeletePoem(poem.id) }} title="Xoá bài viết" aria-label="Xóa hoài niệm"><IconTrash /></button>
               </div>}
               {poem.title && <h3 className="poem__title">{poem.title}</h3>}
               {poem.imageUrl && <MemoryMedia src={poem.imageUrl} />}
@@ -111,7 +112,7 @@ function MemoryInteractions({ poem, username, admin, onAddComment, onDeleteComme
           <span className="pcm__text">{comment.text}</span>
         </div>
         {(admin || comment.author === username) && <button type="button" className="pcm__del"
-          onClick={() => onDeleteComment?.(poem.id, comment.id)} title="Xoá bình luận">✕</button>}
+          onClick={() => onDeleteComment?.(poem.id, comment.id)} title="Xoá bình luận" aria-label="Xóa bình luận"><IconTrash /></button>}
       </div>)}
     </div>}
     {commentsOpen && <form className="pcm-add" onSubmit={submit}>

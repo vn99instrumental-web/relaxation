@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { IconClose } from './icons'
 
 // Cửa sổ video nhỏ, KÉO DI CHUYỂN được. Luôn tồn tại trong DOM để nhạc tiếp
 // tục phát; khi ẩn thì đưa khung ra ngoài màn hình chứ không gỡ bỏ.
@@ -45,7 +46,7 @@ export default function VideoPip({ showVideo, onClose }) {
     <div className={`pip ${showVideo ? 'is-shown' : 'is-hidden'} ${dragging ? 'is-dragging' : ''}`} style={style}>
       <div className="pip__bar" onPointerDown={onDown} title="Kéo để di chuyển">
         <span className="pip__label">⠿ Video</span>
-        <button className="pip__close" onPointerDown={(e) => e.stopPropagation()} onClick={onClose} title="Ẩn video">✕</button>
+        <button className="pip__close" onPointerDown={(e) => e.stopPropagation()} onClick={onClose} title="Ẩn video" aria-label="Ẩn video"><IconClose /></button>
       </div>
       <div className="pip__frame"><div id="yt-frame" /></div>
     </div>

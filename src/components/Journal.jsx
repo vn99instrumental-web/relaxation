@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { IconCameraVintage, IconLock, IconUserSwitch } from './icons'
+import { IconCameraVintage, IconClose, IconEdit, IconLock, IconPlay, IconRefresh, IconReply, IconSmile, IconTrash, IconUserSwitch } from './icons'
 import { parseYouTube } from '../lib/youtube'
 
 // Bắt các đường link trong tin nhắn (kể cả youtu.be / youtube.com chưa có http)
@@ -34,7 +34,7 @@ function ChatLink({ url }) {
         target="_blank" rel="noopener noreferrer"
         title={open ? 'Đóng trình phát' : 'Nghe ngay trong khung chat'}
         onClick={(e) => { e.preventDefault(); setOpen((o) => !o) }}>
-        <span className="chat-yt__ico">{open ? '✕' : '▶'}</span>{url}
+        <span className="chat-yt__ico">{open ? <IconClose /> : <IconPlay />}</span>{url}
       </a>
       {open && (
         <span className="chat-yt__player" ref={playerRef}>
@@ -255,7 +255,7 @@ export default function Journal({ journal, username, setUsername, onClose }) {
       <section className="pane journal journal--locked">
         <header className="pane__head journal-lock__head">
           <h2>Nhật ký chung</h2>
-          {onClose && <button className="link-btn" onClick={onClose} title="Đóng">✕</button>}
+          {onClose && <button className="link-btn" onClick={onClose} title="Đóng" aria-label="Đóng Nhật ký"><IconClose /></button>}
         </header>
         <div className="journal-lock">
           <div className="journal-lock__icon" aria-hidden="true"><IconLock /></div>
@@ -293,10 +293,10 @@ export default function Journal({ journal, username, setUsername, onClose }) {
         <div className="journal__status">
           <span className={`dot dot--${status}`} />
           <span className="muted">{statusText}</span>
-          {online && <button className="link-btn" onClick={refresh} title="Làm mới">↻</button>}
-          {messages.length > 0 && <button className="link-btn" onClick={clearAll} title="Xóa toàn bộ nhật ký">🗑</button>}
+          {online && <button className="link-btn" onClick={refresh} title="Làm mới" aria-label="Làm mới Nhật ký"><IconRefresh /></button>}
+          {messages.length > 0 && <button className="link-btn" onClick={clearAll} title="Xóa toàn bộ nhật ký" aria-label="Xóa toàn bộ nhật ký"><IconTrash /></button>}
           <button className="link-btn journal__lock-btn" onClick={handleLock} title="Khóa Nhật ký / đổi người dùng" aria-label="Khóa Nhật ký / đổi người dùng"><IconLock /></button>
-          {onClose && <button className="link-btn" onClick={onClose} title="Đóng">✕</button>}
+          {onClose && <button className="link-btn" onClick={onClose} title="Đóng" aria-label="Đóng Nhật ký"><IconClose /></button>}
         </div>
       </header>
 
@@ -316,10 +316,10 @@ export default function Journal({ journal, username, setUsername, onClose }) {
                   <div className="bubble__meta">
                     {!mine && <span className="bubble__user">{canonicalJournalUser(m.user)}</span>}
                     <span className="bubble__time">{formatTime(m.ts)}{m.edited ? ' · đã sửa' : ''}</span>
-                    {!editing && <button className="bubble__edit" onClick={() => startReply(m)} title="Trả lời tin này" aria-label={`Trả lời tin nhắn của ${canonicalJournalUser(m.user) || 'người dùng'}`}>↩</button>}
-                    {!editing && reactMessage && <button className="bubble__edit" onClick={() => setReactId(reactId === m.id ? null : m.id)} title="Thả cảm xúc">☺</button>}
-                    {!editing && canEdit && <button className="bubble__edit" onClick={() => startEdit(m)} title="Sửa tin này">✎</button>}
-                    {!editing && admin && <button className="bubble__del" onClick={() => removeOne(m.id)} title="Xóa tin này">✕</button>}
+                    {!editing && <button className="bubble__edit" onClick={() => startReply(m)} title="Trả lời tin này" aria-label={`Trả lời tin nhắn của ${canonicalJournalUser(m.user) || 'người dùng'}`}><IconReply /></button>}
+                    {!editing && reactMessage && <button className="bubble__edit" onClick={() => setReactId(reactId === m.id ? null : m.id)} title="Thả cảm xúc" aria-label="Thả cảm xúc"><IconSmile /></button>}
+                    {!editing && canEdit && <button className="bubble__edit" onClick={() => startEdit(m)} title="Sửa tin này" aria-label="Sửa tin nhắn"><IconEdit /></button>}
+                    {!editing && admin && <button className="bubble__del" onClick={() => removeOne(m.id)} title="Xóa tin này" aria-label="Xóa tin nhắn"><IconTrash /></button>}
                   </div>
                   {editing ? (
                     <div className="bubble__edit-box">
@@ -383,13 +383,13 @@ export default function Journal({ journal, username, setUsername, onClose }) {
             {replyingTo && (
               <div className="journal__reply-preview">
                 <div><b>↩ {replyingTo.user || 'Tin nhắn'}</b><span>{replyingTo.text || (replyingTo.hasImage ? '📷 Ảnh' : 'Tin nhắn')}</span></div>
-                <button type="button" onClick={() => setReplyingTo(null)} title="Bỏ trả lời">✕</button>
+                <button type="button" onClick={() => setReplyingTo(null)} title="Bỏ trả lời" aria-label="Bỏ trả lời"><IconClose /></button>
               </div>
             )}
             {imagePreview && (
               <div className="journal__image-preview">
                 <img src={imagePreview} alt="Ảnh chuẩn bị đăng" />
-                <button type="button" onClick={clearImage} title="Bỏ ảnh">✕</button>
+                <button type="button" onClick={clearImage} title="Bỏ ảnh" aria-label="Bỏ ảnh"><IconClose /></button>
               </div>
             )}
             <form className="journal__compose" onSubmit={submit}>
@@ -406,7 +406,7 @@ export default function Journal({ journal, username, setUsername, onClose }) {
                 <IconCameraVintage aria-hidden="true" />
               </button>
               <button type="button" className={`emoji-toggle ${emojiOpen ? 'is-on' : ''}`}
-                onClick={() => setEmojiOpen((v) => !v)} title="Chèn emoji">😊</button>
+                onClick={() => setEmojiOpen((v) => !v)} title="Chèn emoji" aria-label="Chèn emoji"><IconSmile /></button>
               <button type="submit" disabled={sending || (!draft.trim() && !imageFile)}>{sending ? '…' : 'Gửi'}</button>
             </form>
             {composeError && <div className="journal__compose-error">{composeError}</div>}

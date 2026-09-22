@@ -7,7 +7,7 @@ import Journal from './components/Journal'
 import Poems from './components/Poems'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
-import { IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
+import { IconClose, IconImmersive, IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
 import { useYouTube } from './hooks/useYouTube'
 import { useAmbient } from './hooks/useAmbient'
 import { useWakeLock } from './hooks/useWakeLock'
@@ -1095,7 +1095,7 @@ export default function App() {
         <aside className={`drawer drawer--left ${leftTab ? 'is-open' : ''}`}>
           <div className="drawer__tabs">
             <strong className="drawer__title">Nhạc</strong>
-            <button className="drawer__close" onClick={() => setLeftTab(null)} title="Đóng">✕</button>
+            <button className="drawer__close" onClick={() => setLeftTab(null)} title="Đóng" aria-label="Đóng Nhạc"><IconClose /></button>
           </div>
           <div className="drawer__body">
             <Player
@@ -1161,7 +1161,7 @@ export default function App() {
             {yt.playing ? <IconPause /> : <IconPlay />}
           </button>
           <button className="ctrl" onClick={onNext} title="Bài sau" disabled={!queue.length} aria-label="Bài sau"><IconNext /></button>
-          <button className="ctrl" onClick={() => setUiHidden(false)} title="Hiện giao diện">◉</button>
+          <button className="ctrl" onClick={() => setUiHidden(false)} title="Hiện giao diện" aria-label="Hiện giao diện"><IconImmersive /></button>
         </div>
       )}
 

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { WIND_PRESETS, PRESET_ORDER } from '../leaf-engine/config'
-import { IconImage, IconMusic, IconPalette, IconSettings, IconShield } from './icons'
+import { IconCheck, IconClose, IconEdit, IconImage, IconMusic, IconPalette, IconSettings, IconShield, IconTrash } from './icons'
 import { createPlaylistBackup, parsePlaylistBackup } from '../lib/playlistBackup'
 
 const isVector = (id) => id === 'vector' || id.endsWith('__vector')
@@ -102,7 +102,7 @@ export default function SettingsModal({
       <div className="modal settings-modal" onClick={(event) => event.stopPropagation()}>
         <header className="modal__head">
           <h2><IconSettings /> Cài đặt</h2>
-          <button className="modal__close" onClick={onClose} aria-label="Đóng cài đặt">✕</button>
+          <button className="modal__close" onClick={onClose} aria-label="Đóng cài đặt"><IconClose /></button>
         </header>
 
         <nav className="settings-tabs" role="tablist">
@@ -180,11 +180,11 @@ export default function SettingsModal({
                 const checked = selectedBg.includes(background.id)
                 return <button key={background.id} className={`bg-tile ${!selectMode && bgId === background.id ? 'is-active' : ''} ${checked ? 'is-selected' : ''}`}
                   onClick={() => selectMode ? (canDelete(background) && toggleSelect(background.id)) : setBgId(background.id)}>
-                  {isVector(background.id) || !background.url ? <span className="bg-tile__vector">✎ {background.label}</span> : <img src={background.thumb || background.url} alt="" loading="lazy" />}
+                  {isVector(background.id) || !background.url ? <span className="bg-tile__vector"><IconEdit /> {background.label}</span> : <img src={background.thumb || background.url} alt="" loading="lazy" />}
                   <span className="bg-tile__label">{background.label}</span>
-                  {selectMode ? (canDelete(background) && <span className={`bg-tile__check ${checked ? 'is-on' : ''}`}>{checked ? '✓' : ''}</span>) : <>
-                    <span className="bg-tile__edit" onClick={(event) => { event.stopPropagation(); renameBackground(background) }} title="Đổi tên ảnh">✎</span>
-                    {canDelete(background) && <span className="bg-tile__del" onClick={(event) => { event.stopPropagation(); if (window.confirm(`Xoá ảnh nền “${background.label}”?`)) onRemoveImage(background.id) }}>✕</span>}
+                  {selectMode ? (canDelete(background) && <span className={`bg-tile__check ${checked ? 'is-on' : ''}`}>{checked && <IconCheck />}</span>) : <>
+                    <span className="bg-tile__edit" onClick={(event) => { event.stopPropagation(); renameBackground(background) }} title="Đổi tên ảnh"><IconEdit /></span>
+                    {canDelete(background) && <span className="bg-tile__del" onClick={(event) => { event.stopPropagation(); if (window.confirm(`Xoá ảnh nền “${background.label}”?`)) onRemoveImage(background.id) }} title="Xóa ảnh"><IconTrash /></span>}
                   </>}
                 </button>
               })}</div>

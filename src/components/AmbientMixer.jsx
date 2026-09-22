@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { IconTrash } from './icons'
 
 // Bộ trộn không gian: (1) tiếng tổng hợp bằng Web Audio,
 // (2) file âm thanh thật do bạn tải lên (phát lặp, offline).
@@ -107,7 +108,7 @@ export default function AmbientMixer({ ambient }) {
                 <span className="mixer__label mixer__label--user" title={tk.name}>{tk.name}</span>
                 <input type="range" min="0" max="1" step="0.01" value={tk.volume}
                   onChange={(e) => setTrackVol(tk.id, Number(e.target.value))} />
-                <button className="queue__remove" onClick={() => removeTrack(tk.id)} title="Xóa">✕</button>
+                <button className="queue__remove" onClick={() => removeTrack(tk.id)} title="Xóa" aria-label="Xóa âm thanh"><IconTrash /></button>
               </div>
             ))}
           </div>

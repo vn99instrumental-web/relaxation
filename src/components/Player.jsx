@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { parseYouTube, videoThumb, trackName } from '../lib/youtube'
-import { IconPrev, IconNext, IconPlay, IconPause } from './icons'
+import { IconCheck, IconClose, IconEdit, IconPrev, IconNext, IconPlay, IconPause, IconRefresh, IconTrash, IconVideo } from './icons'
 
 const addedTime = (track, fallback) => {
   const numeric = Number(track?.addedAt)
@@ -143,7 +143,7 @@ export default function Player({
                   <option value="random">Ngẫu nhiên</option>
                 </select>
                 {queueSort === 'random' && (
-                  <button type="button" onClick={onReshuffleQueue} title="Xáo lại thứ tự ngẫu nhiên" aria-label="Xáo lại playlist đang nghe">↻</button>
+                  <button type="button" onClick={onReshuffleQueue} title="Xáo lại thứ tự ngẫu nhiên" aria-label="Xáo lại playlist đang nghe"><IconRefresh /></button>
                 )}
               </div>
             </div>
@@ -193,7 +193,7 @@ export default function Player({
                   <button className="ctrl" onClick={onNext} aria-label="Bài sau" disabled={!queue.length}><IconNext /></button>
                   <button className={`ctrl ctrl--sm ${showVideo ? 'is-on' : ''}`} onClick={onToggleVideo}
                     title={showVideo ? 'Ẩn video YouTube' : 'Trình chiếu video YouTube trong khung'}
-                    aria-label={showVideo ? 'Ẩn video' : 'Hiện video'}>▣</button>
+                    aria-label={showVideo ? 'Ẩn video' : 'Hiện video'}><IconVideo /></button>
                 </div>
                 <label className="now-player__volume" title="Âm lượng"><b>♪</b>
                   <input type="range" min="0" max="100" value={ytVolume} onChange={(event) => setYtVolume(Number(event.target.value))} aria-label="Âm lượng" />
@@ -290,8 +290,8 @@ export default function Player({
                           <form className="pl-rename" onSubmit={(e) => { e.preventDefault(); saveRename() }}>
                             <input autoFocus value={plRename} onChange={(e) => setPlRename(e.target.value)}
                               onKeyDown={(e) => { if (e.key === 'Escape') { setEditPlId(null); setPlRename('') } }} />
-                            <button type="submit" title="Lưu tên">✓</button>
-                            <button type="button" className="queue__remove" onClick={() => { setEditPlId(null); setPlRename('') }} title="Hủy">✕</button>
+                            <button type="submit" title="Lưu tên" aria-label="Lưu tên playlist"><IconCheck /></button>
+                            <button type="button" className="queue__remove" onClick={() => { setEditPlId(null); setPlRename('') }} title="Hủy" aria-label="Hủy đổi tên"><IconClose /></button>
                           </form>
                         ) : (
                           <>
@@ -299,9 +299,9 @@ export default function Player({
                               <span className="pl-item__name">♫ {p.name}</span>
                               <span className="pl-item__count">{p.tracks.length} bài</span>
                             </button>
-                            {onRenamePlaylist && <button className="link-btn" onClick={() => startRename(p)} title="Đổi tên playlist">✎</button>}
+                            {onRenamePlaylist && <button className="link-btn" onClick={() => startRename(p)} title="Đổi tên playlist" aria-label="Đổi tên playlist"><IconEdit /></button>}
                             <button className="link-btn" onClick={() => onLoadPlaylist(p.id, 'append')} title="Thêm vào playlist Mới đăng">＋</button>
-                            <button className="queue__remove" onClick={() => { if (window.confirm(`Xoá playlist “${p.name}”? Không thể hoàn tác.`)) onDeletePlaylist(p.id) }} title="Xóa playlist">✕</button>
+                            <button className="queue__remove" onClick={() => { if (window.confirm(`Xoá playlist “${p.name}”? Không thể hoàn tác.`)) onDeletePlaylist(p.id) }} title="Xóa playlist" aria-label="Xóa playlist"><IconTrash /></button>
                           </>
                         )}
                       </div>
@@ -328,7 +328,7 @@ export default function Player({
                                 </select>
                               )}
                               {onRemoveFromPlaylist && (
-                                <button className="queue__remove" onClick={() => { if (window.confirm('Xoá bài này khỏi playlist?')) onRemoveFromPlaylist(p.id, i) }} title="Xoá khỏi playlist">✕</button>
+                                <button className="queue__remove" onClick={() => { if (window.confirm('Xoá bài này khỏi playlist?')) onRemoveFromPlaylist(p.id, i) }} title="Xoá khỏi playlist" aria-label="Xóa bài khỏi playlist"><IconTrash /></button>
                               )}
                             </li>
                           ))}
