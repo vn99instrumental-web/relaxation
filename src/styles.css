@@ -379,7 +379,7 @@ input, textarea { font-family: inherit; }
 @media (min-width: 701px) {
   .app.is-left-open:not(.is-right-open) .drawer--left { width: min(1180px, calc(100vw - 48px)); }
   .app.is-right-open:not(.is-left-open) .drawer--journal { width: min(640px, calc(100vw - 48px)); }
-  .app.is-right-open:not(.is-left-open) .drawer--poems { width: min(960px, calc(100vw - 48px)); }
+  .app.is-right-open:not(.is-left-open) .drawer--poems { width: min(760px, calc(100vw - 48px)); }
   .app.is-left-open.is-right-open .drawer--left,
   .app.is-left-open.is-right-open .drawer--right { width: 50vw; max-width: none; }
 }
