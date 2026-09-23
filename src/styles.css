@@ -378,7 +378,8 @@ input, textarea { font-family: inherit; }
    chia đều 50/50 để không panel nào lấn át panel còn lại. */
 @media (min-width: 701px) {
   .app.is-left-open:not(.is-right-open) .drawer--left { width: min(1180px, calc(100vw - 48px)); }
-  .app.is-right-open:not(.is-left-open) .drawer--right { width: min(960px, calc(100vw - 48px)); }
+  .app.is-right-open:not(.is-left-open) .drawer--journal { width: min(640px, calc(100vw - 48px)); }
+  .app.is-right-open:not(.is-left-open) .drawer--poems { width: min(960px, calc(100vw - 48px)); }
   .app.is-left-open.is-right-open .drawer--left,
   .app.is-left-open.is-right-open .drawer--right { width: 50vw; max-width: none; }
 }
@@ -859,9 +860,9 @@ input[type='range']:disabled { opacity: 0.4; }
 .poem__edit:hover { color: var(--gold-soft); opacity: 1; }
 .poem__del:hover { color: var(--rose); opacity: 1; }
 .poem__title { font-family: var(--chat); font-weight: 700; font-size: 0.95rem; margin: 0 0 7px; padding-right: 48px; color: var(--gold-soft); letter-spacing: 0.01em; }
-.poem__image-wrap { position: relative; margin: 8px 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--field-bg); }
+.poem__image-wrap { position: relative; display: flex; justify-content: center; margin: 8px 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--field-bg); }
 .poem__image-wrap.is-preview { max-height: 130px; margin: 0; }
-.poem__image { display: block; width: 100%; max-height: 280px; object-fit: cover; }
+.poem__image { display: block; width: auto; max-width: 100%; height: auto; object-fit: contain; }
 .poem__video { display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 280px; border: 0; background: #000; object-fit: contain; }
 .poem__image-wrap.is-preview .poem__image { max-height: 130px; }
 .poem__image-error { display: none; padding: 12px; color: var(--rose); font-size: 0.72rem; text-align: center; }

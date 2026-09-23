@@ -1118,7 +1118,7 @@ export default function App() {
         </aside>
 
         {/* Drawer phải: Nhật ký / Hoài niệm (trượt từ cạnh phải) */}
-        <aside className={`drawer drawer--right ${rightTab ? 'is-open' : ''}`}>
+        <aside className={`drawer drawer--right ${rightTab ? 'is-open' : ''} ${rightTab === 'poems' ? 'drawer--poems' : 'drawer--journal'}`}>
           <div className="drawer__body drawer__body--flush">
             {rightTab === 'poems' ? (
               <Poems
