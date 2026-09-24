@@ -1062,7 +1062,7 @@ export default function App() {
         <header className="topbar">
           <div className="brand">
             <h1 className="brand__title">
-              <img className="brand__lockup" src="/brand-wordmark-option4.png" alt="Dưới Tán Thông" width="405" height="155" />
+              <img className="brand__lockup" src="/brand-pine-wordmark-header.png" alt="Dưới Tán Thông" width="2172" height="724" />
             </h1>
             <div className="brand__name">
               <p className="brand__tagline">{tagline}</p>
