@@ -233,7 +233,7 @@ export default function SettingsModal({
 
           {tab === 'admin' && <section className="settings-block">
             <h3><IconShield /> Quyền admin</h3>
-            <label className="admin-row"><input type="checkbox" checked={!!admin} disabled={adminManaged} onChange={(event) => setAdmin(event.target.checked)} /><span>{adminManaged ? (admin ? 'Dốc Nhà Làng đang có quyền quản trị phòng.' : 'Quyền quản trị được cấp theo user Dốc Nhà Làng.') : 'Cho phép quản lý nội dung chung và đặt cấu hình mặc định cho phòng.'}</span></label>
+            <label className="admin-row"><input type="checkbox" checked={!!admin} disabled={adminManaged} onChange={(event) => setAdmin(event.target.checked)} /><span>{adminManaged ? (admin ? 'User hiện tại đang có quyền quản trị phòng.' : 'Quyền quản trị được cấp cho Dốc Nhà Làng và Rừng Thông.') : 'Cho phép quản lý nội dung chung và đặt cấu hình mặc định cho phòng.'}</span></label>
             {adminManaged && <p className="settings-note">Quyền này do Supabase xác nhận theo user, không thể tự bật trên thiết bị.</p>}
             <div className="settings-backup">
               <h3><IconMusic /> Backup playlist</h3>
@@ -247,7 +247,7 @@ export default function SettingsModal({
                 <button type="button" className="btn btn--primary" onClick={() => backupFileRef.current?.click()} disabled={!admin || backupBusy}>{backupBusy ? 'Đang nhập…' : 'Nhập backup'}</button>
                 <input ref={backupFileRef} type="file" accept="application/json,.json" hidden onChange={(event) => importPlaylistFile(event.target.files?.[0])} />
               </div>
-              {!admin && <p className="settings-note">Đăng nhập Nhật ký bằng user Dốc Nhà Làng để nhập và thay đổi thư viện playlist.</p>}
+              {!admin && <p className="settings-note">Đăng nhập Nhật ký bằng Dốc Nhà Làng hoặc Rừng Thông để nhập và thay đổi thư viện playlist.</p>}
               {msg && <p className="settings-msg" role="status">{msg}</p>}
             </div>
           </section>}
