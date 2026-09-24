@@ -1062,7 +1062,9 @@ export default function App() {
         <header className="topbar">
           <div className="brand">
             <h1 className="brand__title">
-              <img className="brand__lockup" src="/brand-pine-wordmark-header.png" alt="Dưới Tán Thông" width="2172" height="724" />
+              <img className="brand__lockup" src="/brand-pine-wordmark-header-900.png"
+                srcSet="/brand-pine-wordmark-header-900.png 900w, /brand-pine-wordmark-header.png 2172w"
+                sizes="(max-width: 480px) 210px, 252px" alt="Dưới Tán Thông" width="900" height="300" />
             </h1>
             <div className="brand__name">
               <p className="brand__tagline">{tagline}</p>
@@ -1107,7 +1109,7 @@ export default function App() {
           <div className="drawer__body drawer__body--flush">
             {rightTab === 'poems' ? (
               <Poems
-                poems={poemsApi.poems} username={username} admin={admin}
+                poems={poemsApi.poems} error={poemsApi.error} username={username} admin={admin}
                 onAddPoem={poemsApi.addPoem} onEditPoem={poemsApi.editPoem} onDeletePoem={poemsApi.deletePoem}
                 onAddComment={poemsApi.addComment} onDeleteComment={poemsApi.deleteComment}
                 onToggleReaction={poemsApi.toggleReaction}

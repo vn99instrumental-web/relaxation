@@ -33,6 +33,7 @@ export default function Player({
   const [plName, setPlName] = useState('')
   const [target, setTarget] = useState('__queue__') // __queue__ | <playlistId> | __new__
   const [newName, setNewName] = useState('')
+  const [search, setSearch] = useState('')
 
   const flash = (m) => { setNote(m); setTimeout(() => setNote(''), 3500) }
 
@@ -101,6 +102,12 @@ export default function Player({
     .map((track, sourceIndex) => ({ track, sourceIndex }))
     .sort((a, b) => addedTime(b.track, b.sourceIndex) - addedTime(a.track, a.sourceIndex))
   const displayedPlaylists = [...(playlists || [])].sort((a, b) => (b.ts || 0) - (a.ts || 0))
+  const searchKey = search.trim().toLocaleLowerCase('vi')
+  const matchesTrack = (track) => !searchKey || (trackName(track, titles) || '').toLocaleLowerCase('vi').includes(searchKey)
+  const searchedRecentTracks = searchKey ? recentTracks.filter(matchesTrack) : recentTracks
+  const searchedPlaylists = searchKey
+    ? displayedPlaylists.filter((playlist) => playlist.name.toLocaleLowerCase('vi').includes(searchKey) || playlist.tracks.some(matchesTrack))
+    : displayedPlaylists
   const currentTrack = queue[index]
   const currentTitle = yt?.nowTitle || trackName(currentTrack, titles) || 'Chưa chọn bài hát'
   const duration = Number(yt?.duration) || 0
@@ -129,6 +136,15 @@ export default function Player({
       </div>
 
       {note && <div className="form-note">{note}</div>}
+
+      {(tab === 'recent' || tab === 'library') && (
+        <label className="player__search">
+          <span className="sr-only">Tìm bài hát hoặc playlist</span>
+          <input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
+            placeholder="Tìm bài hát hoặc playlist…" />
+          {search && <button type="button" onClick={() => setSearch('')} aria-label="Xóa nội dung tìm kiếm"><IconClose /></button>}
+        </label>
+      )}
 
       <section className={`now-player ${tab === 'now' ? '' : 'is-tab-hidden'}`} aria-label="Trình phát nhạc"
         aria-hidden={tab !== 'now'} inert={tab !== 'now' ? '' : undefined}>
@@ -214,7 +230,7 @@ export default function Player({
           </div>
           <p className="recent__hint">Khi chưa ghim bài mặc định, trang sẽ bắt đầu từ bài mới nhất trong danh sách này.</p>
           <ul className="queue queue--recent">
-            {recentTracks.map((track, rank) => {
+            {searchedRecentTracks.map((track, rank) => {
               const isCurrent = currentTrack && sameTrack(track, currentTrack)
               return (
                 <li key={track.recordId || track.key || `${track.videoId || track.playlistId}-${rank}`}
@@ -237,7 +253,7 @@ export default function Player({
                 </li>
               )
             })}
-            {!recentTracks.length && <li className="queue__empty">Chưa có bài nào được đăng.</li>}
+            {!searchedRecentTracks.length && <li className="queue__empty">{searchKey ? 'Không tìm thấy bài phù hợp.' : 'Chưa có bài nào được đăng.'}</li>}
           </ul>
         </div>
       ) : tab === 'add' ? (
@@ -281,7 +297,7 @@ export default function Player({
               </div>
               {showPlaylists && (
                 <ul className="pl-list">
-                  {displayedPlaylists.map((p) => (
+                  {searchedPlaylists.map((p) => (
                     <li key={p.id} className="pl-group">
                       <div className="pl-item">
                         <button className="pl-expand" onClick={() => setExpanded((e) => (e === p.id ? null : p.id))}
@@ -341,6 +357,7 @@ export default function Player({
             </div>
           )}
           {!playlists?.length && <div className="queue__empty">Chưa có playlist đã lưu. Bạn có thể tạo playlist trong tab “Thêm nhạc”.</div>}
+          {playlists?.length > 0 && !searchedPlaylists.length && <div className="queue__empty">Không tìm thấy playlist hoặc bài hát phù hợp.</div>}
         </div>
       ))}
     </div>

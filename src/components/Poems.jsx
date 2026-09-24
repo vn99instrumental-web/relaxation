@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { IconClose, IconEdit, IconTrash } from './icons'
 
 // Góc Hoài Niệm: thơ, tản văn, câu chữ và hình ảnh/video gợi suy tư.
-export default function Poems({ poems, username, admin, onAddPoem, onEditPoem, onDeletePoem, onAddComment, onDeleteComment, onToggleReaction, onClose }) {
+export default function Poems({ poems, error, username, admin, onAddPoem, onEditPoem, onDeletePoem, onAddComment, onDeleteComment, onToggleReaction, onClose }) {
   const [tab, setTab] = useState('feed')
   const [editingId, setEditingId] = useState(null)
   const [title, setTitle] = useState('')
@@ -35,6 +35,7 @@ export default function Poems({ poems, username, admin, onAddPoem, onEditPoem, o
         <h2>Góc Hoài Niệm</h2>
         {onClose && <button className="link-btn" onClick={onClose} title="Đóng" aria-label="Đóng Hoài niệm"><IconClose /></button>}
       </header>
+      {error && <p className="sync-error" role="status">Chưa đồng bộ được Hoài niệm: {error}</p>}
 
       <div className="poem-tabs" role="tablist">
         <button role="tab" aria-selected={tab === 'feed'} className={tab === 'feed' ? 'is-active' : ''}
