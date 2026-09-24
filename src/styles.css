@@ -374,12 +374,12 @@ input, textarea { font-family: inherit; }
 .drawer--right { top: 0; right: 0; width: min(500px, 92vw); border-right: none; border-radius: var(--radius) 0 0 var(--radius); transform: translateX(104%); opacity: 0; }
 .drawer.is-open { transform: translateX(0); opacity: 1; }
 
-/* Một panel được dùng gần trọn màn hình; khi Nhạc + panel nội dung cùng mở,
-   chia đều 50/50 để không panel nào lấn át panel còn lại. */
+/* Nhật ký và Hoài niệm luôn chiếm nửa màn hình trên desktop;
+   khi mở cùng Nhạc, hai panel tiếp tục chia đều 50/50. */
 @media (min-width: 701px) {
   .app.is-left-open:not(.is-right-open) .drawer--left { width: min(1180px, calc(100vw - 48px)); }
-  .app.is-right-open:not(.is-left-open) .drawer--journal { width: min(640px, calc(100vw - 48px)); }
-  .app.is-right-open:not(.is-left-open) .drawer--poems { width: min(760px, calc(100vw - 48px)); }
+  .app.is-right-open:not(.is-left-open) .drawer--journal,
+  .app.is-right-open:not(.is-left-open) .drawer--poems { width: 50vw; max-width: none; }
   .app.is-left-open.is-right-open .drawer--left,
   .app.is-left-open.is-right-open .drawer--right { width: 50vw; max-width: none; }
 }
