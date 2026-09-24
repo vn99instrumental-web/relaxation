@@ -21,6 +21,7 @@ create table if not exists public.messages (
   created_at  timestamptz not null default now(),
   edited_at   timestamptz             -- có giá trị khi tin đã được sửa
 );
+alter table public.messages add column if not exists reactions jsonb not null default '{}'::jsonb;
 create index if not exists messages_room_time_idx
   on public.messages (room_id, created_at);
 
@@ -113,7 +114,8 @@ alter table public.room_settings
   add column if not exists fx_wind_dir text,
   add column if not exists fx_swirl smallint,
   add column if not exists yt_volume smallint,
-  add column if not exists autoplay boolean;
+  add column if not exists autoplay boolean,
+  add column if not exists default_track jsonb;
 alter table public.room_settings enable row level security;
 drop policy if exists "anon room_settings" on public.room_settings;
 create policy "anon room_settings" on public.room_settings for all to anon using (true) with check (true);

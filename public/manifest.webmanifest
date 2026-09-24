@@ -1,0 +1,13 @@
+{
+  "name": "Dưới Tán Thông",
+  "short_name": "Tán Thông",
+  "description": "Nhạc lofi, tiếng mưa, nhật ký và những hoài niệm chung.",
+  "lang": "vi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1a1f",
+  "theme_color": "#0d1a1f",
+  "icons": [
+    { "src": "/brand-duoi-tan-thong.png", "sizes": "256x256", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

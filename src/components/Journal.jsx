@@ -90,7 +90,7 @@ function sameJournalUser(a, b) {
   return Boolean(aKey && bKey && aKey === bKey)
 }
 
-export default function Journal({ journal, username, setUsername, onClose }) {
+export default function Journal({ journal, username, setUsername, onClose, admin = false }) {
   const {
     messages, status, error, sending, online, send, refresh,
     deleteMessage, editMessage, reactMessage, clearMessages,
@@ -284,7 +284,6 @@ export default function Journal({ journal, username, setUsername, onClose }) {
     )
   }
 
-  const admin = true
 
   return (
     <section className="pane journal">

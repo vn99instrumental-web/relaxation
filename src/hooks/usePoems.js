@@ -24,6 +24,7 @@ export function usePoems(config, username) {
   const enabled = Boolean(url && key && room)
   const clientRef = useRef(null)
   const [poems, setPoems] = useState(() => (enabled ? [] : load(LOCAL_KEY, [])))
+  const [error, setError] = useState('')
   const poemsRef = useRef(poems)
   poemsRef.current = poems
 
@@ -36,7 +37,11 @@ export function usePoems(config, username) {
     try { client = makeClient(url, key) } catch { return undefined }
     clientRef.current = client
     const reload = () => client.from('poems').select('*').eq('room_id', room).order('created_at', { ascending: false })
-      .then(({ data }) => { if (!cancelled && data) setPoems(data.map(mapPoem)) }, () => {})
+      .then(({ data, error: e }) => {
+        if (cancelled) return
+        if (e) { setError(e.message); return }
+        setPoems((data || []).map(mapPoem)); setError('')
+      }, (e) => { if (!cancelled) setError(e.message || 'Tải Hoài niệm lỗi') })
     reload()
     const ch = client
       .channel(`poems:${room}`)
@@ -51,7 +56,8 @@ export function usePoems(config, username) {
     const t = String(title || '').trim()
     const image = cleanImageUrl(imageUrl)
     if (enabled && clientRef.current) {
-      clientRef.current.from('poems').insert({ room_id: room, author: username || 'Ẩn danh', title: t || null, body: b, image_url: image || null, comments: [] }).then(() => {}, () => {})
+      clientRef.current.from('poems').insert({ room_id: room, author: username || 'Ẩn danh', title: t || null, body: b, image_url: image || null, comments: [] })
+        .then(({ error: e }) => setError(e?.message || ''), (e) => setError(e.message || 'Đăng bài lỗi'))
     } else {
       const next = [{ id: rid(), author: username || 'Ẩn danh', title: t, body: b, imageUrl: image, comments: [], ts: Date.now() }, ...poemsRef.current]
       setPoems(next); persistLocal(next)
@@ -66,19 +72,22 @@ export function usePoems(config, username) {
     const next = poemsRef.current.map((p) => (p.id === id ? { ...p, title: t, body: b, imageUrl: image } : p))
     setPoems(next)
     if (enabled && clientRef.current) {
-      clientRef.current.from('poems').update({ title: t || null, body: b, image_url: image || null }).eq('id', id).then(() => {}, () => {})
+      clientRef.current.from('poems').update({ title: t || null, body: b, image_url: image || null }).eq('id', id)
+        .then(({ error: e }) => setError(e?.message || ''), (e) => setError(e.message || 'Sửa bài lỗi'))
     } else persistLocal(next)
   }, [enabled, persistLocal])
 
   const deletePoem = useCallback((id) => {
-    if (enabled && clientRef.current) clientRef.current.from('poems').delete().eq('id', id).then(() => {}, () => {})
+    if (enabled && clientRef.current) clientRef.current.from('poems').delete().eq('id', id)
+      .then(({ error: e }) => setError(e?.message || ''), (e) => setError(e.message || 'Xóa bài lỗi'))
     else { const next = poemsRef.current.filter((p) => p.id !== id); setPoems(next); persistLocal(next) }
   }, [enabled, persistLocal])
 
   const writeComments = useCallback((poemId, comments) => {
     if (enabled && clientRef.current) {
       setPoems((list) => list.map((p) => (p.id === poemId ? { ...p, comments } : p)))
-      clientRef.current.from('poems').update({ comments }).eq('id', poemId).then(() => {}, () => {})
+      clientRef.current.from('poems').update({ comments }).eq('id', poemId)
+        .then(({ error: e }) => setError(e?.message || ''), (e) => setError(e.message || 'Cập nhật bình luận lỗi'))
     } else {
       const next = poemsRef.current.map((p) => (p.id === poemId ? { ...p, comments } : p))
       setPoems(next); persistLocal(next)
@@ -111,5 +120,5 @@ export function usePoems(config, username) {
     writeComments(poemId, comments)
   }, [username, writeComments])
 
-  return { poems, addPoem, editPoem, deletePoem, addComment, deleteComment, toggleReaction, enabled }
+  return { poems, error, addPoem, editPoem, deletePoem, addComment, deleteComment, toggleReaction, enabled }
 }

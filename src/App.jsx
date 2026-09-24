@@ -663,26 +663,11 @@ export default function App() {
     setIndex((cur) => (i < cur ? cur - 1 : cur))
   }, [])
 
-  // Link YouTube hỏng/bị chặn: xóa khỏi hàng chờ, đồng thời xóa khỏi playlist
-  // nguồn (nếu có), rồi phát ngay bài hợp lệ kế tiếp.
-  const removeBrokenFromPlaylist = useCallback((track) => {
-    if (!track?.sourcePlaylistId) return
-    const pl = playlistsRef.current.find((p) => p.id === track.sourcePlaylistId)
-    if (!pl) return
-    let sourceIndex = Number.isInteger(track.sourceTrackIndex) ? track.sourceTrackIndex : -1
-    const sameTrack = (candidate) => candidate && candidate.kind === track.kind
-      && (track.kind === 'playlist' ? candidate.playlistId === track.playlistId : candidate.videoId === track.videoId)
-    if (!sameTrack(pl.tracks[sourceIndex])) sourceIndex = pl.tracks.findIndex(sameTrack)
-    if (sourceIndex < 0) return
-    const tracks = pl.tracks.filter((_, i) => i !== sourceIndex)
-    if (supaRef.current.enabled) supaRef.current.updatePlaylistRow(pl.id, tracks)
-    else setLocalPlaylists((list) => list.map((p) => (p.id === pl.id ? { ...p, tracks } : p)))
-  }, [])
-
   const onPlaybackError = useCallback((_code, failedTrack) => {
     const failed = failedTrack || queueRef.current[indexRef.current]
     if (!failed) return
-    removeBrokenFromPlaylist(failed)
+    // Lỗi mạng/YouTube thường chỉ là tạm thời. Chỉ bỏ khỏi hàng chờ hiện tại,
+    // không tự ý xóa bài khỏi playlist đã lưu của người dùng.
     setQueue((q) => {
       let failedIndex = q.findIndex((t) => failed.key && t.key === failed.key)
       if (failedIndex < 0) failedIndex = Math.max(0, Math.min(indexRef.current, q.length - 1))
@@ -697,7 +682,7 @@ export default function App() {
       setTimeout(() => yt.playTrack(nextQueue[nextIndex]), 0)
       return nextQueue
     })
-  }, [removeBrokenFromPlaylist, yt])
+  }, [yt])
 
   const onNext = useCallback(() => {
     setQueue((q) => {
@@ -1077,7 +1062,7 @@ export default function App() {
         <header className="topbar">
           <div className="brand">
             <h1 className="brand__title">
-              <img className="brand__lockup" src="/brand-pine-wordmark-header.png" alt="Dưới Tán Thông" width="2172" height="724" />
+              <img className="brand__lockup" src="/brand-wordmark-option4.png" alt="Dưới Tán Thông" width="405" height="155" />
             </h1>
             <div className="brand__name">
               <p className="brand__tagline">{tagline}</p>
@@ -1092,7 +1077,7 @@ export default function App() {
         </header>
 
         {/* Drawer trái: Nhạc (trượt từ cạnh trái) */}
-        <aside className={`drawer drawer--left ${leftTab ? 'is-open' : ''}`}>
+        <aside className={`drawer drawer--left ${leftTab ? 'is-open' : ''}`} aria-hidden={!leftTab} inert={!leftTab ? '' : undefined}>
           <div className="drawer__tabs">
             <strong className="drawer__title">Nhạc</strong>
             <button className="drawer__close" onClick={() => setLeftTab(null)} title="Đóng" aria-label="Đóng Nhạc"><IconClose /></button>
@@ -1118,7 +1103,7 @@ export default function App() {
         </aside>
 
         {/* Drawer phải: Nhật ký / Hoài niệm (trượt từ cạnh phải) */}
-        <aside className={`drawer drawer--right ${rightTab ? 'is-open' : ''} ${rightTab === 'poems' ? 'drawer--poems' : 'drawer--journal'}`}>
+        <aside className={`drawer drawer--right ${rightTab ? 'is-open' : ''} ${rightTab === 'poems' ? 'drawer--poems' : 'drawer--journal'}`} aria-hidden={!rightTab} inert={!rightTab ? '' : undefined}>
           <div className="drawer__body drawer__body--flush">
             {rightTab === 'poems' ? (
               <Poems

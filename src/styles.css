@@ -1086,3 +1086,14 @@ input[type='range']:disabled { opacity: 0.4; }
 @media (prefers-reduced-motion: reduce) {
   .scene__grain, .fog, .scene__rays span, .scene__svg { animation: none !important; }
 }
+
+/* Bàn phím luôn nhìn thấy vị trí focus, dùng chính màu nhấn của theme hiện tại. */
+:where(button, input, select, textarea, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--gold-soft);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .dock__btn, .dock__btn--icon, .dock__transport .ctrl,
+  .memory-reactions button, .drawer__close, .modal__close { min-width: 44px; min-height: 44px; }
+}

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { WIND_PRESETS, PRESET_ORDER } from '../leaf-engine/config'
 import { IconCheck, IconClose, IconEdit, IconImage, IconMusic, IconPalette, IconSettings, IconShield, IconTrash } from './icons'
 import { createPlaylistBackup, parsePlaylistBackup } from '../lib/playlistBackup'
@@ -27,6 +27,33 @@ export default function SettingsModal({
   const [selectedBg, setSelectedBg] = useState([])
   const [importMode, setImportMode] = useState('merge')
   const [backupBusy, setBackupBusy] = useState(false)
+  const dialogRef = useRef(null)
+  const previouslyFocusedRef = useRef(null)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
+  useEffect(() => {
+    if (!open) return undefined
+    previouslyFocusedRef.current = document.activeElement
+    const dialog = dialogRef.current
+    const focusable = () => [...(dialog?.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])') || [])]
+    requestAnimationFrame(() => focusable()[0]?.focus())
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); onCloseRef.current(); return }
+      if (event.key !== 'Tab') return
+      const items = focusable()
+      if (!items.length) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      previouslyFocusedRef.current?.focus?.()
+    }
+  }, [open])
 
   if (!open) return null
 
@@ -99,9 +126,9 @@ export default function SettingsModal({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal settings-modal" onClick={(event) => event.stopPropagation()}>
+      <div ref={dialogRef} className="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(event) => event.stopPropagation()}>
         <header className="modal__head">
-          <h2><IconSettings /> Cài đặt</h2>
+          <h2 id="settings-title"><IconSettings /> Cài đặt</h2>
           <button className="modal__close" onClick={onClose} aria-label="Đóng cài đặt"><IconClose /></button>
         </header>
 

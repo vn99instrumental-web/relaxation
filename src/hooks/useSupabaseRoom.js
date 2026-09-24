@@ -65,8 +65,9 @@ export function useSupabaseRoom(config, username) {
   const reloadPlaylists = useCallback(async () => {
     const c = clientRef.current
     if (!c) return
-    const { data } = await c.from('playlists').select('*').eq('room_id', room)
+    const { data, error: e } = await c.from('playlists').select('*').eq('room_id', room)
       .order('updated_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false })
+    if (e) { setError(e.message || 'Tải playlist lỗi'); return }
     setPlaylists((data || []).map(mapPl))
   }, [room])
 
@@ -99,7 +100,7 @@ export function useSupabaseRoom(config, username) {
     clientRef.current = client
     setStatus('connecting'); setError('')
 
-    client.from('rooms').upsert({ id: room }).then(() => {}, () => {})
+    client.from('rooms').upsert({ id: room }).then(({ error: e }) => { if (e && !cancelled) setError(e.message) })
 
     const loadBase = async () => {
       try {
@@ -226,20 +227,20 @@ export function useSupabaseRoom(config, username) {
     const c = clientRef.current
     if (!c || !accessAllowed) return
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, reactions } : m)))
-    try { await c.from('messages').update({ reactions }).eq('id', id) } catch (e) { setError(e.message || 'Thả cảm xúc lỗi') }
+    try { const { error: e } = await c.from('messages').update({ reactions }).eq('id', id); if (e) throw e } catch (e) { setError(e.message || 'Thả cảm xúc lỗi') }
   }, [accessAllowed])
 
   const savePlaylistRow = useCallback(async (name, tracks) => {
     const c = clientRef.current
     if (!c) return
-    try { await c.from('playlists').insert({ room_id: room, name, tracks }) } catch (e) { setError(e.message || 'Lưu playlist lỗi') }
+    try { const { error: e } = await c.from('playlists').insert({ room_id: room, name, tracks }); if (e) throw e; setError('') } catch (e) { setError(e.message || 'Lưu playlist lỗi') }
     reloadPlaylists()
   }, [room, reloadPlaylists])
 
   const deletePlaylistRow = useCallback(async (id) => {
     const c = clientRef.current
     if (!c) return
-    try { await c.from('playlists').delete().eq('id', id) } catch (e) { setError(e.message || 'Xóa playlist lỗi') }
+    try { const { error: e } = await c.from('playlists').delete().eq('id', id); if (e) throw e; setError('') } catch (e) { setError(e.message || 'Xóa playlist lỗi') }
     reloadPlaylists()
   }, [reloadPlaylists])
 
@@ -247,7 +248,7 @@ export function useSupabaseRoom(config, username) {
     const c = clientRef.current
     if (!c) return
     setPlaylists((prev) => prev.map((p) => (p.id === id ? { ...p, tracks } : p)))
-    try { await c.from('playlists').update({ tracks, updated_at: new Date().toISOString() }).eq('id', id) } catch (e) { setError(e.message || 'Cập nhật playlist lỗi') }
+    try { const { error: e } = await c.from('playlists').update({ tracks, updated_at: new Date().toISOString() }).eq('id', id); if (e) throw e; setError('') } catch (e) { setError(e.message || 'Cập nhật playlist lỗi') }
     reloadPlaylists()
   }, [reloadPlaylists])
 
@@ -255,7 +256,7 @@ export function useSupabaseRoom(config, username) {
     const c = clientRef.current
     if (!c) return
     setPlaylists((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)))
-    try { await c.from('playlists').update({ name, updated_at: new Date().toISOString() }).eq('id', id) } catch (e) { setError(e.message || 'Đổi tên playlist lỗi') }
+    try { const { error: e } = await c.from('playlists').update({ name, updated_at: new Date().toISOString() }).eq('id', id); if (e) throw e; setError('') } catch (e) { setError(e.message || 'Đổi tên playlist lỗi') }
     reloadPlaylists()
   }, [reloadPlaylists])
 

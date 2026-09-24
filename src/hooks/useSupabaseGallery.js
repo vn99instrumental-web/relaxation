@@ -76,10 +76,12 @@ export function useSupabaseGallery(config) {
     const row = rowsRef.current.find((r) => r.id === id)
     setItems((list) => list.filter((r) => r.id !== id)) // xóa ngay trên máy mình
     try {
-      if (row?.path) { try { await c.storage.from(BUCKET).remove([row.path]) } catch { /* ignore */ } }
-      await c.from('backgrounds').delete().eq('id', id)
-    } catch (e) { setError(e.message || 'Xóa ảnh lỗi') }
-  }, [])
+      if (row?.path) { const { error: storageError } = await c.storage.from(BUCKET).remove([row.path]); if (storageError) throw storageError }
+      const { error: deleteError } = await c.from('backgrounds').delete().eq('id', id)
+      if (deleteError) throw deleteError
+      setError('')
+    } catch (e) { setError(e.message || 'Xóa ảnh lỗi'); reload() }
+  }, [reload])
 
   const renameImage = useCallback(async (id, label) => {
     const c = clientRef.current
