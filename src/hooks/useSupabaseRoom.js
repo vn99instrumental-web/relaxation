@@ -26,6 +26,7 @@ export function useSupabaseRoom(config, username) {
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
   const [accessAllowed, setAccessAllowed] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [accessStatus, setAccessStatus] = useState(username ? 'checking' : 'locked')
   const messagesRef = useRef(messages)
   messagesRef.current = messages
@@ -34,6 +35,7 @@ export function useSupabaseRoom(config, username) {
     const clean = String(name || '').trim()
     if (!enabled || !clean) {
       setAccessAllowed(false)
+      setIsAdmin(false)
       setAccessStatus('locked')
       return { allowed: false, displayName: null }
     }
@@ -44,12 +46,15 @@ export function useSupabaseRoom(config, username) {
       if (e) throw e
       const row = Array.isArray(data) ? data[0] : data
       const allowed = Boolean(row?.allowed)
+      const nextAdmin = allowed && Boolean(row?.is_admin)
       setAccessAllowed(allowed)
+      setIsAdmin(nextAdmin)
       setAccessStatus(allowed ? 'allowed' : 'locked')
       if (!allowed) setMessages([])
-      return { allowed, displayName: row?.display_name || clean }
+      return { allowed, displayName: row?.display_name || clean, isAdmin: nextAdmin }
     } catch (e) {
       setAccessAllowed(false)
+      setIsAdmin(false)
       setAccessStatus('error')
       setMessages([])
       return { allowed: false, displayName: null, error: e }
@@ -58,6 +63,7 @@ export function useSupabaseRoom(config, username) {
 
   const lockJournal = useCallback(() => {
     setAccessAllowed(false)
+    setIsAdmin(false)
     setAccessStatus('locked')
     setMessages([])
   }, [])
@@ -91,6 +97,7 @@ export function useSupabaseRoom(config, username) {
       setMessages([])
       setPlaylists([])
       setAccessAllowed(false)
+      setIsAdmin(false)
       setAccessStatus('locked')
       return
     }
@@ -292,7 +299,7 @@ export function useSupabaseRoom(config, username) {
   const journal = {
     messages, status, error, sending, online: enabled && status === 'online',
     send, refresh, deleteMessage, editMessage, reactMessage, clearMessages,
-    accessAllowed, accessStatus, unlock: verifyAccess, lock: lockJournal,
+    accessAllowed, accessStatus, isAdmin, unlock: verifyAccess, lock: lockJournal,
   }
 
   return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, updatePlaylistRow, renamePlaylistRow, importPlaylistRows, deleteMessage, editMessage, reactMessage, clearMessages }

@@ -204,7 +204,7 @@ export default function App() {
   const [recentPlayback, setRecentPlayback] = useState(true)
   const [tagline, setTagline] = useState(() => pickTagline('dusk'))
   const [featuredPoemId, setFeaturedPoemId] = useState(null)
-  const [admin, setAdmin] = useState(() => load('vibe.admin', false))
+  const [localAdmin, setLocalAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', Date.now())) // mốc tin đã xem (máy mới: tính từ lúc mở, tránh báo dồn tin cũ như seenPoemTs)
   const [seenPoemTs, setSeenPoemTs] = useState(() => load('vibe.seenPoemTs', Date.now())) // mốc thơ đã xem
@@ -219,6 +219,7 @@ export default function App() {
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
+  const admin = supa.enabled ? Boolean(supa.journal.isAdmin) : localAdmin
   const gallery = useSupabaseGallery(supaConfig)
   const roomSettings = useRoomSettings(supaConfig, admin)
   const poemsApi = usePoems(supaConfig, username)
@@ -353,7 +354,7 @@ export default function App() {
   useEffect(() => save('vibe.hiddenBg', hiddenBg), [hiddenBg])
   useEffect(() => save('vibe.username', username), [username])
   useEffect(() => save('vibe.sync', syncConfig), [syncConfig])
-  useEffect(() => save('vibe.admin', admin), [admin])
+  useEffect(() => { if (!supa.enabled) save('vibe.admin', localAdmin) }, [localAdmin, supa.enabled])
   useEffect(() => save('vibe.keepAwake', keepAwake), [keepAwake])
   useEffect(() => save('vibe.seenTs', seenTs), [seenTs])
   useEffect(() => save('vibe.seenPoemTs', seenPoemTs), [seenPoemTs])
@@ -1154,7 +1155,7 @@ export default function App() {
 
       <SettingsModal
         open={settingsOpen} onClose={() => setSettingsOpen(false)}
-        admin={admin} setAdmin={setAdmin}
+        admin={admin} setAdmin={setLocalAdmin} adminManaged={supa.enabled}
         theme={theme} setTheme={setTheme} themes={THEMES}
         keepAwake={keepAwake} setKeepAwake={setKeepAwake}
         autoplay={autoplay} setAutoplay={setAutoplay}
