@@ -5,14 +5,9 @@ import { decodeChatBody, encodeChatBody, normalizeOutgoingChat } from '../lib/ch
 // Đồng bộ chat + playlist qua Supabase, có REALTIME (tin nhắn hiện ngay).
 // config: { url, key, room }. Khi thiếu -> enabled=false (app dùng cách khác).
 const CHAT_IMAGE_BUCKET = 'backgrounds'
+const MESSAGE_PAGE_SIZE = 50
 const mapMsg = (r) => ({ id: r.id, user: r.author, ...decodeChatBody(r.body), ts: new Date(r.created_at).getTime(), edited: !!r.edited_at, editedTs: r.edited_at ? new Date(r.edited_at).getTime() : null, reactions: r.reactions && typeof r.reactions === 'object' ? r.reactions : {} })
 const mapPl = (r) => ({ id: r.id, name: r.name, tracks: Array.isArray(r.tracks) ? r.tracks : [], ts: new Date(r.updated_at || r.created_at).getTime() })
-
-function mergeById(list, incoming) {
-  const map = new Map(list.map((m) => [m.id, m]))
-  for (const m of incoming) map.set(m.id, m)
-  return [...map.values()].sort((a, b) => (a.ts || 0) - (b.ts || 0))
-}
 
 export function useSupabaseRoom(config, username) {
   const { url, key, room } = config || {}
@@ -28,8 +23,26 @@ export function useSupabaseRoom(config, username) {
   const [accessAllowed, setAccessAllowed] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [accessStatus, setAccessStatus] = useState(username ? 'checking' : 'locked')
+  const [messageLimit, setMessageLimit] = useState(MESSAGE_PAGE_SIZE)
+  const [hasMoreMessages, setHasMoreMessages] = useState(false)
+  const [loadingMoreMessages, setLoadingMoreMessages] = useState(false)
   const messagesRef = useRef(messages)
+  const messageLimitRef = useRef(messageLimit)
   messagesRef.current = messages
+  messageLimitRef.current = messageLimit
+
+  const hydrateReactions = useCallback(async (client, rows) => {
+    if (!rows.length) return []
+    const { data, error: reactionError } = await client.from('message_reactions').select('*').in('message_id', rows.map((row) => row.id))
+    if (reactionError) throw reactionError
+    const grouped = new Map()
+    for (const reaction of data || []) {
+      const reactions = grouped.get(reaction.message_id) || {}
+      reactions[reaction.emoji] = [...(reactions[reaction.emoji] || []), reaction.author]
+      grouped.set(reaction.message_id, reactions)
+    }
+    return rows.map((row) => ({ ...mapMsg(row), reactions: grouped.get(row.id) || {} }))
+  }, [])
 
   const verifyAccess = useCallback(async (name) => {
     const clean = String(name || '').trim()
@@ -77,18 +90,30 @@ export function useSupabaseRoom(config, username) {
     setPlaylists((data || []).map(mapPl))
   }, [room])
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (requestedLimit = messageLimitRef.current) => {
     const c = clientRef.current
     if (!c || !accessAllowed) return
     try {
-      const { data, error: e } = await c.from('messages').select('*').eq('room_id', room).order('created_at')
+      const { data, error: e } = await c.from('messages').select('*').eq('room_id', room)
+        .order('created_at', { ascending: false }).range(0, requestedLimit)
       if (e) throw e
-      setMessages((data || []).map(mapMsg))
+      const rows = data || []
+      const visible = rows.slice(0, requestedLimit).reverse()
+      setMessages(await hydrateReactions(c, visible))
+      setHasMoreMessages(rows.length > requestedLimit)
       setStatus('online'); setError('')
     } catch (e) {
       setStatus('error'); setError(e.message || 'Lỗi Supabase')
     }
-  }, [room, accessAllowed])
+  }, [room, accessAllowed, hydrateReactions])
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!accessAllowed || loadingMoreMessages || !hasMoreMessages) return
+    const next = messageLimitRef.current + MESSAGE_PAGE_SIZE
+    setLoadingMoreMessages(true); setMessageLimit(next); messageLimitRef.current = next
+    await refresh(next)
+    setLoadingMoreMessages(false)
+  }, [accessAllowed, loadingMoreMessages, hasMoreMessages, refresh])
 
   useEffect(() => {
     if (!enabled) {
@@ -130,18 +155,17 @@ export function useSupabaseRoom(config, username) {
 
     if (accessAllowed) {
       ch = ch
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` },
-          (payload) => setMessages((prev) => mergeById(prev, [mapMsg(payload.new)])))
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` },
-          (payload) => setMessages((prev) => mergeById(prev, [mapMsg(payload.new)])))
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` }, () => refresh())
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` }, () => refresh())
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` },
           (payload) => setMessages((prev) => prev.filter((m) => m.id !== payload.old.id)))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'message_reactions', filter: `room_id=eq.${room}` }, () => refresh())
     }
 
     ch.subscribe((s) => { if (s === 'SUBSCRIBED' && !cancelled) setStatus('online') })
 
     return () => { cancelled = true; try { client.removeChannel(ch) } catch { /* ignore */ } }
-  }, [enabled, url, key, room, reloadPlaylists, accessAllowed])
+  }, [enabled, url, key, room, reloadPlaylists, accessAllowed, refresh])
 
   useEffect(() => {
     if (!enabled) return
@@ -233,9 +257,20 @@ export function useSupabaseRoom(config, username) {
   const reactMessage = useCallback(async (id, reactions) => {
     const c = clientRef.current
     if (!c || !accessAllowed) return
+    const current = messagesRef.current.find((message) => message.id === id)
+    const emojis = new Set([...Object.keys(current?.reactions || {}), ...Object.keys(reactions || {})])
+    const changedEmoji = [...emojis].find((emoji) => {
+      const before = (current?.reactions?.[emoji] || []).includes(username || 'Ẩn danh')
+      const after = (reactions?.[emoji] || []).includes(username || 'Ẩn danh')
+      return before !== after
+    })
+    if (!changedEmoji) return
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, reactions } : m)))
-    try { const { error: e } = await c.from('messages').update({ reactions }).eq('id', id); if (e) throw e } catch (e) { setError(e.message || 'Thả cảm xúc lỗi') }
-  }, [accessAllowed])
+    try {
+      const { error: e } = await c.rpc('toggle_message_reaction', { p_message_id: id, p_room_id: room, p_emoji: changedEmoji, p_author: username || 'Ẩn danh' })
+      if (e) throw e
+    } catch (e) { setError(e.message || 'Thả cảm xúc lỗi'); refresh() }
+  }, [accessAllowed, room, username, refresh])
 
   const savePlaylistRow = useCallback(async (name, tracks) => {
     const c = clientRef.current
@@ -271,36 +306,36 @@ export function useSupabaseRoom(config, username) {
     const c = clientRef.current
     const source = Array.isArray(incoming) ? incoming : []
     if (!c) return { ok: false, error: 'Chưa kết nối được phòng dùng chung.' }
-    const rows = source.map((playlist) => ({ room_id: room, name: playlist.name, tracks: playlist.tracks }))
-    const existingIds = replace ? playlists.map((playlist) => playlist.id).filter(Boolean) : []
-
     try {
-      // Ghi bản backup trước, rồi mới bỏ bản cũ. Nếu request thứ hai lỗi thì dữ
-      // liệu cũ vẫn còn nguyên thay vì để thư viện bị trống.
-      if (rows.length) {
-        const { error: insertError } = await c.from('playlists').insert(rows)
-        if (insertError) throw insertError
-      }
-      if (existingIds.length) {
-        const { error: deleteError } = await c.from('playlists').delete().eq('room_id', room).in('id', existingIds)
-        if (deleteError) throw deleteError
-      }
+      const { data: count, error: importError } = await c.rpc('import_room_playlists', { p_room_id: room, p_playlists: source, p_replace: replace })
+      if (importError) throw importError
       await reloadPlaylists()
       setError('')
-      return { ok: true, count: rows.length }
+      return { ok: true, count: Number(count) || 0 }
     } catch (e) {
       const message = e.message || 'Khôi phục playlist lỗi'
       setError(message)
       await reloadPlaylists()
       return { ok: false, error: message }
     }
-  }, [room, playlists, reloadPlaylists])
+  }, [room, reloadPlaylists])
+
+  const movePlaylistTrack = useCallback(async (sourceId, sourceIndex, targetId) => {
+    const c = clientRef.current
+    if (!c) return { ok: false }
+    try {
+      const { error: moveError } = await c.rpc('move_playlist_track', { p_room_id: room, p_source_id: sourceId, p_source_index: sourceIndex, p_target_id: targetId })
+      if (moveError) throw moveError
+      await reloadPlaylists(); setError(''); return { ok: true }
+    } catch (moveError) { setError(moveError.message || 'Chuyển bài hát lỗi'); await reloadPlaylists(); return { ok: false } }
+  }, [room, reloadPlaylists])
 
   const journal = {
     messages, status, error, sending, online: enabled && status === 'online',
     send, refresh, deleteMessage, editMessage, reactMessage, clearMessages,
+    hasMore: hasMoreMessages, loadingMore: loadingMoreMessages, loadMore: loadMoreMessages,
     accessAllowed, accessStatus, isAdmin, unlock: verifyAccess, lock: lockJournal,
   }
 
-  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, updatePlaylistRow, renamePlaylistRow, importPlaylistRows, deleteMessage, editMessage, reactMessage, clearMessages }
+  return { enabled, status, error, journal, playlists, savePlaylistRow, deletePlaylistRow, updatePlaylistRow, renamePlaylistRow, importPlaylistRows, movePlaylistTrack, deleteMessage, editMessage, reactMessage, clearMessages }
 }

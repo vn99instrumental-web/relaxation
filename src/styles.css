@@ -1092,6 +1092,27 @@ input[type='range']:disabled { opacity: 0.4; }
 .player__search button { position: absolute; right: 3px; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; color: var(--ink-dim); }
 .player__search button svg { width: 15px; height: 15px; }
 .sync-error { margin: 6px 10px; padding: 7px 9px; border: 1px solid color-mix(in srgb, var(--gold-soft) 55%, transparent); border-radius: 8px; background: var(--sel); color: var(--ink); font-size: .75rem; }
+.history-more { align-self: center; margin: 6px auto 10px; padding: 7px 16px; border: 1px solid color-mix(in srgb, var(--gold-soft) 55%, transparent); border-radius: 999px; background: var(--sel); color: var(--ink); font: inherit; font-size: .76rem; cursor: pointer; }
+.history-more:hover:not(:disabled) { border-color: var(--gold); background: color-mix(in srgb, var(--sel) 78%, var(--gold-soft)); }
+.history-more:disabled { opacity: .6; cursor: wait; }
+.dock__sync { display: inline-flex; align-items: center; gap: 5px; padding: 0 5px; color: var(--muted); font-size: .64rem; white-space: nowrap; }
+.dock__sync > span { width: 7px; height: 7px; border-radius: 50%; background: #8b8477; box-shadow: 0 0 0 2px color-mix(in srgb, #8b8477 20%, transparent); }
+.dock__sync b { font-weight: 600; }
+.dock__sync--online > span { background: #6e9d75; box-shadow: 0 0 0 2px color-mix(in srgb, #6e9d75 24%, transparent); }
+.dock__sync--connecting > span { background: var(--gold); animation: pulse 1.2s ease-in-out infinite; }
+.dock__sync--error { color: #c87868; }
+.dock__sync--error > span { background: #c87868; }
+@media (max-width: 900px) { .dock__sync b { display: none; } }
+.action-dialog__backdrop { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 20px; background: rgba(10, 8, 6, .62); backdrop-filter: blur(5px); }
+.action-dialog { width: min(390px, 100%); padding: 22px; border: 1px solid color-mix(in srgb, var(--gold-soft) 65%, transparent); border-radius: 16px; background: color-mix(in srgb, var(--panel) 96%, #18110d); color: var(--ink); box-shadow: 0 24px 70px rgba(0,0,0,.45); }
+.action-dialog h2 { margin: 0 0 8px; font: 600 1.08rem Georgia, serif; }
+.action-dialog p { margin: 0 0 16px; color: var(--muted); line-height: 1.5; }
+.action-dialog input { box-sizing: border-box; width: 100%; margin: 4px 0 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--sel); color: var(--ink); font: inherit; }
+.action-dialog__buttons { display: flex; justify-content: flex-end; gap: 9px; }
+.action-dialog__buttons button { min-height: 38px; padding: 8px 15px; border-radius: 9px; }
+.action-dialog__buttons .is-danger { background: #8f463e; color: #fff8ed; }
+.undo-toast { position: fixed; z-index: 10001; left: 50%; bottom: max(88px, calc(env(safe-area-inset-bottom) + 70px)); transform: translateX(-50%); display: flex; align-items: center; gap: 18px; max-width: calc(100vw - 28px); padding: 11px 14px; border: 1px solid color-mix(in srgb, var(--gold-soft) 65%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--panel) 97%, #18110d); color: var(--ink); box-shadow: 0 14px 38px rgba(0,0,0,.38); }
+.undo-toast button { border: 0; background: transparent; color: var(--gold-soft); font-weight: 700; cursor: pointer; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 /* Bàn phím luôn nhìn thấy vị trí focus, dùng chính màu nhấn của theme hiện tại. */

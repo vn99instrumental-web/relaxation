@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { parseYouTube, videoThumb, trackName } from '../lib/youtube'
 import { IconCheck, IconClose, IconEdit, IconPrev, IconNext, IconPlay, IconPause, IconRefresh, IconTrash, IconVideo } from './icons'
+import { useActions } from './ActionProvider'
 
 const addedTime = (track, fallback) => {
   const numeric = Number(track?.addedAt)
@@ -23,6 +24,7 @@ export default function Player({
   recentLimit, onRecentLimitChange,
   onTabChange, titles,
 }) {
+  const actions = useActions()
   const [tab, setTab] = useState('now')            // 'now' | 'recent' | 'library' | 'add'
   const [editPlId, setEditPlId] = useState(null)   // id playlist đang đổi tên
   const [plRename, setPlRename] = useState('')
@@ -317,7 +319,7 @@ export default function Player({
                             </button>
                             {onRenamePlaylist && <button className="link-btn" onClick={() => startRename(p)} title="Đổi tên playlist" aria-label="Đổi tên playlist"><IconEdit /></button>}
                             <button className="link-btn" onClick={() => onLoadPlaylist(p.id, 'append')} title="Thêm vào playlist Mới đăng">＋</button>
-                            <button className="queue__remove" onClick={() => { if (window.confirm(`Xoá playlist “${p.name}”? Không thể hoàn tác.`)) onDeletePlaylist(p.id) }} title="Xóa playlist" aria-label="Xóa playlist"><IconTrash /></button>
+                            <button className="queue__remove" onClick={() => actions.schedule({ message: `Playlist “${p.name}” sẽ được xóa`, action: () => onDeletePlaylist(p.id) })} title="Xóa playlist" aria-label="Xóa playlist"><IconTrash /></button>
                           </>
                         )}
                       </div>
@@ -344,7 +346,7 @@ export default function Player({
                                 </select>
                               )}
                               {onRemoveFromPlaylist && (
-                                <button className="queue__remove" onClick={() => { if (window.confirm('Xoá bài này khỏi playlist?')) onRemoveFromPlaylist(p.id, i) }} title="Xoá khỏi playlist" aria-label="Xóa bài khỏi playlist"><IconTrash /></button>
+                                <button className="queue__remove" onClick={() => actions.schedule({ message: 'Bài hát sẽ được xóa khỏi playlist', action: () => onRemoveFromPlaylist(p.id, i) })} title="Xoá khỏi playlist" aria-label="Xóa bài khỏi playlist"><IconTrash /></button>
                               )}
                             </li>
                           ))}

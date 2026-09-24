@@ -6,6 +6,7 @@ import { trackName } from '../lib/youtube'
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
   playlistName = '', titles,
+  syncStatus = 'offline', syncError = '',
   queuePosition = -1, unread = 0, unreadPoems = 0,
   leftTab, onToggleLeft, journalOpen, onToggleJournal, poemsOpen, onTogglePoems, onOpenSettings, onHideUI,
 }) {
@@ -51,6 +52,10 @@ export default function Dock({
       </div>
 
       <div className="dock__tabs">
+        <span className={`dock__sync dock__sync--${syncError ? 'error' : syncStatus}`} title={syncError || (syncStatus === 'online' ? 'Đã đồng bộ dữ liệu dùng chung' : 'Đang kết nối dữ liệu dùng chung')} role="status" aria-label={syncError ? `Lỗi đồng bộ: ${syncError}` : `Trạng thái đồng bộ: ${syncStatus}`}>
+          <span aria-hidden="true" />
+          <b>{syncError ? 'Lỗi đồng bộ' : syncStatus === 'online' ? 'Đã lưu' : syncStatus === 'connecting' ? 'Đang lưu' : 'Ngoại tuyến'}</b>
+        </span>
         <button className={`dock__btn ${leftTab === 'music' ? 'is-active' : ''}`} onClick={() => onToggleLeft('music')}
           title="Nhạc — danh sách bài hát & playlist (thêm link YouTube)">
           <IconMusic /><span>Nhạc</span>

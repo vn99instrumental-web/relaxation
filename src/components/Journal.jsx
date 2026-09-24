@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { IconCameraVintage, IconClose, IconEdit, IconLock, IconPlay, IconRefresh, IconReply, IconSmile, IconTrash, IconUserSwitch } from './icons'
 import { parseYouTube } from '../lib/youtube'
+import { useActions } from './ActionProvider'
 
 // Bắt các đường link trong tin nhắn (kể cả youtu.be / youtube.com chưa có http)
 const LINK_RE = /((?:https?:\/\/|www\.)[^\s]+|(?:youtu\.be|(?:music\.|m\.)?youtube\.com)\/[^\s]+)/gi
@@ -91,9 +92,11 @@ function sameJournalUser(a, b) {
 }
 
 export default function Journal({ journal, username, setUsername, onClose, admin = false }) {
+  const actions = useActions()
   const {
     messages, status, error, sending, online, send, refresh,
     deleteMessage, editMessage, reactMessage, clearMessages,
+    hasMore, loadingMore, loadMore,
     accessAllowed, accessStatus, unlock, lock,
   } = journal
 
@@ -145,18 +148,18 @@ export default function Journal({ journal, username, setUsername, onClose, admin
     setUnlockError('Tên này không mở được những dòng dưới tán thông.')
   }
 
-  const handleLock = () => {
-    if (!window.confirm('Khóa Nhật ký trên thiết bị này và đổi người dùng?')) return
+  const handleLock = async () => {
+    if (!await actions.confirm({ title: 'Khóa Nhật ký?', message: 'Bạn sẽ cần nhập lại tên người dùng để mở.', confirmLabel: 'Khóa' })) return
     lock?.()
     setUsername('')
     setUnlockName('')
     setUnlockError('')
   }
 
-  const removeOne = (id) => { if (deleteMessage && window.confirm('Xoá tin nhắn này? Không thể hoàn tác.')) deleteMessage(id) }
+  const removeOne = (id) => { if (deleteMessage) actions.schedule({ message: 'Tin nhắn sẽ được xóa', action: () => deleteMessage(id) }) }
   const clearAll = () => {
     if (!clearMessages) return
-    if (window.confirm('Xóa toàn bộ nhật ký? Không thể hoàn tác.')) clearMessages()
+    actions.schedule({ message: 'Toàn bộ Nhật ký sẽ được xóa', action: clearMessages })
   }
 
   const addEmoji = (e) => { setDraft((d) => d + e); inputRef.current?.focus() }
@@ -302,6 +305,9 @@ export default function Journal({ journal, username, setUsername, onClose, admin
       {error && <div className="journal__error">{error}</div>}
 
       <div className="journal__list" ref={listRef}>
+        {hasMore && <button type="button" className="history-more" onClick={loadMore} disabled={loadingMore}>
+          {loadingMore ? 'Đang tải…' : 'Xem tin nhắn cũ hơn'}
+        </button>}
         {messages.length === 0 && <div className="journal__empty">Chưa có dòng nào. Viết điều gì đó cho hôm nay… ☁️</div>}
         {grouped.map((group) => (
           <div className="journal__day" key={group.day}>

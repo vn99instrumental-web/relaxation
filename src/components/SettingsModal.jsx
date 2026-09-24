@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { WIND_PRESETS, PRESET_ORDER } from '../leaf-engine/config'
 import { IconCheck, IconClose, IconEdit, IconImage, IconMusic, IconPalette, IconSettings, IconShield, IconTrash } from './icons'
 import { createPlaylistBackup, parsePlaylistBackup } from '../lib/playlistBackup'
+import { useActions } from './ActionProvider'
 
 const isVector = (id) => id === 'vector' || id.endsWith('__vector')
 const isUserImg = (id) => id.startsWith('u') || id.includes('__u')
@@ -16,6 +17,7 @@ export default function SettingsModal({
   fxWindDir, setFxWindDir, fxSwirl, setFxSwirl,
   playlists = [], onImportPlaylists,
 }) {
+  const actions = useActions()
   const [tab, setTab] = useState('appearance')
   const [msg, setMsg] = useState('')
   const [urlInput, setUrlInput] = useState('')
@@ -73,12 +75,13 @@ export default function SettingsModal({
   const exitSelect = () => { setSelectMode(false); setSelectedBg([]) }
   const toggleSelect = (id) => setSelectedBg((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
   const deleteSelected = () => {
-    if (!selectedBg.length || !window.confirm(`Xoá ${selectedBg.length} ảnh nền đã chọn?`)) return
-    selectedBg.forEach((id) => onRemoveImage(id))
+    if (!selectedBg.length) return
+    const ids = [...selectedBg]
+    actions.schedule({ message: `${ids.length} ảnh nền sẽ được xóa`, action: () => ids.forEach((id) => onRemoveImage(id)) })
     exitSelect()
   }
   const renameBackground = async (background) => {
-    const nextLabel = window.prompt('Tên ảnh mới', background.label)
+    const nextLabel = await actions.prompt({ title: 'Đổi tên ảnh', message: 'Nhập tên mới cho ảnh nền.', value: background.label })
     if (nextLabel === null || nextLabel.trim() === background.label) return
     if (!nextLabel.trim()) { setMsg('Tên ảnh không được để trống.'); return }
     const ok = await onRenameImage(background.id, nextLabel)
@@ -106,7 +109,7 @@ export default function SettingsModal({
     setBackupBusy(true)
     try {
       const incoming = parsePlaylistBackup(await file.text())
-      if (importMode === 'replace' && !window.confirm(`Thay toàn bộ playlist hiện tại bằng ${incoming.length} playlist trong backup?`)) return
+      if (importMode === 'replace' && !await actions.confirm({ title: 'Thay toàn bộ playlist?', message: `Thư viện hiện tại sẽ được thay bằng ${incoming.length} playlist trong backup.`, confirmLabel: 'Thay playlist', danger: true })) return
       const count = await onImportPlaylists(incoming, importMode)
       setMsg(`Đã khôi phục ${count} playlist${importMode === 'replace' ? ' và thay thư viện cũ' : ''}.`)
     } catch (error) {
@@ -211,7 +214,7 @@ export default function SettingsModal({
                   <span className="bg-tile__label">{background.label}</span>
                   {selectMode ? (canDelete(background) && <span className={`bg-tile__check ${checked ? 'is-on' : ''}`}>{checked && <IconCheck />}</span>) : <>
                     <span className="bg-tile__edit" onClick={(event) => { event.stopPropagation(); renameBackground(background) }} title="Đổi tên ảnh"><IconEdit /></span>
-                    {canDelete(background) && <span className="bg-tile__del" onClick={(event) => { event.stopPropagation(); if (window.confirm(`Xoá ảnh nền “${background.label}”?`)) onRemoveImage(background.id) }} title="Xóa ảnh"><IconTrash /></span>}
+                    {canDelete(background) && <span className="bg-tile__del" onClick={(event) => { event.stopPropagation(); actions.schedule({ message: `Ảnh “${background.label}” sẽ được xóa`, action: () => onRemoveImage(background.id) }) }} title="Xóa ảnh"><IconTrash /></span>}
                   </>}
                 </button>
               })}</div>

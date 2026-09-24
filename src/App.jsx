@@ -9,7 +9,6 @@ import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
 import { IconClose, IconImmersive, IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
 import { useYouTube } from './hooks/useYouTube'
-import { useAmbient } from './hooks/useAmbient'
 import { useWakeLock } from './hooks/useWakeLock'
 import { useGistSync } from './hooks/useGistSync'
 import { useSupabaseRoom } from './hooks/useSupabaseRoom'
@@ -21,6 +20,7 @@ import { fetchVideoTitle } from './lib/youtube'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, BUILTIN_SCENES } from './lib/backgrounds'
 import { pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
+import { queueIndexesBySort, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
 
 // Tải LeafEngine (Three.js) theo yêu cầu — không nằm trong gói khởi động, nên
 // không ảnh hưởng tốc độ mở trang hay trình phát nhạc.
@@ -58,43 +58,6 @@ function portableTrack(track) {
 function sameTrack(a, b) {
   if (!a || !b || a.kind !== b.kind) return false
   return a.kind === 'playlist' ? a.playlistId === b.playlistId : a.videoId === b.videoId
-}
-
-function trackAddedTime(track, fallback = 0) {
-  const numeric = Number(track?.addedAt)
-  if (Number.isFinite(numeric) && numeric > 0) return numeric
-  const parsed = Date.parse(track?.addedAt)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
-function sortTracksNewest(tracks) {
-  return (tracks || [])
-    .map((track, originalIndex) => ({ track, originalIndex }))
-    .sort((a, b) => trackAddedTime(b.track, b.originalIndex) - trackAddedTime(a.track, a.originalIndex))
-}
-
-function queueIndexesBySort(tracks, mode = 'latest', randomSeed = 0) {
-  return (tracks || [])
-    .map((track, queueIndex) => ({ track, queueIndex }))
-    .sort((a, b) => {
-      if (mode === 'name') {
-        const byName = (a.track?.title || 'Video').localeCompare(b.track?.title || 'Video', 'vi', { sensitivity: 'base', numeric: true })
-        return byName || trackAddedTime(b.track, b.queueIndex) - trackAddedTime(a.track, a.queueIndex)
-      }
-      if (mode === 'random') return seededTrackRank(a, randomSeed) - seededTrackRank(b, randomSeed)
-      return trackAddedTime(b.track, b.queueIndex) - trackAddedTime(a.track, a.queueIndex)
-    })
-    .map(({ queueIndex }) => queueIndex)
-}
-
-function seededTrackRank({ track, queueIndex }, seed) {
-  const identity = `${seed}:${track?.key || track?.recordId || track?.videoId || track?.playlistId || track?.title || ''}:${queueIndex}`
-  let hash = 2166136261
-  for (let index = 0; index < identity.length; index += 1) {
-    hash ^= identity.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
-  }
-  return hash >>> 0
 }
 
 let keySeed = 1
@@ -150,7 +113,6 @@ function trackFromParsed(p, title = '', addedAt = Date.now()) {
 
 export default function App() {
   const yt = useYouTube('yt-frame')
-  const ambient = useAmbient()
 
   const [queue, setQueue] = useState(() => normalizeQueueMetadata(load('vibe.queue', [])))
   const [index, setIndex] = useState(0)
@@ -634,8 +596,7 @@ export default function App() {
     const movedTrack = { ...track, addedAt: Date.now() }
     const toTracks = sortTracksNewest([...to.tracks, movedTrack]).map(({ track: item }) => item)
     if (supaRef.current.enabled) {
-      supaRef.current.updatePlaylistRow(fromId, remaining)
-      supaRef.current.updatePlaylistRow(toId, toTracks)
+      supaRef.current.movePlaylistTrack(fromId, index, toId)
     } else {
       setLocalPlaylists((list) => list.map((p) => (
         p.id === fromId ? { ...p, tracks: remaining, ts: Date.now() } : p.id === toId ? { ...p, tracks: toTracks, ts: Date.now() } : p
@@ -1111,6 +1072,7 @@ export default function App() {
             {rightTab === 'poems' ? (
               <Poems
                 poems={poemsApi.poems} error={poemsApi.error} username={username} admin={admin}
+                hasMore={poemsApi.hasMore} loadingMore={poemsApi.loadingMore} onLoadMore={poemsApi.loadMore}
                 onAddPoem={poemsApi.addPoem} onEditPoem={poemsApi.editPoem} onDeletePoem={poemsApi.deletePoem}
                 onAddComment={poemsApi.addComment} onDeleteComment={poemsApi.deleteComment}
                 onToggleReaction={poemsApi.toggleReaction}
@@ -1129,6 +1091,7 @@ export default function App() {
 
       <Dock
         yt={yt} queue={queue} index={index} titles={titles}
+        syncStatus={supa.status} syncError={supa.error || poemsApi.error}
         playlistName={activePlaylistName}
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
         queuePosition={queueOrder.indexOf(index)}

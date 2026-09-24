@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { IconClose, IconEdit, IconTrash } from './icons'
+import { useActions } from './ActionProvider'
 
 // Góc Hoài Niệm: thơ, tản văn, câu chữ và hình ảnh/video gợi suy tư.
-export default function Poems({ poems, error, username, admin, onAddPoem, onEditPoem, onDeletePoem, onAddComment, onDeleteComment, onToggleReaction, onClose }) {
+export default function Poems({ poems, error, username, admin, hasMore, loadingMore, onLoadMore, onAddPoem, onEditPoem, onDeletePoem, onAddComment, onDeleteComment, onToggleReaction, onClose }) {
+  const actions = useActions()
   const [tab, setTab] = useState('feed')
   const [editingId, setEditingId] = useState(null)
   const [title, setTitle] = useState('')
@@ -67,7 +69,7 @@ export default function Poems({ poems, error, username, admin, onAddPoem, onEdit
             <article className="poem poem--reading" key={poem.id}>
               {canEdit(poem.author) && <div className="poem__actions">
                 <button className="poem__edit" onClick={() => startEdit(poem)} title="Sửa bài viết và media" aria-label="Sửa hoài niệm"><IconEdit /></button>
-                <button className="poem__del" onClick={() => { if (window.confirm('Xoá bài viết này? Không thể hoàn tác.')) onDeletePoem(poem.id) }} title="Xoá bài viết" aria-label="Xóa hoài niệm"><IconTrash /></button>
+                <button className="poem__del" onClick={() => actions.schedule({ message: 'Hoài niệm sẽ được xóa', action: () => onDeletePoem(poem.id) })} title="Xoá bài viết" aria-label="Xóa hoài niệm"><IconTrash /></button>
               </div>}
               {poem.title && <h3 className="poem__title">{poem.title}</h3>}
               {poem.imageUrl && <MemoryMedia src={poem.imageUrl} />}
@@ -76,6 +78,9 @@ export default function Poems({ poems, error, username, admin, onAddPoem, onEdit
                 onAddComment={onAddComment} onDeleteComment={onDeleteComment} onToggleReaction={onToggleReaction} />
             </article>
           ))}
+          {hasMore && <button type="button" className="history-more" onClick={onLoadMore} disabled={loadingMore}>
+            {loadingMore ? 'Đang tải…' : 'Xem thêm hoài niệm'}
+          </button>}
         </div>
       )}
     </section>
