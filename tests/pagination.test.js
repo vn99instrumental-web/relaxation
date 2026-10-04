@@ -8,6 +8,12 @@ test('journal pagination calculates stable fifty-message pages', () => {
   assert.equal(pageCount(51, 50), 2)
   assert.deepEqual(pageRange(2, 50), { from: 50, to: 99 })
 })
+test('poem pagination uses twenty-item pages', () => {
+  assert.equal(pageCount(20, 20), 1)
+  assert.equal(pageCount(21, 20), 2)
+  assert.deepEqual(pageRange(2, 20), { from: 20, to: 39 })
+})
+
 
 test('journal pagination clamps invalid page requests', () => {
   assert.equal(clampPage(0, 4), 1)

@@ -309,9 +309,9 @@ export default function Journal({ journal, username, setUsername, onClose, admin
       {error && <div className="journal__error">{error}</div>}
 
       <nav className="journal__pager" aria-label="Phân trang Nhật ký">
-        <button type="button" onClick={() => goToPage?.(page - 1)} disabled={loadingPage || page <= 1}>Mới hơn</button>
-        <span>Trang <strong>{page}</strong> / {pageCount}</span>
         <button type="button" onClick={() => goToPage?.(page + 1)} disabled={loadingPage || page >= pageCount}>Cũ hơn</button>
+        <span>Trang <strong>{page}</strong> / {pageCount}</span>
+        <button type="button" onClick={() => goToPage?.(page - 1)} disabled={loadingPage || page <= 1}>Mới hơn</button>
       </nav>
 
       <div className={`journal__list ${loadingPage ? 'is-loading' : ''}`} ref={listRef}>

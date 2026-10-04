@@ -191,8 +191,8 @@ export default function App() {
   const playlists = useMemo(() => withStablePlaylistOrder(rawPlaylists), [rawPlaylists])
 
   const featuredPoem = useMemo(
-    () => journalAccess ? ((poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null) : null,
-    [journalAccess, poemsApi.poems, featuredPoemId],
+    () => (poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null,
+    [poemsApi.poems, featuredPoemId],
   )
 
   const completeJournalLogin = useCallback((displayName) => {
@@ -204,7 +204,7 @@ export default function App() {
   const closeJournalLogin = useCallback(() => setJournalLoginOpen(false), [])
 
   const toggleRight = useCallback((tab) => {
-    if (!journalAccess) {
+    if (tab === 'journal' && !journalAccess) {
       setJournalLoginOpen(true)
       return
     }
@@ -213,7 +213,7 @@ export default function App() {
   }, [journalAccess])
 
   useEffect(() => {
-    if (!journalAccess && rightTab) setRightTab(null)
+    if (!journalAccess && rightTab === 'journal') setRightTab(null)
   }, [journalAccess, rightTab])
 
   // Số tin chưa xem (của người kia, mới hơn mốc đã xem)
@@ -1087,24 +1087,25 @@ export default function App() {
         </aside>
 
         {/* Drawer phải: Nhật ký / Hoài niệm (trượt từ cạnh phải) */}
-        <aside className={`drawer drawer--right ${journalAccess && rightTab ? 'is-open' : ''} ${rightTab === 'poems' ? 'drawer--poems' : 'drawer--journal'}`} aria-hidden={!journalAccess || !rightTab} inert={!journalAccess || !rightTab ? '' : undefined}>
+        <aside className={`drawer drawer--right ${rightTab && (rightTab === 'poems' || journalAccess) ? 'is-open' : ''} ${rightTab === 'poems' ? 'drawer--poems' : 'drawer--journal'}`} aria-hidden={!rightTab || (rightTab === 'journal' && !journalAccess)} inert={!rightTab || (rightTab === 'journal' && !journalAccess) ? '' : undefined}>
           <div className="drawer__body drawer__body--flush">
-            {journalAccess && rightTab && (rightTab === 'poems' ? (
+            {rightTab === 'poems' ? (
               <Poems
                 poems={poemsApi.poems} error={poemsApi.error} username={username} admin={admin}
-                hasMore={poemsApi.hasMore} loadingMore={poemsApi.loadingMore} onLoadMore={poemsApi.loadMore}
+                canContribute={journalAccess}
+                page={poemsApi.page} pageCount={poemsApi.pageCount} loadingPage={poemsApi.loadingPage} onGoToPage={poemsApi.goToPage}
                 onAddPoem={poemsApi.addPoem} onEditPoem={poemsApi.editPoem} onDeletePoem={poemsApi.deletePoem}
                 onAddComment={poemsApi.addComment} onDeleteComment={poemsApi.deleteComment}
                 onToggleReaction={poemsApi.toggleReaction}
                 onClose={() => setRightTab(null)}
               />
-            ) : (
+            ) : journalAccess && rightTab === 'journal' ? (
               <Journal
                 journal={journal} username={username} setUsername={setUsername}
                 onClose={() => setRightTab(null)}
                 admin={admin}
               />
-            ))}
+            ) : null}
           </div>
         </aside>
       </div>

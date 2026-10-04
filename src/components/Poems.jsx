@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { IconClose, IconEdit, IconTrash } from './icons'
 import { useActions } from './ActionProvider'
 
 // Góc Hoài Niệm: thơ, tản văn, câu chữ và hình ảnh/video gợi suy tư.
-export default function Poems({ poems, error, username, admin, hasMore, loadingMore, onLoadMore, onAddPoem, onEditPoem, onDeletePoem, onAddComment, onDeleteComment, onToggleReaction, onClose }) {
+export default function Poems({ poems, error, username, admin, canContribute = false, page = 1, pageCount = 1, loadingPage = false, onGoToPage, onAddPoem, onEditPoem, onDeletePoem, onAddComment, onDeleteComment, onToggleReaction, onClose }) {
   const actions = useActions()
+  const listRef = useRef(null)
+  const previousPageRef = useRef(page)
   const [tab, setTab] = useState('feed')
   const [editingId, setEditingId] = useState(null)
   const [title, setTitle] = useState('')
@@ -31,6 +33,11 @@ export default function Poems({ poems, error, username, admin, hasMore, loadingM
   const canEdit = (author) => admin || author === username
   const invalidImage = imageUrl.trim() && !isImageUrl(imageUrl)
 
+  useEffect(() => {
+    if (previousPageRef.current !== page) listRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    previousPageRef.current = page
+  }, [page])
+
   return (
     <section className="pane poems">
       <header className="pane__head poem-pane-head">
@@ -39,14 +46,14 @@ export default function Poems({ poems, error, username, admin, hasMore, loadingM
       </header>
       {error && <p className="sync-error" role="status">Chưa đồng bộ được Hoài niệm: {error}</p>}
 
-      <div className="poem-tabs" role="tablist">
+      {canContribute && <div className="poem-tabs" role="tablist">
         <button role="tab" aria-selected={tab === 'feed'} className={tab === 'feed' ? 'is-active' : ''}
           onClick={() => { resetForm(); setTab('feed') }}>Hoài niệm</button>
         <button role="tab" aria-selected={tab === 'compose'} className={tab === 'compose' ? 'is-active' : ''}
           onClick={openComposer}>{editingId ? 'Sửa bài' : 'Đăng bài'}</button>
-      </div>
+      </div>}
 
-      {tab === 'compose' ? (
+      {canContribute && tab === 'compose' ? (
         <form className="poem-compose poem-compose--page" onSubmit={submit}>
           <div className="poem-compose__hint">{editingId ? 'Sửa bài viết' : 'Lưu một điều khiến mình nhớ'}</div>
           <input className="poem-title" placeholder="Tựa đề (tuỳ chọn)…" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -63,31 +70,35 @@ export default function Poems({ poems, error, username, admin, hasMore, loadingM
           </div>
         </form>
       ) : (
-        <div className="poem-list poem-list--gallery">
-          {poems.length === 0 && <div className="journal__empty">Chưa có hoài niệm nào. Hãy mở tab “Đăng bài”…</div>}
-          {poems.map((poem) => (
-            <article className="poem poem--reading" key={poem.id}>
-              {canEdit(poem.author) && <div className="poem__actions">
-                <button className="poem__edit" onClick={() => startEdit(poem)} title="Sửa bài viết và media" aria-label="Sửa hoài niệm"><IconEdit /></button>
-                <button className="poem__del" onClick={() => actions.schedule({ message: 'Hoài niệm sẽ được xóa', action: () => onDeletePoem(poem.id) })} title="Xoá bài viết" aria-label="Xóa hoài niệm"><IconTrash /></button>
-              </div>}
-              {poem.title && <h3 className="poem__title">{poem.title}</h3>}
-              {poem.imageUrl && <MemoryMedia src={poem.imageUrl} />}
-              <div className="poem__body">{poem.body}</div>
-              <MemoryInteractions poem={poem} username={username} admin={admin}
-                onAddComment={onAddComment} onDeleteComment={onDeleteComment} onToggleReaction={onToggleReaction} />
-            </article>
-          ))}
-          {hasMore && <button type="button" className="history-more" onClick={onLoadMore} disabled={loadingMore}>
-            {loadingMore ? 'Đang tải…' : 'Xem thêm hoài niệm'}
-          </button>}
-        </div>
+        <>
+          <nav className="journal__pager poem__pager" aria-label="Phân trang Hoài niệm">
+            <button type="button" onClick={() => onGoToPage?.(page + 1)} disabled={loadingPage || page >= pageCount}>Cũ hơn</button>
+            <span>Trang <strong>{page}</strong> / {pageCount}</span>
+            <button type="button" onClick={() => onGoToPage?.(page - 1)} disabled={loadingPage || page <= 1}>Mới hơn</button>
+          </nav>
+          <div ref={listRef} className={`poem-list poem-list--gallery ${loadingPage ? 'is-loading' : ''}`}>
+            {poems.length === 0 && <div className="journal__empty">Chưa có hoài niệm nào.</div>}
+            {poems.map((poem) => (
+              <article className="poem poem--reading" key={poem.id}>
+                {canContribute && canEdit(poem.author) && <div className="poem__actions">
+                  <button className="poem__edit" onClick={() => startEdit(poem)} title="Sửa bài viết và media" aria-label="Sửa hoài niệm"><IconEdit /></button>
+                  <button className="poem__del" onClick={() => actions.schedule({ message: 'Hoài niệm sẽ được xóa', action: () => onDeletePoem(poem.id) })} title="Xoá bài viết" aria-label="Xóa hoài niệm"><IconTrash /></button>
+                </div>}
+                {poem.title && <h3 className="poem__title">{poem.title}</h3>}
+                {poem.imageUrl && <MemoryMedia src={poem.imageUrl} />}
+                <div className="poem__body">{poem.body}</div>
+                <MemoryInteractions poem={poem} username={username} admin={admin} canContribute={canContribute}
+                  onAddComment={onAddComment} onDeleteComment={onDeleteComment} onToggleReaction={onToggleReaction} />
+              </article>
+            ))}
+          </div>
+        </>
       )}
     </section>
   )
 }
 
-function MemoryInteractions({ poem, username, admin, onAddComment, onDeleteComment, onToggleReaction }) {
+function MemoryInteractions({ poem, username, admin, canContribute, onAddComment, onDeleteComment, onToggleReaction }) {
   const [text, setText] = useState('')
   const [commentsOpen, setCommentsOpen] = useState(false)
   const items = Array.isArray(poem.comments) ? poem.comments : []
@@ -105,7 +116,8 @@ function MemoryInteractions({ poem, username, admin, onAddComment, onDeleteComme
         const matches = reactions.filter((item) => item.emoji === emoji)
         const active = matches.some((item) => item.author === (username || 'Ẩn danh'))
         return <button key={emoji} type="button" className={active ? 'is-active' : ''}
-          onClick={() => onToggleReaction?.(poem.id, emoji)} aria-pressed={active}>
+          onClick={() => onToggleReaction?.(poem.id, emoji)} aria-pressed={active} disabled={!canContribute}
+          title={canContribute ? 'Thả tim' : 'Đăng nhập để tương tác'}>
           <span>{emoji}</span>{matches.length > 0 && <b>{matches.length}</b>}
         </button>
       })}
@@ -121,7 +133,7 @@ function MemoryInteractions({ poem, username, admin, onAddComment, onDeleteComme
           onClick={() => onDeleteComment?.(poem.id, comment.id)} title="Xoá bình luận" aria-label="Xóa bình luận"><IconTrash /></button>}
       </div>)}
     </div>}
-    {commentsOpen && <form className="pcm-add" onSubmit={submit}>
+    {canContribute && commentsOpen && <form className="pcm-add" onSubmit={submit}>
       <input value={text} onChange={(event) => setText(event.target.value)} placeholder="Viết bình luận…" />
       <button type="submit" disabled={!text.trim()}>Gửi</button>
     </form>}

@@ -892,6 +892,7 @@ input[type='range']:disabled { opacity: 0.4; }
 .memory-reactions { display: flex; align-items: center; gap: 5px; }
 .memory-reactions button { display: inline-flex; align-items: center; gap: 4px; min-width: 34px; height: 27px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--field-bg); color: var(--ink-dim); font-size: 0.74rem; }
 .memory-reactions button.is-active { border-color: var(--gold-soft); background: var(--sel); color: var(--gold-soft); }
+.memory-reactions button:disabled { opacity: .72; cursor: default; }
 .memory-reactions button b { font-size: 0.66rem; font-weight: 600; }
 .memory-comment-count { margin-left: auto; min-width: 0 !important; border: 0 !important; background: transparent !important; color: var(--ink-dim) !important; font-size: 0.68rem !important; }
 
@@ -1122,6 +1123,7 @@ input[type='range']:disabled { opacity: 0.4; }
 .journal__pager button:hover:not(:disabled) { border-color: var(--gold-soft); }
 .journal__pager button:disabled { opacity: .38; cursor: default; }
 .journal__list.is-loading { opacity: .55; pointer-events: none; }
+.poem-list.is-loading { opacity: .55; pointer-events: none; }
 .journal-login__backdrop { position: fixed; inset: 0; z-index: 10002; display: grid; place-items: center; padding: 20px; background: rgba(9, 12, 11, .66); backdrop-filter: blur(7px); }
 .journal-login { position: relative; width: min(360px, 100%); box-sizing: border-box; display: grid; gap: 12px; justify-items: stretch; padding: 30px 26px 26px; border: 1px solid color-mix(in srgb, var(--gold-soft) 62%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--panel) 97%, #17110d); color: var(--ink); text-align: center; box-shadow: 0 24px 72px rgba(0,0,0,.48); }
 .journal-login__close { position: absolute; top: 9px; right: 9px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
