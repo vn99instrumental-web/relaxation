@@ -96,7 +96,7 @@ export default function Journal({ journal, username, setUsername, onClose, admin
   const {
     messages, status, error, sending, online, send, refresh,
     deleteMessage, editMessage, reactMessage, clearMessages,
-    hasMore, loadingMore, loadMore,
+    page, pageCount, loadingPage, goToPage,
     accessAllowed, accessStatus, unlock, lock,
   } = journal
 
@@ -117,6 +117,7 @@ export default function Journal({ journal, username, setUsername, onClose, admin
   const listRef = useRef(null)
   const inputRef = useRef(null)
   const fileInputRef = useRef(null)
+  const previousPageRef = useRef(page)
 
   useEffect(() => { setNameInput(username || '') }, [username])
   useEffect(() => {
@@ -126,8 +127,11 @@ export default function Journal({ journal, username, setUsername, onClose, admin
   }, [accessAllowed, username, setUsername])
   useEffect(() => {
     const el = listRef.current
-    if (el && accessAllowed) el.scrollTop = el.scrollHeight
-  }, [messages.length, accessAllowed])
+    if (!el || !accessAllowed) return
+    const changedPage = previousPageRef.current !== page
+    el.scrollTop = changedPage ? 0 : el.scrollHeight
+    previousPageRef.current = page
+  }, [messages, accessAllowed, page])
   useEffect(() => () => { if (imagePreview) URL.revokeObjectURL(imagePreview) }, [imagePreview])
 
   const grouped = useMemo(() => groupByDay(messages), [messages])
@@ -295,7 +299,7 @@ export default function Journal({ journal, username, setUsername, onClose, admin
         <div className="journal__status">
           <span className={`dot dot--${status}`} />
           <span className="muted">{statusText}</span>
-          {online && <button className="link-btn" onClick={refresh} title="Làm mới" aria-label="Làm mới Nhật ký"><IconRefresh /></button>}
+          {online && <button className="link-btn" onClick={() => refresh?.()} title="Làm mới" aria-label="Làm mới Nhật ký"><IconRefresh /></button>}
           {messages.length > 0 && <button className="link-btn" onClick={clearAll} title="Xóa toàn bộ nhật ký" aria-label="Xóa toàn bộ nhật ký"><IconTrash /></button>}
           <button className="link-btn journal__lock-btn" onClick={handleLock} title="Khóa Nhật ký / đổi người dùng" aria-label="Khóa Nhật ký / đổi người dùng"><IconLock /></button>
           {onClose && <button className="link-btn" onClick={onClose} title="Đóng" aria-label="Đóng Nhật ký"><IconClose /></button>}
@@ -304,10 +308,13 @@ export default function Journal({ journal, username, setUsername, onClose, admin
 
       {error && <div className="journal__error">{error}</div>}
 
-      <div className="journal__list" ref={listRef}>
-        {hasMore && <button type="button" className="history-more" onClick={loadMore} disabled={loadingMore}>
-          {loadingMore ? 'Đang tải…' : 'Xem tin nhắn cũ hơn'}
-        </button>}
+      <nav className="journal__pager" aria-label="Phân trang Nhật ký">
+        <button type="button" onClick={() => goToPage?.(page - 1)} disabled={loadingPage || page <= 1}>Mới hơn</button>
+        <span>Trang <strong>{page}</strong> / {pageCount}</span>
+        <button type="button" onClick={() => goToPage?.(page + 1)} disabled={loadingPage || page >= pageCount}>Cũ hơn</button>
+      </nav>
+
+      <div className={`journal__list ${loadingPage ? 'is-loading' : ''}`} ref={listRef}>
         {messages.length === 0 && <div className="journal__empty">Chưa có dòng nào. Viết điều gì đó cho hôm nay… ☁️</div>}
         {grouped.map((group) => (
           <div className="journal__day" key={group.day}>

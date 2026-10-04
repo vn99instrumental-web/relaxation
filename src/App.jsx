@@ -4,6 +4,7 @@ import FallingFx from './components/FallingFx'
 import { hasWebGL } from './leaf-engine/quality'
 import Player from './components/Player'
 import Journal from './components/Journal'
+import JournalLoginModal from './components/JournalLoginModal'
 import Poems from './components/Poems'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
@@ -156,12 +157,9 @@ export default function App() {
   const [musicView, setMusicView] = useState('now')
   const journalOpen = rightTab === 'journal'
   const poemsOpen = rightTab === 'poems'
-  const toggleRight = (tab) => {
-    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches) setLeftTab(null)
-    setRightTab((cur) => (cur === tab ? null : tab))
-  }
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [journalLoginOpen, setJournalLoginOpen] = useState(false)
   const [uiHidden, setUiHidden] = useState(false)
   const [recentPlayback, setRecentPlayback] = useState(true)
   const [tagline, setTagline] = useState(() => pickTagline('dusk'))
@@ -181,20 +179,42 @@ export default function App() {
 
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
-  const admin = supa.enabled ? Boolean(supa.journal.isAdmin) : localAdmin
+  const journal = supa.enabled ? supa.journal : gist
+  const journalAccess = Boolean(supa.enabled && journal.accessAllowed && journal.isAdmin)
+  const admin = supa.enabled ? journalAccess : localAdmin
   const gallery = useSupabaseGallery(supaConfig)
   const roomSettings = useRoomSettings(supaConfig, admin)
   const poemsApi = usePoems(supaConfig, username)
   const [roomHydrated, setRoomHydrated] = useState(false)
-  const journal = supa.enabled ? supa.journal : gist
   const rawPlaylists = supa.enabled ? supa.playlists : localPlaylists
   // Chuẩn hoá addedAt để mọi playlist luôn xếp bài mới nhất lên đầu, ổn định.
   const playlists = useMemo(() => withStablePlaylistOrder(rawPlaylists), [rawPlaylists])
 
   const featuredPoem = useMemo(
-    () => (poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null,
-    [poemsApi.poems, featuredPoemId],
+    () => journalAccess ? ((poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null) : null,
+    [journalAccess, poemsApi.poems, featuredPoemId],
   )
+
+  const completeJournalLogin = useCallback((displayName) => {
+    setUsername(displayName)
+    setJournalLoginOpen(false)
+    setRightTab('journal')
+  }, [])
+
+  const closeJournalLogin = useCallback(() => setJournalLoginOpen(false), [])
+
+  const toggleRight = useCallback((tab) => {
+    if (!journalAccess) {
+      setJournalLoginOpen(true)
+      return
+    }
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches) setLeftTab(null)
+    setRightTab((cur) => (cur === tab ? null : tab))
+  }, [journalAccess])
+
+  useEffect(() => {
+    if (!journalAccess && rightTab) setRightTab(null)
+  }, [journalAccess, rightTab])
 
   // Số tin chưa xem (của người kia, mới hơn mốc đã xem)
   const unread = useMemo(() => {
@@ -1067,9 +1087,9 @@ export default function App() {
         </aside>
 
         {/* Drawer phải: Nhật ký / Hoài niệm (trượt từ cạnh phải) */}
-        <aside className={`drawer drawer--right ${rightTab ? 'is-open' : ''} ${rightTab === 'poems' ? 'drawer--poems' : 'drawer--journal'}`} aria-hidden={!rightTab} inert={!rightTab ? '' : undefined}>
+        <aside className={`drawer drawer--right ${journalAccess && rightTab ? 'is-open' : ''} ${rightTab === 'poems' ? 'drawer--poems' : 'drawer--journal'}`} aria-hidden={!journalAccess || !rightTab} inert={!journalAccess || !rightTab ? '' : undefined}>
           <div className="drawer__body drawer__body--flush">
-            {rightTab === 'poems' ? (
+            {journalAccess && rightTab && (rightTab === 'poems' ? (
               <Poems
                 poems={poemsApi.poems} error={poemsApi.error} username={username} admin={admin}
                 hasMore={poemsApi.hasMore} loadingMore={poemsApi.loadingMore} onLoadMore={poemsApi.loadMore}
@@ -1084,7 +1104,7 @@ export default function App() {
                 onClose={() => setRightTab(null)}
                 admin={admin}
               />
-            )}
+            ))}
           </div>
         </aside>
       </div>
@@ -1097,10 +1117,20 @@ export default function App() {
         queuePosition={queueOrder.indexOf(index)}
         unread={unread} unreadPoems={unreadPoems + unreadHearts}
         leftTab={leftTab} onToggleLeft={toggleLeft}
+        journalAuthenticated={journalAccess}
         journalOpen={journalOpen} onToggleJournal={() => toggleRight('journal')}
         poemsOpen={rightTab === 'poems'} onTogglePoems={() => toggleRight('poems')}
+        onLoginJournal={() => setJournalLoginOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onHideUI={() => setUiHidden(true)}
+      />
+
+      <JournalLoginModal
+        open={journalLoginOpen && !journalAccess}
+        unlock={journal.unlock}
+        accessStatus={journal.accessStatus}
+        onSuccess={completeJournalLogin}
+        onClose={closeJournalLogin}
       />
 
       {/* Chế độ ngắm cảnh: chỉ còn vài toggle cần thiết */}

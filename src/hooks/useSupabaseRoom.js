@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { makeClient } from '../lib/supabase'
 import { decodeChatBody, encodeChatBody, normalizeOutgoingChat } from '../lib/chatMessage'
+import { clampPage, pageCount, pageRange } from '../lib/pagination'
 
 // Đồng bộ chat + playlist qua Supabase, có REALTIME (tin nhắn hiện ngay).
 // config: { url, key, room }. Khi thiếu -> enabled=false (app dùng cách khác).
@@ -23,13 +24,13 @@ export function useSupabaseRoom(config, username) {
   const [accessAllowed, setAccessAllowed] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [accessStatus, setAccessStatus] = useState(username ? 'checking' : 'locked')
-  const [messageLimit, setMessageLimit] = useState(MESSAGE_PAGE_SIZE)
-  const [hasMoreMessages, setHasMoreMessages] = useState(false)
-  const [loadingMoreMessages, setLoadingMoreMessages] = useState(false)
+  const [messagePage, setMessagePage] = useState(1)
+  const [messagePageCount, setMessagePageCount] = useState(1)
+  const [loadingMessages, setLoadingMessages] = useState(false)
   const messagesRef = useRef(messages)
-  const messageLimitRef = useRef(messageLimit)
+  const messagePageRef = useRef(messagePage)
   messagesRef.current = messages
-  messageLimitRef.current = messageLimit
+  messagePageRef.current = messagePage
 
   const hydrateReactions = useCallback(async (client, rows) => {
     if (!rows.length) return []
@@ -58,13 +59,17 @@ export function useSupabaseRoom(config, username) {
       const { data, error: e } = await c.rpc('check_journal_user', { p_username: clean })
       if (e) throw e
       const row = Array.isArray(data) ? data[0] : data
-      const allowed = Boolean(row?.allowed)
-      const nextAdmin = allowed && Boolean(row?.is_admin)
+      const nextAdmin = Boolean(row?.allowed && row?.is_admin)
+      const allowed = nextAdmin
       setAccessAllowed(allowed)
       setIsAdmin(nextAdmin)
       setAccessStatus(allowed ? 'allowed' : 'locked')
       if (!allowed) setMessages([])
-      return { allowed, displayName: row?.display_name || clean, isAdmin: nextAdmin }
+      else {
+        setMessagePage(1)
+        messagePageRef.current = 1
+      }
+      return { allowed, displayName: allowed ? (row?.display_name || clean) : null, isAdmin: nextAdmin }
     } catch (e) {
       setAccessAllowed(false)
       setIsAdmin(false)
@@ -79,6 +84,9 @@ export function useSupabaseRoom(config, username) {
     setIsAdmin(false)
     setAccessStatus('locked')
     setMessages([])
+    setMessagePage(1)
+    setMessagePageCount(1)
+    messagePageRef.current = 1
   }, [])
 
   const reloadPlaylists = useCallback(async () => {
@@ -90,30 +98,44 @@ export function useSupabaseRoom(config, username) {
     setPlaylists((data || []).map(mapPl))
   }, [room])
 
-  const refresh = useCallback(async (requestedLimit = messageLimitRef.current) => {
+  const refresh = useCallback(async (requestedPage = messagePageRef.current) => {
     const c = clientRef.current
     if (!c || !accessAllowed) return
+    setLoadingMessages(true)
     try {
-      const { data, error: e } = await c.from('messages').select('*').eq('room_id', room)
-        .order('created_at', { ascending: false }).range(0, requestedLimit)
-      if (e) throw e
-      const rows = data || []
-      const visible = rows.slice(0, requestedLimit).reverse()
+      const fetchPage = (page) => {
+        const { from, to } = pageRange(page, MESSAGE_PAGE_SIZE)
+        return c.from('messages').select('*', { count: 'exact' }).eq('room_id', room)
+          .order('created_at', { ascending: false }).range(from, to)
+      }
+      let page = Math.max(1, Number(requestedPage) || 1)
+      let result = await fetchPage(page)
+      if (result.error) throw result.error
+      const totalPages = pageCount(result.count, MESSAGE_PAGE_SIZE)
+      if (page > totalPages) {
+        page = totalPages
+        result = await fetchPage(page)
+        if (result.error) throw result.error
+      }
+      const visible = (result.data || []).reverse()
       setMessages(await hydrateReactions(c, visible))
-      setHasMoreMessages(rows.length > requestedLimit)
+      setMessagePage(page)
+      setMessagePageCount(totalPages)
+      messagePageRef.current = page
       setStatus('online'); setError('')
     } catch (e) {
       setStatus('error'); setError(e.message || 'Lỗi Supabase')
+    } finally {
+      setLoadingMessages(false)
     }
   }, [room, accessAllowed, hydrateReactions])
 
-  const loadMoreMessages = useCallback(async () => {
-    if (!accessAllowed || loadingMoreMessages || !hasMoreMessages) return
-    const next = messageLimitRef.current + MESSAGE_PAGE_SIZE
-    setLoadingMoreMessages(true); setMessageLimit(next); messageLimitRef.current = next
+  const goToMessagePage = useCallback(async (page) => {
+    if (!accessAllowed || loadingMessages) return
+    const next = clampPage(page, messagePageCount)
+    if (next === messagePageRef.current) return
     await refresh(next)
-    setLoadingMoreMessages(false)
-  }, [accessAllowed, loadingMoreMessages, hasMoreMessages, refresh])
+  }, [accessAllowed, loadingMessages, messagePageCount, refresh])
 
   useEffect(() => {
     if (!enabled) {
@@ -157,8 +179,7 @@ export function useSupabaseRoom(config, username) {
       ch = ch
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` }, () => refresh())
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` }, () => refresh())
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` },
-          (payload) => setMessages((prev) => prev.filter((m) => m.id !== payload.old.id)))
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages', filter: `room_id=eq.${room}` }, () => refresh())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'message_reactions', filter: `room_id=eq.${room}` }, () => refresh())
     }
 
@@ -202,6 +223,7 @@ export function useSupabaseRoom(config, username) {
       const body = encodeChatBody({ ...outgoing, imageUrl, imagePath: uploadedPath || outgoing.imagePath })
       const { error: e } = await c.from('messages').insert({ room_id: room, author: username || 'Ẩn danh', body })
       if (e) throw e
+      await refresh(1)
       setError('')
       return { ok: true }
     } catch (e) {
@@ -211,7 +233,7 @@ export function useSupabaseRoom(config, username) {
       setError(e.message || 'Gửi thất bại')
       return { ok: false, error: e.message || 'Gửi thất bại' }
     } finally { setSending(false) }
-  }, [room, username, accessAllowed, chatImageFolder])
+  }, [room, username, accessAllowed, chatImageFolder, refresh])
 
   const deleteMessage = useCallback(async (id) => {
     const c = clientRef.current
@@ -333,7 +355,7 @@ export function useSupabaseRoom(config, username) {
   const journal = {
     messages, status, error, sending, online: enabled && status === 'online',
     send, refresh, deleteMessage, editMessage, reactMessage, clearMessages,
-    hasMore: hasMoreMessages, loadingMore: loadingMoreMessages, loadMore: loadMoreMessages,
+    page: messagePage, pageCount: messagePageCount, loadingPage: loadingMessages, goToPage: goToMessagePage,
     accessAllowed, accessStatus, isAdmin, unlock: verifyAccess, lock: lockJournal,
   }
 
