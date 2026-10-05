@@ -1015,6 +1015,8 @@ input[type='range']:disabled { opacity: 0.4; }
   .now-player { grid-template-columns: 1fr; grid-template-rows: minmax(110px, 30vh) auto; overflow-y: auto; gap: 10px; }
   .now-player__queue { padding: 0 0 9px; border-right: 0; border-bottom: 1px solid var(--border); }
   .now-player__main { overflow: visible; }
+  .app.is-left-open.is-music-now .drawer--left { bottom: 0; }
+  .app.is-left-open.is-music-now .dock { opacity: 0; pointer-events: none; transform: translate(-50%, calc(100% + 32px)); }
 }
 @media (min-width: 1100px) {
   .app.is-left-open .drawer--left { bottom: 84px; }
@@ -1114,14 +1116,13 @@ input[type='range']:disabled { opacity: 0.4; }
 .action-dialog__buttons .is-danger { background: #8f463e; color: #fff8ed; }
 .undo-toast { position: fixed; z-index: 10001; left: 50%; bottom: max(88px, calc(env(safe-area-inset-bottom) + 70px)); transform: translateX(-50%); display: flex; align-items: center; gap: 18px; max-width: calc(100vw - 28px); padding: 11px 14px; border: 1px solid color-mix(in srgb, var(--gold-soft) 65%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--panel) 97%, #18110d); color: var(--ink); box-shadow: 0 14px 38px rgba(0,0,0,.38); }
 .undo-toast button { border: 0; background: transparent; color: var(--gold-soft); font-weight: 700; cursor: pointer; }
-.journal__pager { display: grid; grid-template-columns: minmax(72px, 1fr) auto minmax(72px, 1fr); align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 82%, transparent); }
-.journal__pager span { color: var(--muted); text-align: center; font-size: .73rem; }
-.journal__pager strong { color: var(--ink); font-weight: 700; }
-.journal__pager button { min-height: 34px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--sel); color: var(--ink); font: inherit; font-size: .72rem; cursor: pointer; }
-.journal__pager button:first-child { justify-self: start; }
-.journal__pager button:last-child { justify-self: end; }
-.journal__pager button:hover:not(:disabled) { border-color: var(--gold-soft); }
-.journal__pager button:disabled { opacity: .38; cursor: default; }
+.page-picker { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 8px 10px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 82%, transparent); }
+.page-picker__label { flex: 0 0 auto; color: var(--muted); font-size: .73rem; }
+.page-picker__pages { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-x: auto; padding: 1px 2px 3px; scrollbar-width: thin; }
+.page-picker__button { flex: 0 0 auto; min-width: 34px; min-height: 34px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--sel); color: var(--ink); font: 700 .72rem/1 var(--ui); cursor: pointer; }
+.page-picker__button:hover:not(:disabled) { border-color: var(--gold-soft); }
+.page-picker__button.is-current { border-color: var(--gold-soft); background: var(--sel-strong); color: var(--gold-soft); }
+.page-picker__button:disabled { cursor: default; opacity: 1; }
 .journal__list.is-loading { opacity: .55; pointer-events: none; }
 .poem-list.is-loading { opacity: .55; pointer-events: none; }
 .journal-login__backdrop { position: fixed; inset: 0; z-index: 10002; display: grid; place-items: center; padding: 20px; background: rgba(9, 12, 11, .66); backdrop-filter: blur(7px); }
@@ -1149,7 +1150,8 @@ input[type='range']:disabled { opacity: 0.4; }
 
 @media (pointer: coarse) {
   .dock__btn, .dock__btn--icon, .dock__transport .ctrl,
-  .memory-reactions button, .drawer__close, .modal__close { min-width: 44px; min-height: 44px; }
+  .memory-reactions button, .drawer__close, .modal__close,
+  .page-picker__button { min-width: 44px; min-height: 44px; }
 }
 
 @media (max-width: 480px) {

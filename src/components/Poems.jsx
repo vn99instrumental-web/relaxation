@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { IconClose, IconEdit, IconTrash } from './icons'
 import { useActions } from './ActionProvider'
+import PagePicker from './PagePicker'
 
 // Góc Hoài Niệm: thơ, tản văn, câu chữ và hình ảnh/video gợi suy tư.
 export default function Poems({ poems, error, username, admin, canContribute = false, page = 1, pageCount = 1, loadingPage = false, onGoToPage, onAddPoem, onEditPoem, onDeletePoem, onAddComment, onDeleteComment, onToggleReaction, onClose }) {
@@ -71,11 +72,8 @@ export default function Poems({ poems, error, username, admin, canContribute = f
         </form>
       ) : (
         <>
-          <nav className="journal__pager poem__pager" aria-label="Phân trang Hoài niệm">
-            <button type="button" onClick={() => onGoToPage?.(page + 1)} disabled={loadingPage || page >= pageCount}>Cũ hơn</button>
-            <span>Trang <strong>{page}</strong> / {pageCount}</span>
-            <button type="button" onClick={() => onGoToPage?.(page - 1)} disabled={loadingPage || page <= 1}>Mới hơn</button>
-          </nav>
+          <PagePicker page={page} pageCount={pageCount} loading={loadingPage}
+            onSelect={onGoToPage} label="Chọn trang Hoài niệm" />
           <div ref={listRef} className={`poem-list poem-list--gallery ${loadingPage ? 'is-loading' : ''}`}>
             {poems.length === 0 && <div className="journal__empty">Chưa có hoài niệm nào.</div>}
             {poems.map((poem) => (

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { IconCameraVintage, IconClose, IconEdit, IconLock, IconPlay, IconRefresh, IconReply, IconSmile, IconTrash, IconUserSwitch } from './icons'
 import { parseYouTube } from '../lib/youtube'
 import { useActions } from './ActionProvider'
+import PagePicker from './PagePicker'
 
 // Bắt các đường link trong tin nhắn (kể cả youtu.be / youtube.com chưa có http)
 const LINK_RE = /((?:https?:\/\/|www\.)[^\s]+|(?:youtu\.be|(?:music\.|m\.)?youtube\.com)\/[^\s]+)/gi
@@ -308,11 +309,8 @@ export default function Journal({ journal, username, setUsername, onClose, admin
 
       {error && <div className="journal__error">{error}</div>}
 
-      <nav className="journal__pager" aria-label="Phân trang Nhật ký">
-        <button type="button" onClick={() => goToPage?.(page + 1)} disabled={loadingPage || page >= pageCount}>Cũ hơn</button>
-        <span>Trang <strong>{page}</strong> / {pageCount}</span>
-        <button type="button" onClick={() => goToPage?.(page - 1)} disabled={loadingPage || page <= 1}>Mới hơn</button>
-      </nav>
+      <PagePicker page={page} pageCount={pageCount} loading={loadingPage}
+        onSelect={goToPage} label="Chọn trang Nhật ký" />
 
       <div className={`journal__list ${loadingPage ? 'is-loading' : ''}`} ref={listRef}>
         {messages.length === 0 && <div className="journal__empty">Chưa có dòng nào. Viết điều gì đó cho hôm nay… ☁️</div>}
