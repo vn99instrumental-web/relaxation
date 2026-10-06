@@ -1456,3 +1456,139 @@ input[type='range']:disabled { opacity: 0.4; }
   .birthday-petals i { animation: none !important; }
   .birthday-petals { display: none; }
 }
+
+/* Birthday welcome v2: Da Lat narcissus photograph + vintage postcard balance */
+.birthday-welcome__backdrop {
+  background:
+    linear-gradient(102deg, rgba(12, 19, 13, .42), rgba(19, 26, 19, .48) 52%, rgba(38, 27, 17, .7)),
+    url('/scenes/birthday-daffodils-dalat-v2.webp') center / cover no-repeat;
+  filter: saturate(.72) sepia(.12) contrast(1.04);
+}
+.birthday-welcome__backdrop::after {
+  background:
+    radial-gradient(circle at 68% 16%, rgba(246, 215, 148, .18), transparent 34%),
+    linear-gradient(180deg, rgba(13, 20, 14, .02), rgba(10, 15, 11, .44));
+}
+.birthday-card {
+  width: min(1080px, 94vw);
+  min-height: min(630px, 86vh);
+  max-height: 90vh;
+  grid-template-columns: minmax(410px, 1.12fr) minmax(390px, .88fr);
+  border-radius: 24px 5px 24px 5px;
+  background:
+    linear-gradient(145deg, rgba(42, 43, 30, .97), rgba(24, 31, 23, .96)),
+    #1d271e;
+  box-shadow: 0 34px 100px rgba(3, 9, 5, .68), inset 0 1px rgba(255, 250, 226, .09);
+}
+.birthday-card::before {
+  border-color: rgba(234, 209, 151, .17);
+  border-radius: 17px 3px 17px 3px;
+}
+.birthday-card__photo {
+  min-height: 500px;
+  background:
+    linear-gradient(180deg, rgba(13, 18, 12, .02), rgba(12, 18, 12, .42)),
+    url('/scenes/birthday-daffodils-dalat-v2.webp') 38% center / cover no-repeat;
+  box-shadow: inset -1px 0 rgba(244, 224, 177, .18);
+}
+.birthday-card__date {
+  border-radius: 3px;
+  background: rgba(24, 31, 21, .62);
+  font-family: var(--serif-body);
+  font-style: italic;
+  letter-spacing: .14em;
+}
+.birthday-card__content {
+  overflow-y: auto;
+  align-items: flex-start;
+  padding: clamp(46px, 5vw, 68px) clamp(40px, 4.7vw, 60px);
+  text-align: left;
+  font-family: var(--serif-body);
+  background:
+    radial-gradient(circle at 100% 0, rgba(194, 158, 85, .1), transparent 34%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .012) 0 1px, transparent 1px 4px);
+}
+.birthday-card__flower { margin: 0 0 22px; }
+.birthday-card__eyebrow {
+  color: #d4bd83;
+  font-family: var(--serif-body);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: .16em;
+}
+.birthday-card h2 {
+  max-width: 440px;
+  margin: 0;
+  font-size: clamp(2.35rem, 4.2vw, 3.85rem);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -.032em;
+}
+.birthday-card__copy {
+  max-width: 420px;
+  margin: 20px 0 0;
+  color: rgba(244, 235, 211, .78);
+  font-size: .94rem;
+  line-height: 1.78;
+}
+.birthday-card__answers {
+  width: min(360px, 100%);
+  margin: 28px 0 0;
+}
+.birthday-answer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--serif-body);
+  letter-spacing: .015em;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.birthday-answer--no {
+  cursor: default;
+  touch-action: none;
+  pointer-events: auto;
+  will-change: left, top;
+  transition:
+    left .56s cubic-bezier(.22, 1, .36, 1),
+    top .56s cubic-bezier(.22, 1, .36, 1),
+    transform .28s ease,
+    background .28s ease;
+}
+.birthday-card__hint { text-align: left; }
+.birthday-card__correct { margin: 0 0 22px; }
+.birthday-card__signature { font-size: .82rem; }
+.birthday-card__continue { font-family: var(--serif-body); letter-spacing: .02em; }
+
+@media (max-width: 760px) {
+  .birthday-card {
+    width: min(560px, 100%);
+    min-height: min(760px, calc(100dvh - 20px));
+    max-height: calc(100dvh - 20px);
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(205px, 31vh) 1fr;
+  }
+  .birthday-card__photo {
+    min-height: 205px;
+    background-position: 40% 48%;
+  }
+  .birthday-card__content {
+    align-items: center;
+    padding: 32px 26px 36px;
+    text-align: center;
+  }
+  .birthday-card__flower { margin: 0 auto 15px; }
+  .birthday-card h2,
+  .birthday-card__copy { margin-left: auto; margin-right: auto; }
+  .birthday-card__answers { margin-left: auto; margin-right: auto; }
+  .birthday-card__hint { text-align: center; }
+  .birthday-card__correct { margin-left: auto; margin-right: auto; }
+}
+
+@media (max-width: 390px) {
+  .birthday-card { grid-template-rows: 168px 1fr; }
+  .birthday-card__photo { min-height: 168px; }
+  .birthday-card__content { padding: 25px 18px 28px; }
+  .birthday-card h2 { font-size: clamp(1.85rem, 9vw, 2.35rem); }
+}

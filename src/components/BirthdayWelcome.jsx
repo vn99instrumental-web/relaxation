@@ -46,11 +46,11 @@ export default function BirthdayWelcome() {
     if (event?.pointerType === 'touch') event.preventDefault()
     setNoPosition((current) => {
       let left = 48 + Math.random() * 34
-      let top = Math.random() * 46
+      let top = Math.random() * 28
 
-      if (Math.abs(left - current.left) < 12 && Math.abs(top - current.top) < 12) {
+      if (Math.abs(left - current.left) < 14 && Math.abs(top - current.top) < 10) {
         left = current.left > 64 ? 49 : 78
-        top = current.top > 22 ? 2 : 42
+        top = current.top > 14 ? 0 : 28
       }
 
       return { left, top }
@@ -110,12 +110,15 @@ export default function BirthdayWelcome() {
                   onClick={() => setStep('celebrate')}>
                   {COPY.yes}
                 </button>
-                <button className="birthday-answer birthday-answer--no" type="button"
+                <span className="birthday-answer birthday-answer--no" role="button" aria-disabled="true"
                   style={{ left: noPosition.left + '%', top: noPosition.top + 'px' }}
-                  onPointerEnter={dodgeNoButton} onPointerDown={dodgeNoButton} onClick={dodgeNoButton}
-                  aria-label={COPY.noLabel}>
+                  onPointerEnter={dodgeNoButton}
+                  onPointerDown={(event) => { event.preventDefault(); dodgeNoButton(event) }}
+                  onClick={(event) => { event.preventDefault(); event.stopPropagation() }}
+                  onContextMenu={(event) => event.preventDefault()}
+                  aria-label={COPY.noLabel} draggable="false">
                   {COPY.no}
-                </button>
+                </span>
               </div>
               <p className="birthday-card__hint">{COPY.hint}</p>
             </>
