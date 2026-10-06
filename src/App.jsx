@@ -8,6 +8,7 @@ import JournalLoginModal from './components/JournalLoginModal'
 import Poems from './components/Poems'
 import SettingsModal from './components/SettingsModal'
 import Dock from './components/Dock'
+import BirthdayWelcome from './components/BirthdayWelcome'
 import { IconClose, IconImmersive, IconPrev, IconNext, IconPlay, IconPause } from './components/icons'
 import { useYouTube } from './hooks/useYouTube'
 import { useWakeLock } from './hooks/useWakeLock'
@@ -1167,6 +1168,9 @@ export default function App() {
         hiddenCount={hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
         playlists={playlists} onImportPlaylists={importPlaylists}
       />
+      {String(username || '').trim().toLocaleLowerCase('vi-VN') === 'd\u1ed1c nh\u00e0 l\u00e0ng' && (
+        <BirthdayWelcome />
+      )}
     </div>
   )
 }
