@@ -40,7 +40,7 @@ const COPY = {
 export default function BirthdayWelcome() {
   const [step, setStep] = useState('question')
   const [open, setOpen] = useState(true)
-  const [noPosition, setNoPosition] = useState({ left: 74, top: 24 })
+  const [noPosition, setNoPosition] = useState({ left: 82, top: 8 })
   const yesButtonRef = useRef(null)
   const continueButtonRef = useRef(null)
   const noButtonRef = useRef(null)
