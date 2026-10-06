@@ -1593,3 +1593,42 @@ input[type='range']:disabled { opacity: 0.4; }
   .birthday-card__content { padding: 25px 18px 28px; }
   .birthday-card h2 { font-size: clamp(1.85rem, 9vw, 2.35rem); }
 }
+
+/* Celebration card: compact, centered vintage greeting */
+.birthday-card.is-celebrating .birthday-card__content {
+  align-items: center;
+  text-align: center;
+}
+.birthday-card.is-celebrating .birthday-card__flower {
+  margin: 0 auto 18px;
+}
+.birthday-card.is-celebrating .birthday-card__wish {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.birthday-card.is-celebrating .birthday-card__correct {
+  margin: 0 auto 18px;
+}
+.birthday-card.is-celebrating .birthday-card__eyebrow {
+  margin-right: auto;
+  margin-left: auto;
+}
+.birthday-card.is-celebrating h2 {
+  max-width: 410px;
+  margin: 0 auto;
+  font-size: clamp(1.95rem, 3.2vw, 2.85rem);
+  line-height: 1.08;
+  letter-spacing: -.025em;
+  text-align: center;
+}
+.birthday-card.is-celebrating .birthday-card__copy {
+  max-width: 400px;
+  margin: 18px auto 0;
+  text-align: center;
+}
+.birthday-card.is-celebrating .birthday-card__signature {
+  margin: 14px auto 20px;
+  text-align: center;
+}
