@@ -7,6 +7,13 @@ const PETALS = Array.from({ length: 18 }, (_, index) => ({
   duration: (5.8 + (index % 5) * 0.7) + 's',
   drift: ((index % 2 ? 1 : -1) * (24 + (index % 4) * 12)) + 'px',
 }))
+const NO_SPOTS = [
+  { left: 63, top: 0 },
+  { left: 82, top: 0 },
+  { left: 63, top: 48 },
+  { left: 82, top: 48 },
+]
+
 
 const COPY = {
   dialogLabel: 'L\u1eddi ch\u00fac sinh nh\u1eadt',
@@ -33,28 +40,41 @@ const COPY = {
 export default function BirthdayWelcome() {
   const [step, setStep] = useState('question')
   const [open, setOpen] = useState(true)
-  const [noPosition, setNoPosition] = useState({ left: 64, top: 8 })
+  const [noPosition, setNoPosition] = useState({ left: 74, top: 24 })
   const yesButtonRef = useRef(null)
   const continueButtonRef = useRef(null)
+  const noButtonRef = useRef(null)
 
   useEffect(() => {
     if (step === 'question') yesButtonRef.current?.focus()
     if (step === 'celebrate') continueButtonRef.current?.focus()
   }, [step])
 
-  const dodgeNoButton = useCallback((event) => {
-    if (event?.pointerType === 'touch') event.preventDefault()
-    setNoPosition((current) => {
-      let left = 48 + Math.random() * 34
-      let top = Math.random() * 28
+  const keepNoAway = useCallback((event) => {
+    if (event.pointerType === 'touch') event.preventDefault()
+    const area = event.currentTarget.getBoundingClientRect()
+    const button = noButtonRef.current?.getBoundingClientRect()
+    if (!button) return
 
-      if (Math.abs(left - current.left) < 14 && Math.abs(top - current.top) < 10) {
-        left = current.left > 64 ? 49 : 78
-        top = current.top > 14 ? 0 : 28
-      }
+    const distanceToButton = Math.hypot(
+      event.clientX - (button.left + button.width / 2),
+      event.clientY - (button.top + button.height / 2),
+    )
+    const safeDistance = Math.min(84, Math.max(68, area.width * .21))
+    if (distanceToButton >= safeDistance) return
 
-      return { left, top }
-    })
+    const pointerX = event.clientX - area.left
+    const pointerY = event.clientY - area.top
+    const next = NO_SPOTS.reduce((best, spot) => {
+      const spotX = area.width * spot.left / 100
+      const spotY = spot.top + button.height / 2
+      const distance = Math.hypot(pointerX - spotX, pointerY - spotY)
+      return distance > best.distance ? { spot, distance } : best
+    }, { spot: NO_SPOTS[0], distance: -1 }).spot
+
+    setNoPosition((current) => (
+      current.left === next.left && current.top === next.top ? current : next
+    ))
   }, [])
 
   if (!open) return null
@@ -105,17 +125,14 @@ export default function BirthdayWelcome() {
               <h2 id="birthday-title">{COPY.questionTitle}</h2>
               <p id="birthday-copy" className="birthday-card__copy">{COPY.questionCopy}</p>
 
-              <div className="birthday-card__answers" aria-label={COPY.answersLabel}>
+              <div className="birthday-card__answers" aria-label={COPY.answersLabel}
+                onPointerEnter={keepNoAway} onPointerMove={keepNoAway} onPointerDown={keepNoAway}>
                 <button ref={yesButtonRef} className="birthday-answer birthday-answer--yes" type="button"
                   onClick={() => setStep('celebrate')}>
                   {COPY.yes}
                 </button>
-                <span className="birthday-answer birthday-answer--no" role="button" aria-disabled="true"
+                <span ref={noButtonRef} className="birthday-answer birthday-answer--no" role="button" aria-disabled="true"
                   style={{ left: noPosition.left + '%', top: noPosition.top + 'px' }}
-                  onPointerEnter={dodgeNoButton}
-                  onPointerDown={(event) => { event.preventDefault(); dodgeNoButton(event) }}
-                  onClick={(event) => { event.preventDefault(); event.stopPropagation() }}
-                  onContextMenu={(event) => event.preventDefault()}
                   aria-label={COPY.noLabel} draggable="false">
                   {COPY.no}
                 </span>
