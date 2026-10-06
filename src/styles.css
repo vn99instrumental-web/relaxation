@@ -377,7 +377,7 @@ input, textarea { font-family: inherit; }
 /* Nhật ký và Hoài niệm luôn chiếm nửa màn hình trên desktop;
    khi mở cùng Nhạc, hai panel tiếp tục chia đều 50/50. */
 @media (min-width: 701px) {
-  .app.is-left-open:not(.is-right-open) .drawer--left { width: min(1180px, calc(100vw - 48px)); }
+  .app.is-left-open:not(.is-right-open) .drawer--left { width: 100vw; max-width: none; border-radius: 0; }
   .app.is-right-open:not(.is-left-open) .drawer--journal,
   .app.is-right-open:not(.is-left-open) .drawer--poems { width: 50vw; max-width: none; }
   .app.is-left-open.is-right-open .drawer--left,

@@ -19,6 +19,7 @@ import { usePoems } from './hooks/usePoems'
 import { load, save } from './lib/storage'
 import { fetchVideoTitle } from './lib/youtube'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, BUILTIN_SCENES } from './lib/backgrounds'
+import { playlistNameForTrack } from './lib/trackPlaylist'
 import { pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 import { queueIndexesBySort, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
@@ -699,6 +700,12 @@ export default function App() {
     })
   }, [index, yt, queueSort, queueRandomSeed])
 
+  const currentQueueTrack = queue[index]
+  const activePlaylistName = useMemo(
+    () => playlistNameForTrack(currentQueueTrack, playlists),
+    [currentQueueTrack, playlists],
+  )
+
   useEffect(() => { yt.setOnEnded(onNext) }, [yt, onNext])
   useEffect(() => { yt.setOnError(onPlaybackError) }, [yt, onPlaybackError])
   useEffect(() => { if (yt.ready) yt.setVolume(ytVolume) }, [ytVolume, yt.ready, yt])
@@ -806,14 +813,14 @@ export default function App() {
   // Điều khiển nhạc trên màn hình khóa / trung tâm thông báo (MediaSession)
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
-    const track = queue[index]
+    const track = currentQueueTrack
     try {
       const mediaTitle = yt.nowTitle || track?.title
       if (mediaTitle && typeof window.MediaMetadata === 'function') {
         navigator.mediaSession.metadata = new window.MediaMetadata({
           title: mediaTitle,
           artist: 'Dưới Tán Thông',
-          album: track?.sourcePlaylistName || 'Mới đăng',
+          album: activePlaylistName || 'Mới đăng',
           artwork: track?.videoId
             ? [{ src: `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`, sizes: '480x360', type: 'image/jpeg' }]
             : [],
@@ -826,7 +833,7 @@ export default function App() {
         position: Math.min(Math.max(0, yt.currentTime || 0), yt.duration),
       })
     } catch { /* ignore */ }
-  }, [queue, index, yt.nowTitle, yt.playing, yt.currentTime, yt.duration])
+  }, [currentQueueTrack, activePlaylistName, yt.nowTitle, yt.playing, yt.currentTime, yt.duration])
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
     const set = (a, fn) => { try { navigator.mediaSession.setActionHandler(a, fn) } catch { /* ignore */ } }
@@ -964,14 +971,10 @@ export default function App() {
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches) setRightTab(null)
     setLeftTab((cur) => (cur === tab ? null : tab))
   }
-  const currentQueueTrack = queue[index]
   const queueOrder = useMemo(
     () => queueIndexesBySort(queue, queueSort, queueRandomSeed),
     [queue, queueSort, queueRandomSeed],
   )
-  const activePlaylistName = currentQueueTrack?.sourcePlaylistId
-    ? (playlists.find((p) => p.id === currentQueueTrack.sourcePlaylistId)?.name || currentQueueTrack.sourcePlaylistName || '')
-    : (currentQueueTrack?.kind === 'playlist' ? (currentQueueTrack.title || 'Playlist YouTube') : '')
 
   const addUserBg = useCallback((label, url) => {
     const id = `u${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
