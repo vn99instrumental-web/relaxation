@@ -119,15 +119,7 @@ export default function BirthdayWelcome() {
         </div>
 
         <div ref={contentRef} className="birthday-card__content">
-          {step === 'celebrate' ? (
-            <div className="birthday-card__flower birthday-card__flower--cluster" aria-hidden="true">
-              {Array.from({ length: 5 }, (_, index) => (
-                <span className="birthday-card__flower-item" key={index}>
-                  <i /><i /><i /><i /><i /><b />
-                </span>
-              ))}
-            </div>
-          ) : (
+          {step !== 'celebrate' && (
             <div className="birthday-card__flower" aria-hidden="true">
               <span /><span /><span /><span /><span /><b />
             </div>
@@ -155,6 +147,13 @@ export default function BirthdayWelcome() {
             </>
           ) : (
             <div className="birthday-card__wish">
+              <div className="birthday-card__flower birthday-card__flower--cluster" aria-hidden="true">
+                {Array.from({ length: 5 }, (_, index) => (
+                  <span className="birthday-card__flower-item" key={index}>
+                    <i /><i /><i /><i /><i /><b />
+                  </span>
+                ))}
+              </div>
               <p className="birthday-card__correct"><span>{COPY.check}</span> {COPY.correct}</p>
               <p className="birthday-card__eyebrow">{COPY.gift}</p>
               <h2 ref={celebrateTitleRef} id="birthday-title" tabIndex={-1}>{COPY.birthdayTitle}</h2>

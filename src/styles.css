@@ -1650,11 +1650,13 @@ input[type='range']:disabled { opacity: 0.4; }
 }
 .birthday-card.is-celebrating .birthday-card__flower--cluster {
   display: flex;
+  flex: 0 0 auto;
   width: auto;
   height: 34px;
   gap: 8px;
   align-items: flex-end;
   justify-content: center;
+  margin: 0 auto 4px;
   animation: birthday-flower-float 4s ease-in-out infinite;
 }
 .birthday-card.is-celebrating .birthday-card__flower-item {
@@ -1807,4 +1809,17 @@ input[type='range']:disabled { opacity: 0.4; }
     line-height: 1.46;
   }
   .birthday-card.is-celebrating .birthday-card__copy--wish p { margin-bottom: 6px; }
+}
+@media (min-width: 761px) {
+  .birthday-card.is-celebrating .birthday-card__flower--cluster {
+    width: auto;
+    height: 34px;
+    gap: 8px;
+    margin: 0 auto 4px;
+    scale: 1;
+  }
+}
+
+@media (min-width: 1180px) and (min-height: 760px) {
+  .birthday-card.is-celebrating .birthday-card__flower--cluster { scale: 1.08; }
 }
