@@ -42,14 +42,10 @@ export default function BirthdayWelcome() {
   const [open, setOpen] = useState(true)
   const [noPosition, setNoPosition] = useState({ left: 82, top: 8 })
   const welcomeRef = useRef(null)
-  const yesButtonRef = useRef(null)
   const contentRef = useRef(null)
-  const celebrateTitleRef = useRef(null)
   const noButtonRef = useRef(null)
 
   useLayoutEffect(() => {
-    const focusTarget = step === 'question' ? yesButtonRef.current : celebrateTitleRef.current
-    focusTarget?.focus({ preventScroll: true })
     if (welcomeRef.current) welcomeRef.current.scrollTop = 0
     if (contentRef.current) contentRef.current.scrollTop = 0
   }, [step])
@@ -133,7 +129,7 @@ export default function BirthdayWelcome() {
 
               <div className="birthday-card__answers" aria-label={COPY.answersLabel}
                 onPointerEnter={keepNoAway} onPointerMove={keepNoAway} onPointerDown={keepNoAway}>
-                <button ref={yesButtonRef} className="birthday-answer birthday-answer--yes" type="button"
+                <button className="birthday-answer birthday-answer--yes" type="button"
                   onClick={() => setStep('celebrate')}>
                   {COPY.yes}
                 </button>
@@ -156,7 +152,7 @@ export default function BirthdayWelcome() {
               </div>
               <p className="birthday-card__correct"><span>{COPY.check}</span> {COPY.correct}</p>
               <p className="birthday-card__eyebrow">{COPY.gift}</p>
-              <h2 ref={celebrateTitleRef} id="birthday-title" tabIndex={-1}>{COPY.birthdayTitle}</h2>
+              <h2 id="birthday-title">{COPY.birthdayTitle}</h2>
               <div id="birthday-copy" className="birthday-card__copy birthday-card__copy--wish">
                 <p>{COPY.wishOne}</p>
                 <p>{COPY.wishTwo}</p>
