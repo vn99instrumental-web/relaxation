@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 const PETALS = Array.from({ length: 18 }, (_, index) => ({
   id: index,
@@ -41,13 +41,17 @@ export default function BirthdayWelcome() {
   const [step, setStep] = useState('question')
   const [open, setOpen] = useState(true)
   const [noPosition, setNoPosition] = useState({ left: 82, top: 8 })
+  const welcomeRef = useRef(null)
   const yesButtonRef = useRef(null)
-  const continueButtonRef = useRef(null)
+  const contentRef = useRef(null)
+  const celebrateTitleRef = useRef(null)
   const noButtonRef = useRef(null)
 
-  useEffect(() => {
-    if (step === 'question') yesButtonRef.current?.focus()
-    if (step === 'celebrate') continueButtonRef.current?.focus()
+  useLayoutEffect(() => {
+    const focusTarget = step === 'question' ? yesButtonRef.current : celebrateTitleRef.current
+    focusTarget?.focus({ preventScroll: true })
+    if (welcomeRef.current) welcomeRef.current.scrollTop = 0
+    if (contentRef.current) contentRef.current.scrollTop = 0
   }, [step])
 
   const keepNoAway = useCallback((event) => {
@@ -80,7 +84,7 @@ export default function BirthdayWelcome() {
   if (!open) return null
 
   return (
-    <section className={'birthday-welcome birthday-welcome--' + step} aria-label={COPY.dialogLabel}>
+    <section ref={welcomeRef} className={'birthday-welcome birthday-welcome--' + step} aria-label={COPY.dialogLabel}>
       <div className="birthday-welcome__backdrop" aria-hidden="true" />
       <div className="birthday-welcome__mist birthday-welcome__mist--one" aria-hidden="true" />
       <div className="birthday-welcome__mist birthday-welcome__mist--two" aria-hidden="true" />
@@ -114,7 +118,7 @@ export default function BirthdayWelcome() {
           <span className="birthday-card__pine birthday-card__pine--right">{COPY.sparkle}</span>
         </div>
 
-        <div className="birthday-card__content">
+        <div ref={contentRef} className="birthday-card__content">
           <div className="birthday-card__flower" aria-hidden="true">
             <span /><span /><span /><span /><span /><b />
           </div>
@@ -143,13 +147,13 @@ export default function BirthdayWelcome() {
             <div className="birthday-card__wish">
               <p className="birthday-card__correct"><span>{COPY.check}</span> {COPY.correct}</p>
               <p className="birthday-card__eyebrow">{COPY.gift}</p>
-              <h2 id="birthday-title">{COPY.birthdayTitle}</h2>
+              <h2 ref={celebrateTitleRef} id="birthday-title" tabIndex={-1}>{COPY.birthdayTitle}</h2>
               <div id="birthday-copy" className="birthday-card__copy birthday-card__copy--wish">
                 <p>{COPY.wishOne}</p>
                 <p>{COPY.wishTwo}</p>
               </div>
               <p className="birthday-card__signature">{COPY.signature}</p>
-              <button ref={continueButtonRef} className="birthday-card__continue" type="button"
+              <button className="birthday-card__continue" type="button"
                 onClick={() => setOpen(false)}>
                 {COPY.continue}
               </button>

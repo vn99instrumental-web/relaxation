@@ -1272,6 +1272,7 @@ input[type='range']:disabled { opacity: 0.4; }
   position: relative;
   display: flex;
   min-width: 0;
+  min-height: 0;
   flex-direction: column;
   justify-content: center;
   padding: clamp(42px, 6vw, 76px) clamp(34px, 5.5vw, 72px);
@@ -1279,6 +1280,7 @@ input[type='range']:disabled { opacity: 0.4; }
 }
 .birthday-card__flower {
   position: relative;
+  flex: 0 0 auto;
   width: 66px;
   height: 66px;
   margin: 0 auto 22px;
@@ -1439,7 +1441,6 @@ input[type='range']:disabled { opacity: 0.4; }
   .birthday-card { grid-template-rows: 155px 1fr; }
   .birthday-card__photo { min-height: 155px; }
   .birthday-card__content { padding: 24px 18px 26px; }
-  .birthday-card__flower { display: none; }
   .birthday-card__eyebrow { margin-bottom: 9px; font-size: .6rem; }
   .birthday-card__copy--wish p:last-child { display: none; }
   .birthday-card__signature { margin-block: 11px 15px; }
@@ -1500,6 +1501,7 @@ input[type='range']:disabled { opacity: 0.4; }
 }
 .birthday-card__content {
   overflow-y: auto;
+  overscroll-behavior: contain;
   align-items: flex-start;
   padding: clamp(46px, 5vw, 68px) clamp(40px, 4.7vw, 60px);
   text-align: left;
@@ -1579,7 +1581,7 @@ input[type='range']:disabled { opacity: 0.4; }
     padding: 32px 26px 36px;
     text-align: center;
   }
-  .birthday-card__flower { margin: 0 auto 15px; }
+  .birthday-card__flower { margin: 0 auto 15px; scale: .76; }
   .birthday-card h2,
   .birthday-card__copy { margin-left: auto; margin-right: auto; }
   .birthday-card__answers { margin-left: auto; margin-right: auto; }
@@ -1591,14 +1593,50 @@ input[type='range']:disabled { opacity: 0.4; }
   .birthday-card { grid-template-rows: 168px 1fr; }
   .birthday-card__photo { min-height: 168px; }
   .birthday-card__content { padding: 25px 18px 28px; }
+  .birthday-card__flower { display: block; width: 44px; height: 44px; margin-bottom: 10px; scale: .66; }
   .birthday-card h2 { font-size: clamp(1.85rem, 9vw, 2.35rem); }
+}
+
+@media (min-width: 761px) {
+  .birthday-card {
+    height: min(630px, calc(100dvh - clamp(28px, 6vw, 72px)));
+    min-height: 0;
+    max-height: none;
+  }
+  .birthday-card.is-celebrating {
+    height: min(744px, calc(100dvh - clamp(28px, 6vw, 72px)));
+  }
+  .birthday-card__photo { min-height: 0; }
+}
+
+@media (min-width: 761px) and (max-height: 800px) {
+  .birthday-card.is-celebrating .birthday-card__content {
+    padding-block: 26px;
+  }
+  .birthday-card.is-celebrating .birthday-card__flower {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 12px;
+    scale: .82;
+  }
+  .birthday-card.is-celebrating .birthday-card__correct { margin-bottom: 12px; }
+  .birthday-card.is-celebrating .birthday-card__eyebrow { margin-bottom: 8px; }
+  .birthday-card.is-celebrating h2 { font-size: clamp(1.8rem, 3vw, 2.45rem); }
+  .birthday-card.is-celebrating .birthday-card__copy {
+    margin-top: 13px;
+    line-height: 1.62;
+  }
+  .birthday-card.is-celebrating .birthday-card__copy--wish p { margin-bottom: 8px; }
+  .birthday-card.is-celebrating .birthday-card__signature { margin: 10px auto 14px; }
 }
 
 /* Celebration card: compact, centered vintage greeting */
 .birthday-card.is-celebrating .birthday-card__content {
   align-items: center;
+  justify-content: flex-start;
   text-align: center;
 }
+.birthday-card.is-celebrating .birthday-card__wish { flex: 0 0 auto; }
 .birthday-card.is-celebrating .birthday-card__flower {
   margin: 0 auto 18px;
 }
