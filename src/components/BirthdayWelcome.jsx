@@ -119,9 +119,19 @@ export default function BirthdayWelcome() {
         </div>
 
         <div ref={contentRef} className="birthday-card__content">
-          <div className="birthday-card__flower" aria-hidden="true">
-            <span /><span /><span /><span /><span /><b />
-          </div>
+          {step === 'celebrate' ? (
+            <div className="birthday-card__flower birthday-card__flower--cluster" aria-hidden="true">
+              {Array.from({ length: 5 }, (_, index) => (
+                <span className="birthday-card__flower-item" key={index}>
+                  <i /><i /><i /><i /><i /><b />
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="birthday-card__flower" aria-hidden="true">
+              <span /><span /><span /><span /><span /><b />
+            </div>
+          )}
 
           {step === 'question' ? (
             <>

@@ -1286,7 +1286,7 @@ input[type='range']:disabled { opacity: 0.4; }
   margin: 0 auto 22px;
   animation: birthday-flower-float 4s ease-in-out infinite;
 }
-.birthday-card__flower span {
+.birthday-card__flower > span:not(.birthday-card__flower-item) {
   position: absolute;
   left: 25px;
   top: 3px;
@@ -1297,11 +1297,11 @@ input[type='range']:disabled { opacity: 0.4; }
   transform-origin: 8px 30px;
   box-shadow: inset -2px -3px 5px rgba(154, 123, 55, .16);
 }
-.birthday-card__flower span:nth-child(2) { transform: rotate(72deg); }
-.birthday-card__flower span:nth-child(3) { transform: rotate(144deg); }
-.birthday-card__flower span:nth-child(4) { transform: rotate(216deg); }
-.birthday-card__flower span:nth-child(5) { transform: rotate(288deg); }
-.birthday-card__flower b {
+.birthday-card__flower > span:not(.birthday-card__flower-item):nth-child(2) { transform: rotate(72deg); }
+.birthday-card__flower > span:not(.birthday-card__flower-item):nth-child(3) { transform: rotate(144deg); }
+.birthday-card__flower > span:not(.birthday-card__flower-item):nth-child(4) { transform: rotate(216deg); }
+.birthday-card__flower > span:not(.birthday-card__flower-item):nth-child(5) { transform: rotate(288deg); }
+.birthday-card__flower > b {
   position: absolute;
   left: 23px;
   top: 22px;
@@ -1620,6 +1620,12 @@ input[type='range']:disabled { opacity: 0.4; }
     margin-bottom: 8px;
     scale: .72;
   }
+  .birthday-card.is-celebrating .birthday-card__flower--cluster {
+    width: auto;
+    height: 30px;
+    margin-bottom: 4px;
+    scale: 1;
+  }
   .birthday-card.is-celebrating .birthday-card__correct { margin-bottom: 8px; }
   .birthday-card.is-celebrating .birthday-card__eyebrow { margin-bottom: 6px; }
   .birthday-card.is-celebrating h2 { font-size: clamp(1.58rem, 2.6vw, 2.18rem); }
@@ -1640,7 +1646,55 @@ input[type='range']:disabled { opacity: 0.4; }
 }
 .birthday-card.is-celebrating .birthday-card__wish { flex: 1 1 auto; }
 .birthday-card.is-celebrating .birthday-card__flower {
-  margin: 0 auto 12px;
+  margin: 0 auto 6px;
+}
+.birthday-card.is-celebrating .birthday-card__flower--cluster {
+  display: flex;
+  width: auto;
+  height: 34px;
+  gap: 8px;
+  align-items: flex-end;
+  justify-content: center;
+  animation: birthday-flower-float 4s ease-in-out infinite;
+}
+.birthday-card.is-celebrating .birthday-card__flower-item {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  transform: translateY(2px) rotate(var(--flower-tilt, 0deg));
+}
+.birthday-card.is-celebrating .birthday-card__flower-item:nth-child(1) { --flower-tilt: -8deg; scale: .86; }
+.birthday-card.is-celebrating .birthday-card__flower-item:nth-child(2) { --flower-tilt: 5deg; scale: .94; }
+.birthday-card.is-celebrating .birthday-card__flower-item:nth-child(3) { --flower-tilt: -2deg; scale: 1; }
+.birthday-card.is-celebrating .birthday-card__flower-item:nth-child(4) { --flower-tilt: 7deg; scale: .92; }
+.birthday-card.is-celebrating .birthday-card__flower-item:nth-child(5) { --flower-tilt: -5deg; scale: .84; }
+.birthday-card.is-celebrating .birthday-card__flower-item i {
+  position: absolute;
+  left: 11px;
+  top: 1px;
+  width: 7px;
+  height: 14px;
+  border-radius: 70% 30% 65% 35%;
+  background: linear-gradient(160deg, #fff8dc, #e9d492);
+  transform-origin: 3px 13px;
+  box-shadow: inset -1px -2px 3px rgba(154, 123, 55, .14);
+}
+.birthday-card.is-celebrating .birthday-card__flower-item i:nth-child(2) { transform: rotate(72deg); }
+.birthday-card.is-celebrating .birthday-card__flower-item i:nth-child(3) { transform: rotate(144deg); }
+.birthday-card.is-celebrating .birthday-card__flower-item i:nth-child(4) { transform: rotate(216deg); }
+.birthday-card.is-celebrating .birthday-card__flower-item i:nth-child(5) { transform: rotate(288deg); }
+.birthday-card.is-celebrating .birthday-card__flower-item b {
+  position: absolute;
+  left: 9px;
+  top: 9px;
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  border-radius: 50% 50% 44% 48%;
+  background: radial-gradient(circle at 40% 35%, #ffd978, #d99b32 74%);
+  box-shadow: 0 0 10px rgba(231, 181, 72, .3);
 }
 .birthday-card.is-celebrating .birthday-card__wish {
   width: 100%;
@@ -1704,6 +1758,17 @@ input[type='range']:disabled { opacity: 0.4; }
     margin-bottom: 8px;
     scale: .66;
   }
+  .birthday-card.is-celebrating .birthday-card__flower--cluster {
+    width: auto;
+    height: 30px;
+    gap: 6px;
+    margin-bottom: 4px;
+    scale: 1;
+  }
+  .birthday-card.is-celebrating .birthday-card__flower-item {
+    width: 24px;
+    height: 24px;
+  }
   .birthday-card.is-celebrating h2 {
     max-width: 350px;
     font-size: clamp(1.42rem, 6.4vw, 1.95rem);
@@ -1730,6 +1795,12 @@ input[type='range']:disabled { opacity: 0.4; }
     height: 40px;
     margin-bottom: 6px;
     scale: .62;
+  }
+  .birthday-card.is-celebrating .birthday-card__flower--cluster {
+    width: auto;
+    height: 28px;
+    margin-bottom: 3px;
+    scale: 1;
   }
   .birthday-card.is-celebrating .birthday-card__copy {
     font-size: clamp(.76rem, 2.25vh, .84rem);
