@@ -196,14 +196,25 @@ input, textarea { font-family: inherit; }
   animation: sway 40s ease-in-out infinite alternate;
 }
 @keyframes sway { from { transform: scale(1.02) translateX(0); } to { transform: scale(1.06) translateX(-1.4%); } }
-.scene__photo { animation: sway 60s ease-in-out infinite alternate; overflow: hidden; }
+.scene__photo { inset: 0; width: 100%; height: 100%; animation: none; overflow: hidden; }
 .scene__photo-img {
-  width: 100%; height: 100%; object-fit: cover; display: block;
-  filter: none; /* để ảnh rõ nét, không ám màu */
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+}
+.scene__photo-img--backdrop {
+  inset: -3%;
+  width: 106%; height: 106%;
+  object-fit: cover;
+  filter: blur(20px) brightness(.58) saturate(.82);
+  transform: scale(1.04);
+}
+.scene__photo-img--full {
+  z-index: 1;
+  object-fit: contain;
+  filter: none; /* giữ ảnh chính rõ nét và đúng tỉ lệ */
 }
 /* chỉ tối nhẹ ở đáy cho dock dễ đọc, không phủ kín ảnh */
 .scene__photo::after {
-  content: ''; position: absolute; inset: 0;
+  content: ''; position: absolute; inset: 0; z-index: 2;
   background: linear-gradient(180deg, transparent 60%, rgba(16,12,8,0.42));
 }
 
@@ -1036,9 +1047,7 @@ input[type='range']:disabled { opacity: 0.4; }
 @media (max-width: 640px) {
   .drawer { top: 60px; bottom: 80px; width: min(440px, 94vw); }
   .drawer--right { top: 12px; bottom: 74px; }
-  /* Ảnh nền: bỏ zoom thừa (104% + hiệu ứng trôi) để trên màn hình dọc
-     thấy được nhiều cảnh hơn, ít bị cắt hai bên; đứng yên cho nhẹ máy. */
-  .scene__photo { inset: 0; width: 100%; height: 100%; animation: none; }
+  /* Giữ tâm ảnh hơi cao trên màn hình dọc; lớp ảnh chính vẫn luôn hiển thị trọn vẹn. */
   .scene__photo-img { object-position: center 45%; }
 }
 /* ---- Điện thoại: khung tràn viền, gõ chat gọn, nút to dễ chạm ---- */
