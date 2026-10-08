@@ -1442,7 +1442,6 @@ input[type='range']:disabled { opacity: 0.4; }
   .birthday-card__photo { min-height: 155px; }
   .birthday-card__content { padding: 24px 18px 26px; }
   .birthday-card__eyebrow { margin-bottom: 9px; font-size: .6rem; }
-  .birthday-card__copy--wish p:last-child { display: none; }
   .birthday-card__signature { margin-block: 11px 15px; }
   .birthday-answer { min-width: 116px; padding-inline: 14px; }
 }
@@ -1723,15 +1722,16 @@ input[type='range']:disabled { opacity: 0.4; }
     font-size: .68rem;
   }
 }
-
 @media (max-height: 660px) {
-  .birthday-card.is-celebrating .birthday-card__copy--wish p:last-child {
-    display: none;
-  }
   .birthday-card.is-celebrating .birthday-card__flower {
     width: 40px;
     height: 40px;
     margin-bottom: 6px;
     scale: .62;
   }
+  .birthday-card.is-celebrating .birthday-card__copy {
+    font-size: clamp(.68rem, 2.1vh, .78rem);
+    line-height: 1.38;
+  }
+  .birthday-card.is-celebrating .birthday-card__copy--wish p { margin-bottom: 5px; }
 }
