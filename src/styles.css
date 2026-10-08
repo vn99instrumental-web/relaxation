@@ -690,6 +690,18 @@ input[type='range']:disabled { opacity: 0.4; }
 .journal { flex: 1; min-height: 0; }
 .journal__status { display: flex; align-items: center; gap: 8px; }
 .drawer--right .journal__status { gap: 5px; font-size: .68rem; }
+.journal__refresh-btn {
+  display: inline-grid;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  line-height: 1;
+}
+.journal__refresh-btn svg { width: 16px; height: 16px; }
+.journal__refresh-btn:hover { background: var(--surface); }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #8a7f68; }
 .dot--online { background: #a3c07f; box-shadow: 0 0 8px #a3c07f; }
 .dot--connecting { background: var(--gold-soft); animation: pulse 1.2s infinite; }

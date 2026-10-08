@@ -119,7 +119,7 @@ export default function App() {
 
   const [queue, setQueue] = useState(() => normalizeQueueMetadata(load('vibe.queue', [])))
   const [index, setIndex] = useState(0)
-  const [ytVolume, setYtVolume] = useState(() => load('vibe.ytVolume', 70))
+  const [ytVolume, setYtVolume] = useState(100)
   const [localPlaylists, setLocalPlaylists] = useState(() => load('vibe.playlists', []))
   const [queueSort, setQueueSort] = useState('latest')
   const [queueRandomSeed, setQueueRandomSeed] = useState(0)
@@ -889,7 +889,7 @@ export default function App() {
     const nextFxPreset = s.fx_preset || fxPreset
     const nextFxWindDir = s.fx_wind_dir || fxWindDir
     const nextFxSwirl = boundedSetting(s.fx_swirl, fxSwirl)
-    const nextVolume = boundedSetting(s.yt_volume, ytVolume)
+    const nextVolume = 100
     const nextAutoplay = typeof s.autoplay === 'boolean' ? s.autoplay : autoplay
     const nextDefaultTrack = Object.prototype.hasOwnProperty.call(s, 'default_track') ? portableTrack(s.default_track) : defaultTrack
     const storedQueue = Array.isArray(s.queue)

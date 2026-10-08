@@ -64,7 +64,7 @@ export const IconClose = (p) => (
   <svg {...base} {...p}><path d="m6 6 12 12M18 6 6 18" /></svg>
 )
 export const IconRefresh = (p) => (
-  <svg {...base} {...p}><path d="M20 7v5h-5" /><path d="M18.5 16a8 8 0 10-1-9L20 12" /></svg>
+  <svg {...base} {...p}><path d="M20 6v5h-5" /><path d="M4 18v-5h5" /><path d="M6.1 9a7 7 0 0111.6-2.6L20 11" /><path d="M4 13l2.3 4.6A7 7 0 0018 15" /></svg>
 )
 export const IconTrash = (p) => (
   <svg {...base} {...p}><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6" /></svg>

@@ -300,7 +300,7 @@ export default function Journal({ journal, username, setUsername, onClose, admin
         <div className="journal__status">
           <span className={`dot dot--${status}`} />
           <span className="muted">{statusText}</span>
-          {online && <button className="link-btn" onClick={() => refresh?.()} title="Làm mới" aria-label="Làm mới Nhật ký"><IconRefresh /></button>}
+          {online && <button type="button" className="link-btn journal__refresh-btn" onClick={() => refresh?.()} title="Làm mới" aria-label="Làm mới Nhật ký"><IconRefresh /></button>}
           {messages.length > 0 && <button className="link-btn" onClick={clearAll} title="Xóa toàn bộ nhật ký" aria-label="Xóa toàn bộ nhật ký"><IconTrash /></button>}
           <button className="link-btn journal__lock-btn" onClick={handleLock} title="Khóa Nhật ký / đổi người dùng" aria-label="Khóa Nhật ký / đổi người dùng"><IconLock /></button>
           {onClose && <button className="link-btn" onClick={onClose} title="Đóng" aria-label="Đóng Nhật ký"><IconClose /></button>}
