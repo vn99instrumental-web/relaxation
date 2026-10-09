@@ -47,10 +47,7 @@ export default function Scene({ scene = 'fog', photo = '' }) {
     >
       {usePhoto ? (
         <div className="scene__photo">
-          <img src={photo} alt="" className="scene__photo-img scene__photo-img--backdrop"
-            style={{ objectPosition: `${pan.x}% ${pan.y}%` }}
-            draggable="false" aria-hidden="true" />
-          <img src={photo} alt="" className="scene__photo-img scene__photo-img--full"
+          <img src={photo} alt="" className="scene__photo-img"
             style={{ objectPosition: `${pan.x}% ${pan.y}%` }}
             draggable="false" onError={() => setFailed(true)} />
         </div>
