@@ -1168,7 +1168,7 @@ export default function App() {
         hiddenCount={hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
         playlists={playlists} onImportPlaylists={importPlaylists}
       />
-      {journalAccess && String(username || '').trim().toLocaleLowerCase('vi-VN') === 'd\u1ed1c nh\u00e0 l\u00e0ng' && (
+      {journalAccess && ['dốc nhà làng', 'rừng thông', 'rt'].includes(String(username || '').trim().toLocaleLowerCase('vi-VN')) && (
         <BirthdayWelcome />
       )}
     </div>
