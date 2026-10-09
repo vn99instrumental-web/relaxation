@@ -1246,17 +1246,6 @@ input[type='range']:disabled { opacity: 0.4; }
     linear-gradient(180deg, rgba(9, 20, 15, .05), rgba(9, 20, 15, .58)),
     url('/scenes/Birthday.png') center / cover no-repeat;
 }
-.birthday-card__photo::before,
-.birthday-card__photo::after {
-  content: '';
-  position: absolute;
-  width: 145px;
-  height: 145px;
-  border: 1px solid rgba(232, 210, 150, .18);
-  border-radius: 50%;
-}
-.birthday-card__photo::before { left: -72px; top: 14%; }
-.birthday-card__photo::after { right: -78px; bottom: 10%; }
 .birthday-card__date {
   position: absolute;
   left: 28px;
