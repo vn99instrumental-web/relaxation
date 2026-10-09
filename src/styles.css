@@ -199,8 +199,8 @@ input, textarea { font-family: inherit; }
 .scene__photo { inset: 0; width: 100%; height: 100%; animation: none; overflow: hidden; }
 .scene__photo-img {
   position: absolute; inset: 0; width: 100%; height: 100%; display: block;
-  object-fit: fill;
-  filter: none; /* phủ kín viewport; chỉ co giãn ảnh, không cắt chi tiết */
+  object-fit: cover;
+  filter: none; /* giữ tỉ lệ ảnh; crop phần dư để phủ kín viewport */
 }
 /* chỉ tối nhẹ ở đáy cho dock dễ đọc, không phủ kín ảnh */
 .scene__photo::after {
