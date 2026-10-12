@@ -92,7 +92,7 @@ function sameJournalUser(a, b) {
   return Boolean(aKey && bKey && aKey === bKey)
 }
 
-export default function Journal({ journal, username, setUsername, onClose, admin = false }) {
+export default function Journal({ journal, username, setUsername, onClose, onOpenBirthday, admin = false }) {
   const actions = useActions()
   const {
     messages, status, error, sending, online, send, refresh,
@@ -301,6 +301,7 @@ export default function Journal({ journal, username, setUsername, onClose, admin
           <span className={`dot dot--${status}`} />
           <span className="muted">{statusText}</span>
           {online && <button type="button" className="link-btn journal__refresh-btn" onClick={() => refresh?.()} title="Làm mới" aria-label="Làm mới Nhật ký"><IconRefresh /></button>}
+          {onOpenBirthday && <button type="button" className="link-btn journal__birthday-btn" onClick={onOpenBirthday} title="Mở lời chúc sinh nhật" aria-label="Mở lời chúc sinh nhật"><span aria-hidden="true">🌼</span></button>}
           {messages.length > 0 && <button className="link-btn" onClick={clearAll} title="Xóa toàn bộ nhật ký" aria-label="Xóa toàn bộ nhật ký"><IconTrash /></button>}
           <button className="link-btn journal__lock-btn" onClick={handleLock} title="Khóa Nhật ký / đổi người dùng" aria-label="Khóa Nhật ký / đổi người dùng"><IconLock /></button>
           {onClose && <button className="link-btn" onClick={onClose} title="Đóng" aria-label="Đóng Nhật ký"><IconClose /></button>}

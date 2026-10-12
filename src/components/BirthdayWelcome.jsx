@@ -37,7 +37,7 @@ const COPY = {
   continue: 'C\u00f9ng v\u00e0o nghe nh\u1ea1c nh\u00e9',
 }
 
-export default function BirthdayWelcome() {
+export default function BirthdayWelcome({ onClose }) {
   const [step, setStep] = useState('question')
   const [open, setOpen] = useState(true)
   const [noPosition, setNoPosition] = useState({ left: 82, top: 8 })
@@ -159,7 +159,7 @@ export default function BirthdayWelcome() {
               </div>
               <p className="birthday-card__signature">{COPY.signature}</p>
               <button className="birthday-card__continue" type="button"
-                onClick={() => setOpen(false)}>
+                onClick={() => { setOpen(false); onClose?.() }}>
                 {COPY.continue}
               </button>
             </div>

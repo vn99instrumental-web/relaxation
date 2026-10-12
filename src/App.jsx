@@ -146,6 +146,8 @@ export default function App() {
   })
 
   const [username, setUsername] = useState(() => load('vibe.username', ''))
+  const [birthdayOpen, setBirthdayOpen] = useState(false)
+  const birthdayEligible = ['dốc nhà làng', 'rừng thông', 'rt'].includes(String(username || '').trim().toLocaleLowerCase('vi-VN'))
   const [syncConfig, setSyncConfig] = useState(() =>
     load('vibe.sync', { token: '', gistId: '', roomName: 'Vibe Space Journal' }),
   )
@@ -1107,6 +1109,7 @@ export default function App() {
               <Journal
                 journal={journal} username={username} setUsername={setUsername}
                 onClose={() => setRightTab(null)}
+                onOpenBirthday={birthdayEligible ? () => setBirthdayOpen(true) : undefined}
                 admin={admin}
               />
             ) : null}
@@ -1168,8 +1171,8 @@ export default function App() {
         hiddenCount={hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
         playlists={playlists} onImportPlaylists={importPlaylists}
       />
-      {journalAccess && ['dốc nhà làng', 'rừng thông', 'rt'].includes(String(username || '').trim().toLocaleLowerCase('vi-VN')) && (
-        <BirthdayWelcome />
+      {journalAccess && birthdayOpen && birthdayEligible && (
+        <BirthdayWelcome onClose={() => setBirthdayOpen(false)} />
       )}
     </div>
   )
