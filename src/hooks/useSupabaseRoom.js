@@ -310,11 +310,27 @@ export function useSupabaseRoom(config, username) {
 
   const updatePlaylistRow = useCallback(async (id, tracks) => {
     const c = clientRef.current
-    if (!c) return
+    if (!c) return { ok: false, error: 'Chưa kết nối được phòng dùng chung.' }
     setPlaylists((prev) => prev.map((p) => (p.id === id ? { ...p, tracks } : p)))
-    try { const { error: e } = await c.from('playlists').update({ tracks, updated_at: new Date().toISOString() }).eq('id', id); if (e) throw e; setError('') } catch (e) { setError(e.message || 'Cập nhật playlist lỗi') }
-    reloadPlaylists()
-  }, [reloadPlaylists])
+    try {
+      const { data: updatedRow, error: updateError } = await c.from('playlists')
+        .update({ tracks, updated_at: new Date().toISOString() })
+        .eq('room_id', room)
+        .eq('id', id)
+        .select('id')
+        .maybeSingle()
+      if (updateError) throw updateError
+      if (!updatedRow) throw new Error('Không tìm thấy playlist trong phòng hiện tại.')
+      setError('')
+      await reloadPlaylists()
+      return { ok: true }
+    } catch (updateError) {
+      const message = updateError.message || 'Cập nhật playlist lỗi'
+      setError(message)
+      await reloadPlaylists()
+      return { ok: false, error: message }
+    }
+  }, [room, reloadPlaylists])
 
   const renamePlaylistRow = useCallback(async (id, name) => {
     const c = clientRef.current

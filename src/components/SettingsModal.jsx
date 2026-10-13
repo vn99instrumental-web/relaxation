@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { WIND_PRESETS, PRESET_ORDER } from '../leaf-engine/config'
-import { IconCheck, IconClose, IconEdit, IconImage, IconMusic, IconPalette, IconSettings, IconShield, IconTrash } from './icons'
+import { IconCheck, IconClose, IconEdit, IconImage, IconMusic, IconPalette, IconRefresh, IconSettings, IconShield, IconTrash } from './icons'
 import { createPlaylistBackup, parsePlaylistBackup } from '../lib/playlistBackup'
 import { useActions } from './ActionProvider'
 
@@ -15,7 +15,7 @@ export default function SettingsModal({
   theme, setTheme, themes,
   fx, setFx, fxSpeed, setFxSpeed, fxDensity, setFxDensity, fxSize, setFxSize, fxPreset, setFxPreset,
   fxWindDir, setFxWindDir, fxSwirl, setFxSwirl,
-  playlists = [], onImportPlaylists,
+  playlists = [], onImportPlaylists, onSyncPlaylistTitles,
 }) {
   const actions = useActions()
   const [tab, setTab] = useState('appearance')
@@ -32,6 +32,8 @@ export default function SettingsModal({
   const dialogRef = useRef(null)
   const previouslyFocusedRef = useRef(null)
   const onCloseRef = useRef(onClose)
+  const [playlistSyncBusy, setPlaylistSyncBusy] = useState(false)
+  const [playlistSyncProgress, setPlaylistSyncProgress] = useState({ completed: 0, total: 0 })
   onCloseRef.current = onClose
 
   useEffect(() => {
@@ -117,6 +119,30 @@ export default function SettingsModal({
     } finally {
       setBackupBusy(false)
       if (backupFileRef.current) backupFileRef.current.value = ''
+    }
+  }
+
+  const syncPlaylistData = async () => {
+    if (!admin || !onSyncPlaylistTitles || playlistSyncBusy) return
+    setPlaylistSyncBusy(true)
+    setPlaylistSyncProgress({ completed: 0, total: 0 })
+    setMsg('')
+    try {
+      const result = await onSyncPlaylistTitles(setPlaylistSyncProgress)
+      if (!result.totalVideos) {
+        setMsg('Chưa có video nào trong Mới đăng hoặc playlist đã lưu để đồng bộ.')
+      } else if (result.failedPlaylists) {
+        setMsg('Đã lấy ' + result.fetchedTitles + '/' + result.totalVideos + ' tên từ YouTube và cập nhật ' + result.updatedTracks + ' bài; ' + result.failedPlaylists + ' playlist chưa lưu được.')
+      } else if (result.updatedTracks) {
+        setMsg('Đã lấy ' + result.fetchedTitles + '/' + result.totalVideos + ' tên từ YouTube và lưu ' + result.updatedTracks + ' bài vào dữ liệu dùng chung.')
+      } else {
+        const suffix = result.failedVideos ? ' ' + result.failedVideos + ' video không trả về tên.' : ''
+        setMsg('Đã kiểm tra ' + result.totalVideos + ' video; tên bài hát hiện đã mới nhất.' + suffix)
+      }
+    } catch (error) {
+      setMsg(error.message || 'Không thể đồng bộ tên bài hát.')
+    } finally {
+      setPlaylistSyncBusy(false)
     }
   }
 
@@ -238,6 +264,21 @@ export default function SettingsModal({
             <h3><IconShield /> Quyền admin</h3>
             <label className="admin-row"><input type="checkbox" checked={!!admin} disabled={adminManaged} onChange={(event) => setAdmin(event.target.checked)} /><span>{adminManaged ? (admin ? 'User hiện tại đang có quyền quản trị phòng.' : 'Quyền quản trị được cấp cho Dốc Nhà Làng và Rừng Thông.') : 'Cho phép quản lý nội dung chung và đặt cấu hình mặc định cho phòng.'}</span></label>
             {adminManaged && <p className="settings-note">Quyền này do Supabase xác nhận theo user, không thể tự bật trên thiết bị.</p>}
+            <div className="settings-backup settings-playlist-sync">
+              <h3><IconRefresh /> Đồng bộ dữ liệu playlist</h3>
+              <p className="settings-note">Lấy tên mới nhất từ YouTube cho “Mới đăng” và các playlist đã lưu, sau đó ghi vào Supabase để mọi thiết bị dùng chung. Vercel chỉ phục vụ ứng dụng, không lưu dữ liệu playlist.</p>
+              <div className="settings-backup__actions">
+                <button type="button" className="btn btn--primary playlist-sync__button"
+                  onClick={syncPlaylistData} disabled={!admin || playlistSyncBusy}>
+                  <IconRefresh />
+                  {playlistSyncBusy
+                    ? 'Đang đồng bộ ' + playlistSyncProgress.completed + '/' + (playlistSyncProgress.total || '…')
+                    : 'Đồng bộ tên bài hát'}
+                </button>
+              </div>
+              {!playlists.length && <p className="settings-note">Chưa có playlist đã lưu; nút vẫn kiểm tra danh sách Mới đăng.</p>}
+              {!admin && <p className="settings-note">Chỉ Dốc Nhà Làng hoặc Rừng Thông có thể đồng bộ dữ liệu playlist.</p>}
+            </div>
             <div className="settings-backup">
               <h3><IconMusic /> Backup playlist</h3>
               <p className="settings-note">Xuất toàn bộ {playlists.length} playlist thành một tệp JSON, hoặc khôi phục lại vào thư viện hiện tại.</p>

@@ -23,6 +23,7 @@ import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, BUILTIN_SCENES } from './lib/backgr
 import { playlistNameForTrack } from './lib/trackPlaylist'
 import { pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
+import { applyVideoTitles, collectPlaylistVideoIds } from './lib/playlistTitleSync'
 import { queueIndexesBySort, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
 
 // Tải LeafEngine (Three.js) theo yêu cầu — không nằm trong gói khởi động, nên
@@ -584,6 +585,83 @@ export default function App() {
     }))
     setLocalPlaylists((current) => mode === 'replace' ? restored : [...restored, ...current])
     return restored.length
+  }, [admin])
+
+  const syncPlaylistTitles = useCallback(async (onProgress) => {
+    if (!admin) throw new Error('Chỉ admin mới có thể đồng bộ tên bài hát.')
+
+    const videoIds = collectPlaylistVideoIds(queueRef.current, playlistsRef.current)
+    if (!videoIds.length) {
+      return { totalVideos: 0, fetchedTitles: 0, updatedTracks: 0, failedVideos: 0, failedPlaylists: 0 }
+    }
+
+    const fetchedTitles = {}
+    let cursor = 0
+    let completed = 0
+    const worker = async () => {
+      while (cursor < videoIds.length) {
+        const current = cursor
+        cursor += 1
+        const videoId = videoIds[current]
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 12000)
+        let title = ''
+        try {
+          title = await fetchVideoTitle(videoId, controller.signal)
+        } finally {
+          clearTimeout(timeout)
+        }
+        if (title) fetchedTitles[videoId] = title
+        completed += 1
+        onProgress?.({ completed, total: videoIds.length })
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(4, videoIds.length) }, worker))
+
+    if (Object.keys(fetchedTitles).length) {
+      setTitles((current) => ({ ...current, ...fetchedTitles }))
+    }
+
+    let updatedTracks = 0
+    let failedPlaylists = 0
+    const queueResult = applyVideoTitles(queueRef.current, fetchedTitles)
+    if (queueResult.updatedCount) {
+      updatedTracks += queueResult.updatedCount
+      setQueue(queueResult.tracks)
+    }
+
+    if (supaRef.current.enabled) {
+      for (const snapshot of playlistsRef.current) {
+        const current = playlistsRef.current.find((playlist) => playlist.id === snapshot.id)
+        if (!current) continue
+        const result = applyVideoTitles(current.tracks, fetchedTitles)
+        if (!result.updatedCount) continue
+        const saved = await supaRef.current.updatePlaylistRow(current.id, result.tracks)
+        if (saved?.ok) updatedTracks += result.updatedCount
+        else failedPlaylists += 1
+      }
+    } else {
+      const updates = new Map()
+      playlistsRef.current.forEach((playlist) => {
+        const result = applyVideoTitles(playlist.tracks, fetchedTitles)
+        if (!result.updatedCount) return
+        updates.set(playlist.id, result.tracks)
+        updatedTracks += result.updatedCount
+      })
+      if (updates.size) {
+        setLocalPlaylists((current) => current.map((playlist) => (
+          updates.has(playlist.id) ? { ...playlist, tracks: updates.get(playlist.id), ts: Date.now() } : playlist
+        )))
+      }
+    }
+
+    return {
+      totalVideos: videoIds.length,
+      fetchedTitles: Object.keys(fetchedTitles).length,
+      updatedTracks,
+      failedVideos: videoIds.length - Object.keys(fetchedTitles).length,
+      failedPlaylists,
+    }
   }, [admin])
 
   const tracksFromParsed = (parsedList) => {
@@ -1168,6 +1246,7 @@ export default function App() {
         backgrounds={backgrounds} bgId={bgId} setBgId={setBgId}
         onAddImage={addImage} onRemoveImage={removeImage} onRenameImage={renameImage}
         shared={useShared} galleryError={gallery.error}
+        onSyncPlaylistTitles={syncPlaylistTitles}
         hiddenCount={hiddenBg.length} onRestoreBg={() => setHiddenBg([])}
         playlists={playlists} onImportPlaylists={importPlaylists}
       />
