@@ -2,6 +2,7 @@
 // âm lượng, và các nút mở/đóng panel (Nhạc / Không gian / Nhật ký).
 import { IconMusic, IconJournal, IconImmersive, IconLock, IconPoem, IconSettings, IconPrev, IconNext, IconPlay, IconPause } from './icons'
 import { trackName } from '../lib/youtube'
+import { useYouTubeProgress } from '../hooks/useYouTube'
 
 export default function Dock({
   yt, queue, index, onNext, onPrev, ytVolume, setYtVolume,
@@ -11,8 +12,9 @@ export default function Dock({
   leftTab, onToggleLeft, journalAuthenticated = false, journalOpen, onToggleJournal, poemsOpen, onTogglePoems, onLoginJournal, onOpenSettings, onHideUI,
 }) {
   const title = yt.nowTitle || trackName(queue[index], titles) || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
-  const duration = Number(yt.duration) || 0
-  const currentTime = Math.min(Number(yt.currentTime) || 0, duration || Infinity)
+  const progress = useYouTubeProgress(yt)
+  const duration = Number(progress.duration) || 0
+  const currentTime = Math.min(Number(progress.currentTime) || 0, duration || Infinity)
   const timeLabel = (seconds) => {
     const safe = Math.max(0, Math.floor(Number(seconds) || 0))
     return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, '0')}`

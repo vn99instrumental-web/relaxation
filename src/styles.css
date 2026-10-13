@@ -369,7 +369,7 @@ input, textarea { font-family: inherit; }
   box-shadow: var(--shadow), inset 0 1px 0 rgba(231,220,196,0.06);
   overflow: hidden;
   z-index: 5;
-  transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.36s, width 0.32s ease;
+  transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.26s, width 0.24s ease;
 }
 .drawer--left { top: 0; left: 0; width: min(760px, calc(100vw - 24px)); border-left: none; border-radius: 0 var(--radius) var(--radius) 0; transform: translateX(-104%); opacity: 0; }
 .drawer--right { top: 0; right: 0; width: min(500px, 92vw); border-right: none; border-radius: var(--radius) 0 0 var(--radius); transform: translateX(104%); opacity: 0; }
@@ -650,7 +650,7 @@ input, textarea { font-family: inherit; }
 .pane:has(.pl-saved) .queue { flex: 0 1 auto; max-height: 40%; }
 /* Ẩn danh sách playlist -> hàng chờ mở rộng chiếm hết chỗ */
 .pane:has(.pl-saved.is-collapsed) .queue { flex: 1 1 auto; max-height: none; }
-.queue__item { display: flex; align-items: center; gap: 4px; border-radius: 8px; padding: 3px; transition: 0.2s; }
+.queue__item { display: flex; align-items: center; gap: 4px; border-radius: 8px; padding: 3px; transition: 0.2s; content-visibility: auto; contain-intrinsic-size: auto 38px; }
 .queue__item:hover { background: var(--surface); }
 .queue__item.is-current { background: color-mix(in srgb, var(--sel) 72%, transparent); box-shadow: inset 2px 0 0 color-mix(in srgb, var(--gold-soft) 72%, transparent); }
 .queue__play { flex: 1; display: flex; align-items: center; gap: 9px; background: none; border: none; color: var(--ink); text-align: left; min-width: 0; padding: 3px; }

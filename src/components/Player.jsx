@@ -2,6 +2,26 @@ import { useState, useMemo } from 'react'
 import { parseYouTube, videoThumb, trackName } from '../lib/youtube'
 import { IconCheck, IconClose, IconEdit, IconPrev, IconNext, IconPlay, IconPause, IconRefresh, IconTrash, IconVideo } from './icons'
 import { useActions } from './ActionProvider'
+import { useYouTubeProgress } from '../hooks/useYouTube'
+
+const timeLabel = (seconds) => {
+  const safe = Math.max(0, Math.floor(Number(seconds) || 0))
+  return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, '0')}`
+}
+
+function PlayerProgress({ yt }) {
+  const progress = useYouTubeProgress(yt)
+  const duration = Number(progress.duration) || 0
+  const currentTime = Math.min(Number(progress.currentTime) || 0, duration || Infinity)
+  return (
+    <div className="now-player__seek">
+      <span>{timeLabel(currentTime)}</span>
+      <input type="range" min="0" max={duration || 0.1} step="0.1" value={currentTime}
+        disabled={!duration} onChange={(event) => yt?.seekTo(Number(event.target.value))} aria-label="Tua bài hát" />
+      <span>{timeLabel(duration)}</span>
+    </div>
+  )
+}
 
 const addedTime = (track, fallback) => {
   const numeric = Number(track?.addedAt)
@@ -22,7 +42,7 @@ export default function Player({
   onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist, onRenamePlaylist,
   admin, defaultTrack, onSetDefaultTrack, onClearDefaultTrack,
   recentLimit, onRecentLimitChange,
-  onTabChange, titles,
+  onTabChange, titles, active = true,
 }) {
   const actions = useActions()
   const [tab, setTab] = useState('now')            // 'now' | 'recent' | 'library' | 'add'
@@ -112,13 +132,8 @@ export default function Player({
     : displayedPlaylists
   const currentTrack = queue[index]
   const currentTitle = yt?.nowTitle || trackName(currentTrack, titles) || 'Chưa chọn bài hát'
-  const duration = Number(yt?.duration) || 0
-  const currentTime = Math.min(Number(yt?.currentTime) || 0, duration || Infinity)
   const selectTab = (next) => { setTab(next); onTabChange?.(next) }
-  const timeLabel = (seconds) => {
-    const safe = Math.max(0, Math.floor(Number(seconds) || 0))
-    return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, '0')}`
-  }
+  if (!active) return <div id="yt-frame" className="player__deferred-frame" aria-hidden="true" />
 
   return (
     <div className="pane">
@@ -196,12 +211,7 @@ export default function Player({
               <small>{queue.length ? `${Math.max(0, currentTracks.findIndex((item) => item.queueIndex === index)) + 1} / ${queue.length}` : 'Chưa có bài'}</small>
             </div>
             <div className="now-player__controls">
-              <div className="now-player__seek">
-                <span>{timeLabel(currentTime)}</span>
-                <input type="range" min="0" max={duration || 0.1} step="0.1" value={currentTime}
-                  disabled={!duration} onChange={(event) => yt?.seekTo(Number(event.target.value))} aria-label="Tua bài hát" />
-                <span>{timeLabel(duration)}</span>
-              </div>
+              <PlayerProgress yt={yt} />
               <div className="now-player__control-row">
                 <div className="now-player__transport">
                   <button className="ctrl" onClick={onPrev} aria-label="Bài trước" disabled={!queue.length}><IconPrev /></button>

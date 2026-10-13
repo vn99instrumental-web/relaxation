@@ -116,7 +116,8 @@ function trackFromParsed(p, title = '', addedAt = Date.now()) {
 }
 
 export default function App() {
-  const yt = useYouTube('yt-frame')
+  const [musicActivated, setMusicActivated] = useState(false)
+  const yt = useYouTube('yt-frame', musicActivated)
 
   const [queue, setQueue] = useState(() => normalizeQueueMetadata(load('vibe.queue', [])))
   const [index, setIndex] = useState(0)
@@ -189,7 +190,7 @@ export default function App() {
   const admin = supa.enabled ? journalAccess : localAdmin
   const gallery = useSupabaseGallery(supaConfig)
   const roomSettings = useRoomSettings(supaConfig, admin)
-  const poemsApi = usePoems(supaConfig, username)
+  const poemsApi = usePoems(supaConfig, username, poemsOpen)
   const [roomHydrated, setRoomHydrated] = useState(false)
   const rawPlaylists = supa.enabled ? supa.playlists : localPlaylists
   // Chuẩn hoá addedAt để mọi playlist luôn xếp bài mới nhất lên đầu, ổn định.
@@ -908,13 +909,14 @@ export default function App() {
         })
       }
       navigator.mediaSession.playbackState = yt.playing ? 'playing' : 'paused'
-      if (yt.duration > 0) navigator.mediaSession.setPositionState({
-        duration: yt.duration,
+      const { currentTime, duration } = yt.getProgress()
+      if (duration > 0) navigator.mediaSession.setPositionState({
+        duration,
         playbackRate: 1,
-        position: Math.min(Math.max(0, yt.currentTime || 0), yt.duration),
+        position: Math.min(Math.max(0, currentTime || 0), duration),
       })
     } catch { /* ignore */ }
-  }, [currentQueueTrack, activePlaylistName, yt.nowTitle, yt.playing, yt.currentTime, yt.duration])
+  }, [currentQueueTrack, activePlaylistName, yt.nowTitle, yt.playing, yt])
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
     const set = (a, fn) => { try { navigator.mediaSession.setActionHandler(a, fn) } catch { /* ignore */ } }
@@ -925,11 +927,11 @@ export default function App() {
       set('nexttrack', () => mediaControlsRef.current.onNext())
       set('seekbackward', (details) => {
         const player = ytLiveRef.current
-        player.seekTo(Math.max(0, player.currentTime - (details.seekOffset || 10)))
+        player.seekTo(Math.max(0, player.getProgress().currentTime - (details.seekOffset || 10)))
       })
       set('seekforward', (details) => {
         const player = ytLiveRef.current
-        player.seekTo(Math.min(player.duration || Infinity, player.currentTime + (details.seekOffset || 10)))
+        player.seekTo(Math.min(player.getProgress().duration || Infinity, player.getProgress().currentTime + (details.seekOffset || 10)))
       })
       set('seekto', (details) => { if (Number.isFinite(details.seekTime)) ytLiveRef.current.seekTo(details.seekTime) })
     }
@@ -1049,6 +1051,7 @@ export default function App() {
   }, [sharedMusicSig, admin, recentPlayback, roomSettings.enabled, roomSettings.ready, roomHydrated])
 
   const toggleLeft = (tab) => {
+    if (tab === 'music') setMusicActivated(true)
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches) setRightTab(null)
     setLeftTab((cur) => (cur === tab ? null : tab))
   }
@@ -1112,12 +1115,23 @@ export default function App() {
 
   // Máy có WebGL -> dùng LeafEngine (3D); không thì rơi về hiệu ứng CSS.
   const webglOK = useMemo(() => hasWebGL(), [])
+  const [fxEngineReady, setFxEngineReady] = useState(false)
+  useEffect(() => {
+    if (!webglOK || !fx.length || fxEngineReady) return undefined
+    const ready = () => setFxEngineReady(true)
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(ready, { timeout: 1800 })
+      return () => window.cancelIdleCallback(id)
+    }
+    const id = window.setTimeout(ready, 900)
+    return () => window.clearTimeout(id)
+  }, [webglOK, fx.length, fxEngineReady])
   return (
     <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''} ${rightTab ? 'is-right-open' : ''} ${musicView === 'now' ? 'is-music-now' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
-      {webglOK && fx.length > 0 ? (
+      {webglOK && fx.length > 0 && fxEngineReady ? (
         <Suspense fallback={<FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />}>
-          <LeafEngine modes={fx} speed={fxSpeed} density={fxDensity} sizeLevel={fxSize} preset={fxPreset} windDir={fxWindDir} swirl={fxSwirl} />
+          <LeafEngine modes={fx} speed={fxSpeed} density={fxDensity} sizeLevel={fxSize} preset={fxPreset} windDir={fxWindDir} swirl={fxSwirl} paused={Boolean(leftTab || rightTab)} />
         </Suspense>
       ) : (
         <FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />
@@ -1128,8 +1142,8 @@ export default function App() {
         <header className="topbar">
           <div className="brand">
             <h1 className="brand__title">
-              <img className="brand__lockup" src="/brand-pine-wordmark-header-900.png"
-                srcSet="/brand-pine-wordmark-header-900.png 900w, /brand-pine-wordmark-header.png 2172w"
+              <img className="brand__lockup" src="/brand-pine-wordmark-header-900.webp"
+                srcSet="/brand-pine-wordmark-header-900.webp 900w, /brand-pine-wordmark-header.webp 2172w"
                 sizes="(max-width: 480px) 210px, 252px" alt="Dưới Tán Thông" width="900" height="300" />
             </h1>
             <div className="brand__name">
@@ -1165,7 +1179,7 @@ export default function App() {
                 admin={admin} defaultTrack={defaultTrack}
                 onSetDefaultTrack={setOpeningTrack} onClearDefaultTrack={clearOpeningTrack}
                 recentLimit={recentLimit} onRecentLimitChange={setRecentLimit}
-                onTabChange={setMusicView}
+                onTabChange={setMusicView} active={musicActivated}
               />
           </div>
         </aside>

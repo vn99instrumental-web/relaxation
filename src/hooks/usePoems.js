@@ -16,7 +16,7 @@ const mapInteraction = (row) => row.reaction
   ? { id: row.id, type: 'reaction', emoji: row.reaction, author: row.author, ts: new Date(row.created_at).getTime() }
   : { id: row.id, author: row.author, text: row.body || '', ts: new Date(row.created_at).getTime() }
 
-export function usePoems(config, username) {
+export function usePoems(config, username, detailsEnabled = false) {
   const { url, key, room } = config || {}
   const enabled = Boolean(url && key && room)
   const clientRef = useRef(null)
@@ -71,7 +71,7 @@ export function usePoems(config, username) {
       const visible = (result.data || []).map(mapPoem)
       const ids = visible.map((poem) => poem.id)
       let interactions = []
-      if (ids.length) {
+      if (detailsEnabled && ids.length) {
         const interactionResult = await client.from('poem_interactions').select('*').in('poem_id', ids).order('created_at')
         if (interactionResult.error) throw interactionResult.error
         interactions = interactionResult.data || []
@@ -89,7 +89,7 @@ export function usePoems(config, username) {
     } finally {
       setLoadingPage(false)
     }
-  }, [enabled, room, showLocalPage])
+  }, [enabled, room, showLocalPage, detailsEnabled])
 
   useEffect(() => {
     if (!enabled) {

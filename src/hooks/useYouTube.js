@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo, useSyncExternalStore } from 'react'
 
 // iOS chặn phát nhạc nền của web/YouTube ở mức hệ điều hành. Gọi playVideo()
 // khi trang đang ẩn (không do người dùng bấm) dễ bị iOS từ chối và sập luôn
@@ -44,15 +44,15 @@ function applyTrack(player, track, autoplay) {
 
 // Quản lý 1 player YouTube ẩn + hàng chờ do mình tự điều khiển.
 // Mỗi track: { key, kind: 'video'|'playlist', videoId?, playlistId?, title }
-export function useYouTube(mountId) {
+export function useYouTube(mountId, enabled = true) {
   const playerRef = useRef(null)
   const [ready, setReady] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [current, setCurrent] = useState(null) // track đang phát
   const [nowTitle, setNowTitle] = useState('')
   const [buffering, setBuffering] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
+  const progressRef = useRef({ currentTime: 0, duration: 0 })
+  const progressListenersRef = useRef(new Set())
   const currentRef = useRef(null)
   const onEndedRef = useRef(() => {})
   const onErrorRef = useRef(() => {})
@@ -63,8 +63,18 @@ export function useYouTube(mountId) {
   const intendedPlayingRef = useRef(false)
   const resumeTriesRef = useRef(0)
   const resumeTimerRef = useRef(null)
+  const setProgress = useCallback((currentTime, duration = progressRef.current.duration) => {
+    progressRef.current = { currentTime: Number(currentTime) || 0, duration: Number(duration) || 0 }
+    progressListenersRef.current.forEach((listener) => listener())
+  }, [])
+  const subscribeProgress = useCallback((listener) => {
+    progressListenersRef.current.add(listener)
+    return () => progressListenersRef.current.delete(listener)
+  }, [])
+  const getProgress = useCallback(() => progressRef.current, [])
 
   useEffect(() => {
+    if (!enabled) return undefined
     let cancelled = false
     loadYouTubeAPI().then((YT) => {
       if (cancelled) return
@@ -93,7 +103,7 @@ export function useYouTube(mountId) {
               try {
                 const d = playerRef.current.getVideoData()
                 if (d && d.title) setNowTitle(d.title)
-                setDuration(Number(playerRef.current.getDuration()) || 0)
+                setProgress(progressRef.current.currentTime, Number(playerRef.current.getDuration()) || 0)
               } catch { /* ignore */ }
             } else if (e.data === S.PAUSED) {
               setPlaying(false)
@@ -130,7 +140,7 @@ export function useYouTube(mountId) {
       try { playerRef.current?.destroy() } catch { /* ignore */ }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [enabled, mountId, setProgress])
 
   // Ẩn/khóa màn: cho phép một loạt lần thử phát-lại mới. Quay lại tab mà vẫn
   // muốn phát nhưng đã bị dừng -> phát tiếp ngay.
@@ -157,24 +167,22 @@ export function useYouTube(mountId) {
     currentRef.current = track
     setCurrent(track)
     setNowTitle(track.title || '')
-    setCurrentTime(0)
-    setDuration(0)
+    setProgress(0, 0)
     if (!applyTrack(p, track, true)) pendingTrackRef.current = { track, autoplay: true }
-  }, [])
+  }, [setProgress])
 
   useEffect(() => {
     if (!ready) return undefined
     const readProgress = () => {
       try {
         const p = playerRef.current
-        setCurrentTime(Number(p?.getCurrentTime?.()) || 0)
-        setDuration(Number(p?.getDuration?.()) || 0)
+        setProgress(Number(p?.getCurrentTime?.()) || 0, Number(p?.getDuration?.()) || 0)
       } catch { /* ignore */ }
     }
     readProgress()
     const timer = window.setInterval(readProgress, 500)
     return () => window.clearInterval(timer)
-  }, [ready])
+  }, [ready, setProgress])
 
   const cueTrack = useCallback((track) => {
     const p = playerRef.current
@@ -184,10 +192,9 @@ export function useYouTube(mountId) {
     currentRef.current = track
     setCurrent(track)
     setNowTitle(track.title || '')
-    setCurrentTime(0)
-    setDuration(0)
+    setProgress(0, 0)
     if (!applyTrack(p, track, false)) pendingTrackRef.current = { track, autoplay: false }
-  }, [])
+  }, [setProgress])
 
   const play = useCallback(() => {
     intendedPlayingRef.current = true
@@ -223,9 +230,9 @@ export function useYouTube(mountId) {
     if (!Number.isFinite(value)) return
     try {
       playerRef.current?.seekTo(Math.max(0, value), true)
-      setCurrentTime(Math.max(0, value))
+      setProgress(Math.max(0, value))
     } catch { /* ignore */ }
-  }, [])
+  }, [setProgress])
 
   const stop = useCallback(() => {
     intendedPlayingRef.current = false
@@ -234,17 +241,21 @@ export function useYouTube(mountId) {
     currentRef.current = null
     setCurrent(null)
     setNowTitle('')
-    setCurrentTime(0)
-    setDuration(0)
+    setProgress(0, 0)
     setPlaying(false)
     setBuffering(false)
-  }, [])
+  }, [setProgress])
 
   const setOnEnded = useCallback((fn) => { onEndedRef.current = fn }, [])
   const setOnError = useCallback((fn) => { onErrorRef.current = fn }, [])
 
-  return {
-    ready, playing, buffering, current, nowTitle, currentTime, duration,
+  return useMemo(() => ({
+    ready, playing, buffering, current, nowTitle, subscribeProgress, getProgress,
     playTrack, cueTrack, play, pause, toggle, stop, seekTo, setVolume, setOnEnded, setOnError,
-  }
+  }), [ready, playing, buffering, current, nowTitle, subscribeProgress, getProgress,
+    playTrack, cueTrack, play, pause, toggle, stop, seekTo, setVolume, setOnEnded, setOnError])
+}
+
+export function useYouTubeProgress(yt) {
+  return useSyncExternalStore(yt.subscribeProgress, yt.getProgress, yt.getProgress)
 }

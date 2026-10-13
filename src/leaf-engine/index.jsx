@@ -10,7 +10,7 @@ import { pickProfile, prefersReducedMotion } from './quality'
 // thiết bị, tạm dừng khi tab ẩn. Bật debug bằng ?fxdebug=1.
 export default function LeafEngine({
   modes = ['leaves'], speed = 50, density = 50, sizeLevel = 50, preset = 'breeze',
-  windDir = 'auto', swirl = 50, debug = false,
+  windDir = 'auto', swirl = 50, debug = false, paused = false,
 }) {
   const profile = useMemo(() => pickProfile(), [])
   const reduce = useMemo(() => prefersReducedMotion(), [])
@@ -51,7 +51,7 @@ export default function LeafEngine({
     <>
       <div className="leaf-canvas" aria-hidden="true">
         <Canvas
-          frameloop={visible ? 'always' : 'never'}
+          frameloop={visible && !paused ? 'always' : 'never'}
           dpr={profile.dpr}
           gl={{ antialias: profile.antialias, alpha: true, powerPreference: 'low-power' }}
           camera={{ fov: 45, position: [0, 0, 14], near: 0.1, far: 60 }}
