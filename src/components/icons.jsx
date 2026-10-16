@@ -67,10 +67,22 @@ export const IconRefresh = (p) => (
   <svg {...base} {...p}><path d="M20 6v5h-5" /><path d="M4 18v-5h5" /><path d="M6.1 9a7 7 0 0111.6-2.6L20 11" /><path d="M4 13l2.3 4.6A7 7 0 0018 15" /></svg>
 )
 export const IconRepeat = (p) => (
-  <svg {...base} {...p}><path d="M17 4l3 3-3 3" /><path d="M4 7h14a3 3 0 013 3" /><path d="M7 20l-3-3 3-3" /><path d="M20 17H6a3 3 0 01-3-3" /></svg>
+  <svg {...base} {...p}>
+    <path d="M7 7h9.5a4.5 4.5 0 014.5 4.5" />
+    <path d="m17 4 3.5 3-3.5 3" />
+    <path d="M17 17H7.5A4.5 4.5 0 013 12.5" />
+    <path d="m7 20-3.5-3L7 14" />
+  </svg>
 )
 export const IconRepeatOne = (p) => (
-  <svg {...base} {...p}><path d="M17 4l3 3-3 3" /><path d="M4 7h14a3 3 0 013 3" /><path d="M7 20l-3-3 3-3" /><path d="M20 17H6a3 3 0 01-3-3" /><path d="M12 10v5M10.8 10.8 12 10v5" /></svg>
+  <svg {...base} {...p}>
+    <path d="M7 7h9.5a4.5 4.5 0 014.5 4.5" />
+    <path d="m17 4 3.5 3-3.5 3" />
+    <path d="M17 17H7.5A4.5 4.5 0 013 12.5" />
+    <path d="m7 20-3.5-3L7 14" />
+    <circle cx="12" cy="12" r="4.3" fill="var(--surface-2, currentColor)" stroke="currentColor" strokeWidth="1.2" />
+    <text x="12" y="15" textAnchor="middle" fill="currentColor" stroke="none" fontSize="7" fontWeight="700" fontFamily="var(--ui, sans-serif)">1</text>
+  </svg>
 )
 export const IconTrash = (p) => (
   <svg {...base} {...p}><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6" /></svg>
