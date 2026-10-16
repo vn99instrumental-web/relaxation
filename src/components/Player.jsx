@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { parseYouTube, videoThumb, trackName } from '../lib/youtube'
-import { IconCheck, IconClose, IconEdit, IconPrev, IconNext, IconPlay, IconPause, IconRefresh, IconTrash, IconVideo } from './icons'
+import { IconCheck, IconClose, IconEdit, IconPrev, IconNext, IconPlay, IconPause, IconRefresh, IconTrash, IconVideo, IconRepeat, IconRepeatOne } from './icons'
 import { useActions } from './ActionProvider'
 import { useYouTubeProgress } from '../hooks/useYouTube'
 
@@ -42,7 +42,7 @@ export default function Player({
   onAddToPlaylist, onCreatePlaylist, onMoveTrack, onRemoveFromPlaylist, onRenamePlaylist,
   admin, defaultTrack, onSetDefaultTrack, onClearDefaultTrack,
   recentLimit, onRecentLimitChange,
-  onTabChange, titles, active = true,
+  onTabChange, titles, active = true, repeatMode = 'off', onRepeatModeChange,
 }) {
   const actions = useActions()
   const [tab, setTab] = useState('now')            // 'now' | 'recent' | 'library' | 'add'
@@ -219,6 +219,8 @@ export default function Player({
                     {yt?.playing ? <IconPause /> : <IconPlay />}
                   </button>
                   <button className="ctrl" onClick={onNext} aria-label="Bài sau" disabled={!queue.length}><IconNext /></button>
+                  <button className={`ctrl ctrl--repeat ${repeatMode === 'one' ? 'is-on' : ''}`} onClick={() => onRepeatModeChange?.(repeatMode === 'one' ? 'off' : 'one')} title="Lặp bài đang nghe" aria-label="Lặp bài đang nghe" aria-pressed={repeatMode === 'one'}><IconRepeatOne /></button>
+                  <button className={`ctrl ctrl--repeat ${repeatMode === 'all' ? 'is-on' : ''}`} onClick={() => onRepeatModeChange?.(repeatMode === 'all' ? 'off' : 'all')} title="Lặp tất cả" aria-label="Lặp tất cả" aria-pressed={repeatMode === 'all'}><IconRepeat /></button>
                   <button className={`ctrl ctrl--sm ${showVideo ? 'is-on' : ''}`} onClick={onToggleVideo}
                     title={showVideo ? 'Ẩn video YouTube' : 'Trình chiếu video YouTube trong khung'}
                     aria-label={showVideo ? 'Ẩn video' : 'Hiện video'}><IconVideo /></button>

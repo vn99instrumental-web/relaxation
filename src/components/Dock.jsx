@@ -1,6 +1,6 @@
 // Thanh điều khiển mỏng ở đáy màn hình: thông tin bài đang phát + nút phát,
 // âm lượng, và các nút mở/đóng panel (Nhạc / Không gian / Nhật ký).
-import { IconMusic, IconJournal, IconImmersive, IconLock, IconPoem, IconSettings, IconPrev, IconNext, IconPlay, IconPause } from './icons'
+import { IconMusic, IconJournal, IconImmersive, IconLock, IconPoem, IconSettings, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne } from './icons'
 import { trackName } from '../lib/youtube'
 import { useYouTubeProgress } from '../hooks/useYouTube'
 
@@ -10,6 +10,7 @@ export default function Dock({
   syncStatus = 'offline', syncError = '',
   queuePosition = -1, unread = 0, unreadPoems = 0,
   leftTab, onToggleLeft, journalAuthenticated = false, journalOpen, onToggleJournal, poemsOpen, onTogglePoems, onLoginJournal, onOpenSettings, onHideUI,
+  repeatMode = 'off', onRepeatModeChange,
 }) {
   const title = yt.nowTitle || trackName(queue[index], titles) || (queue.length ? 'Sẵn sàng phát…' : 'Chưa có bài — mở ♫ Nhạc để thêm')
   const progress = useYouTubeProgress(yt)
@@ -47,6 +48,10 @@ export default function Dock({
           {yt.playing ? <IconPause /> : <IconPlay />}
         </button>
         <button className="ctrl" onClick={onNext} title="Bài sau" disabled={!queue.length} aria-label="Bài sau"><IconNext /></button>
+        <div className="repeat-controls" role="group" aria-label="Chế độ lặp">
+          <button className={`ctrl ctrl--repeat ${repeatMode === 'one' ? 'is-on' : ''}`} onClick={() => onRepeatModeChange?.(repeatMode === 'one' ? 'off' : 'one')} title="Lặp bài đang nghe" aria-label="Lặp bài đang nghe" aria-pressed={repeatMode === 'one'}><IconRepeatOne /></button>
+          <button className={`ctrl ctrl--repeat ${repeatMode === 'all' ? 'is-on' : ''}`} onClick={() => onRepeatModeChange?.(repeatMode === 'all' ? 'off' : 'all')} title="Lặp tất cả" aria-label="Lặp tất cả" aria-pressed={repeatMode === 'all'}><IconRepeat /></button>
+        </div>
         <label className="dock__vol" title="Âm lượng nhạc">
           <span className="player__volicon">♪</span>
           <input type="range" min="0" max="100" value={ytVolume} onChange={(e) => setYtVolume(Number(e.target.value))} />

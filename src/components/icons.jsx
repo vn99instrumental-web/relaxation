@@ -66,6 +66,12 @@ export const IconClose = (p) => (
 export const IconRefresh = (p) => (
   <svg {...base} {...p}><path d="M20 6v5h-5" /><path d="M4 18v-5h5" /><path d="M6.1 9a7 7 0 0111.6-2.6L20 11" /><path d="M4 13l2.3 4.6A7 7 0 0018 15" /></svg>
 )
+export const IconRepeat = (p) => (
+  <svg {...base} {...p}><path d="M17 4l3 3-3 3" /><path d="M4 7h14a3 3 0 013 3" /><path d="M7 20l-3-3 3-3" /><path d="M20 17H6a3 3 0 01-3-3" /></svg>
+)
+export const IconRepeatOne = (p) => (
+  <svg {...base} {...p}><path d="M17 4l3 3-3 3" /><path d="M4 7h14a3 3 0 013 3" /><path d="M7 20l-3-3 3-3" /><path d="M20 17H6a3 3 0 01-3-3" /><path d="M12 10v5M10.8 10.8 12 10v5" /></svg>
+)
 export const IconTrash = (p) => (
   <svg {...base} {...p}><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6" /></svg>
 )

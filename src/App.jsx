@@ -125,6 +125,10 @@ export default function App() {
   const [localPlaylists, setLocalPlaylists] = useState(() => load('vibe.playlists', []))
   const [queueSort, setQueueSort] = useState('latest')
   const [queueRandomSeed, setQueueRandomSeed] = useState(0)
+  const [repeatMode, setRepeatMode] = useState(() => {
+    const mode = load('vibe.repeatMode', 'off')
+    return ['off', 'one', 'all'].includes(mode) ? mode : 'off'
+  })
   const [autoplay, setAutoplay] = useState(() => load('vibe.autoplay', true))
   const [defaultTrack, setDefaultTrack] = useState(() => load('vibe.defaultTrack', null))
   const [recentLimit, setRecentLimit] = useState(() => load('vibe.recentLimit', 10))
@@ -295,6 +299,7 @@ export default function App() {
   }, [playlists, queue, index, yt])
 
   useEffect(() => save('vibe.queue', queue), [queue])
+  useEffect(() => save('vibe.repeatMode', repeatMode), [repeatMode])
   useEffect(() => save('vibe.playlists', localPlaylists), [localPlaylists])
   useEffect(() => save('vibe.autoplay', autoplay), [autoplay])
   useEffect(() => save('vibe.defaultTrack', defaultTrack), [defaultTrack])
@@ -788,7 +793,18 @@ export default function App() {
     [currentQueueTrack, playlists],
   )
 
-  useEffect(() => { yt.setOnEnded(onNext) }, [yt, onNext])
+  const onEnded = useCallback(() => {
+    if (repeatMode === 'one' && currentQueueTrack) {
+      yt.playTrack(currentQueueTrack)
+      return
+    }
+    if (repeatMode === 'all') {
+      onNext()
+      return
+    }
+    yt.stop()
+  }, [currentQueueTrack, onNext, repeatMode, yt])
+  useEffect(() => { yt.setOnEnded(onEnded) }, [yt, onEnded])
   useEffect(() => { yt.setOnError(onPlaybackError) }, [yt, onPlaybackError])
   useEffect(() => { if (yt.ready) yt.setVolume(ytVolume) }, [ytVolume, yt.ready, yt])
 
@@ -1180,6 +1196,7 @@ export default function App() {
                 onSetDefaultTrack={setOpeningTrack} onClearDefaultTrack={clearOpeningTrack}
                 recentLimit={recentLimit} onRecentLimitChange={setRecentLimit}
                 onTabChange={setMusicView} active={musicActivated}
+                repeatMode={repeatMode} onRepeatModeChange={setRepeatMode}
               />
           </div>
         </aside>
@@ -1216,6 +1233,7 @@ export default function App() {
         onNext={onNext} onPrev={onPrev} ytVolume={ytVolume} setYtVolume={setYtVolume}
         queuePosition={queueOrder.indexOf(index)}
         unread={unread} unreadPoems={unreadPoems + unreadHearts}
+        repeatMode={repeatMode} onRepeatModeChange={setRepeatMode}
         leftTab={leftTab} onToggleLeft={toggleLeft}
         journalAuthenticated={journalAccess}
         journalOpen={journalOpen} onToggleJournal={() => toggleRight('journal')}
