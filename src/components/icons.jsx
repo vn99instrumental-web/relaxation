@@ -68,20 +68,16 @@ export const IconRefresh = (p) => (
 )
 export const IconRepeat = (p) => (
   <svg {...base} {...p}>
-    <path d="M7 7h9.5a4.5 4.5 0 014.5 4.5" />
-    <path d="m17 4 3.5 3-3.5 3" />
-    <path d="M17 17H7.5A4.5 4.5 0 013 12.5" />
-    <path d="m7 20-3.5-3L7 14" />
+    <path d="M19 8a7 7 0 10.7 5.2" />
+    <path d="M19 4v4h-4" />
   </svg>
 )
 export const IconRepeatOne = (p) => (
   <svg {...base} {...p}>
-    <path d="M7 7h9.5a4.5 4.5 0 014.5 4.5" />
-    <path d="m17 4 3.5 3-3.5 3" />
-    <path d="M17 17H7.5A4.5 4.5 0 013 12.5" />
-    <path d="m7 20-3.5-3L7 14" />
-    <circle cx="12" cy="12" r="4.3" fill="var(--surface-2, currentColor)" stroke="currentColor" strokeWidth="1.2" />
-    <text x="12" y="15" textAnchor="middle" fill="currentColor" stroke="none" fontSize="7" fontWeight="700" fontFamily="var(--ui, sans-serif)">1</text>
+    <path d="M19 8a7 7 0 10.7 5.2" />
+    <path d="M19 4v4h-4" />
+    <circle cx="12" cy="12" r="4.6" fill="var(--surface-2, currentColor)" stroke="currentColor" strokeWidth="1.2" />
+    <text x="12" y="15" textAnchor="middle" fill="currentColor" stroke="none" fontSize="8" fontWeight="800" fontFamily="var(--ui, sans-serif)">1</text>
   </svg>
 )
 export const IconTrash = (p) => (
