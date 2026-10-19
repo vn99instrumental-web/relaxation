@@ -16,13 +16,13 @@ const mapInteraction = (row) => row.reaction
   ? { id: row.id, type: 'reaction', emoji: row.reaction, author: row.author, ts: new Date(row.created_at).getTime() }
   : { id: row.id, author: row.author, text: row.body || '', ts: new Date(row.created_at).getTime() }
 
-export function usePoems(config, username, detailsEnabled = false) {
+export function usePoems(config, username, detailsEnabled = false, accessAllowed = true) {
   const { url, key, room } = config || {}
   const enabled = Boolean(url && key && room)
   const clientRef = useRef(null)
   const localPoemsRef = useRef(null)
   if (localPoemsRef.current === null) localPoemsRef.current = enabled ? [] : load(LOCAL_KEY, [])
-  const [poems, setPoems] = useState(() => localPoemsRef.current.slice(0, PAGE_SIZE))
+  const [poems, setPoems] = useState(() => accessAllowed ? localPoemsRef.current.slice(0, PAGE_SIZE) : [])
   const [error, setError] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -50,6 +50,7 @@ export function usePoems(config, username, detailsEnabled = false) {
   }, [])
   const reload = useCallback(async (requestedPage = pageRef.current) => {
     const client = clientRef.current
+    if (!accessAllowed) { setPoems([]); setTotalPages(1); return }
     if (!enabled) { showLocalPage(requestedPage); return }
     if (!client) return
     setLoadingPage(true)
@@ -89,9 +90,16 @@ export function usePoems(config, username, detailsEnabled = false) {
     } finally {
       setLoadingPage(false)
     }
-  }, [enabled, room, showLocalPage, detailsEnabled])
+  }, [enabled, room, showLocalPage, detailsEnabled, accessAllowed])
 
   useEffect(() => {
+    if (!accessAllowed) {
+      clientRef.current = null
+      setPoems([])
+      setPage(1)
+      setTotalPages(1)
+      return undefined
+    }
     if (!enabled) {
       clientRef.current = null
       const localPoems = load(LOCAL_KEY, [])
@@ -109,7 +117,7 @@ export function usePoems(config, username, detailsEnabled = false) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'poem_interactions', filter: `room_id=eq.${room}` }, () => reload(pageRef.current))
       .subscribe()
     return () => { try { client.removeChannel(channel) } catch { /* ignore */ } }
-  }, [enabled, url, key, room, reload, showLocalPage])
+  }, [enabled, url, key, room, reload, showLocalPage, accessAllowed]
 
   const goToPage = useCallback(async (requestedPage) => {
     const nextPage = clampPage(requestedPage, pageCountRef.current)

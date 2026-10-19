@@ -170,6 +170,7 @@ export default function App() {
   const [showVideo, setShowVideo] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [journalLoginOpen, setJournalLoginOpen] = useState(false)
+  const [journalLoginTarget, setJournalLoginTarget] = useState('journal')
   const [uiHidden, setUiHidden] = useState(false)
   const [recentPlayback, setRecentPlayback] = useState(true)
   const [tagline, setTagline] = useState(() => pickTagline('dusk'))
@@ -190,41 +191,44 @@ export default function App() {
   const gist = useGistSync({ ...syncConfig, username })
   const supa = useSupabaseRoom(supaConfig, username)
   const journal = supa.enabled ? supa.journal : gist
+  const privatePoemAccess = Boolean(supa.enabled && journal.accessAllowed)
   const journalAccess = Boolean(supa.enabled && journal.accessAllowed && journal.isAdmin)
   const admin = supa.enabled ? journalAccess : localAdmin
   const gallery = useSupabaseGallery(supaConfig)
   const roomSettings = useRoomSettings(supaConfig, admin)
-  const poemsApi = usePoems(supaConfig, username, poemsOpen)
+  const poemsApi = usePoems(supaConfig, username, poemsOpen && privatePoemAccess, privatePoemAccess)
   const [roomHydrated, setRoomHydrated] = useState(false)
   const rawPlaylists = supa.enabled ? supa.playlists : localPlaylists
   // Chuẩn hoá addedAt để mọi playlist luôn xếp bài mới nhất lên đầu, ổn định.
   const playlists = useMemo(() => withStablePlaylistOrder(rawPlaylists), [rawPlaylists])
 
   const featuredPoem = useMemo(
-    () => (poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null,
-    [poemsApi.poems, featuredPoemId],
+    () => (privatePoemAccess ? (poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null : null),
+    [poemsApi.poems, featuredPoemId, privatePoemAccess],
   )
 
   const completeJournalLogin = useCallback((displayName) => {
     setUsername(displayName)
     setJournalLoginOpen(false)
-    setRightTab('journal')
-  }, [])
+    setRightTab(journalLoginTarget)
+  }, [journalLoginTarget])
 
   const closeJournalLogin = useCallback(() => setJournalLoginOpen(false), [])
 
   const toggleRight = useCallback((tab) => {
-    if (tab === 'journal' && !journalAccess) {
+    if ((tab === 'journal' || tab === 'poems') && !privatePoemAccess) {
+      setJournalLoginTarget(tab)
       setJournalLoginOpen(true)
       return
     }
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches) setLeftTab(null)
     setRightTab((cur) => (cur === tab ? null : tab))
-  }, [journalAccess])
+  }, [privatePoemAccess])
 
   useEffect(() => {
+    if (!privatePoemAccess && rightTab === 'poems') setRightTab(null)
     if (!journalAccess && rightTab === 'journal') setRightTab(null)
-  }, [journalAccess, rightTab])
+  }, [journalAccess, privatePoemAccess, rightTab])
 
   // Số tin chưa xem (của người kia, mới hơn mốc đã xem)
   const unread = useMemo(() => {
@@ -374,6 +378,10 @@ export default function App() {
   // tránh lặp lại bài đã hiện ở lần truy cập ngay trước đó.
   const featuredPoemPickedRef = useRef(false)
   useEffect(() => {
+    if (!privatePoemAccess) {
+      setFeaturedPoemId(null)
+      return
+    }
     const list = poemsApi.poems || []
     if (!list.length) { setFeaturedPoemId(null); return }
     if (featuredPoemPickedRef.current && list.some((poem) => poem.id === featuredPoemId)) return
@@ -383,7 +391,7 @@ export default function App() {
     featuredPoemPickedRef.current = true
     setFeaturedPoemId(next.id)
     save('vibe.featuredPoemId', next.id)
-  }, [poemsApi.poems, featuredPoemId])
+  }, [poemsApi.poems, featuredPoemId, privatePoemAccess])
 
   // Mở nhật ký -> đánh dấu đã xem hết; xin quyền thông báo (cần thao tác người dùng)
   useEffect(() => {
@@ -1202,9 +1210,9 @@ export default function App() {
         </aside>
 
         {/* Drawer phải: Nhật ký / Hoài niệm (trượt từ cạnh phải) */}
-        <aside className={`drawer drawer--right ${rightTab && (rightTab === 'poems' || journalAccess) ? 'is-open' : ''} ${rightTab === 'poems' ? 'drawer--poems' : 'drawer--journal'}`} aria-hidden={!rightTab || (rightTab === 'journal' && !journalAccess)} inert={!rightTab || (rightTab === 'journal' && !journalAccess) ? '' : undefined}>
+        <aside className={`drawer drawer--right ${rightTab && ((rightTab === 'poems' && privatePoemAccess) || (rightTab === 'journal' && journalAccess)) ? 'is-open' : ''} ${rightTab === 'poems' ? 'drawer--poems' : 'drawer--journal'}`} aria-hidden={!rightTab || (rightTab === 'poems' ? !privatePoemAccess : !journalAccess)} inert={!rightTab || (rightTab === 'poems' ? !privatePoemAccess : !journalAccess) ? '' : undefined}>
           <div className="drawer__body drawer__body--flush">
-            {rightTab === 'poems' ? (
+            {privatePoemAccess && rightTab === 'poems' ? (
               <Poems
                 poems={poemsApi.poems} error={poemsApi.error} username={username} admin={admin}
                 canContribute={journalAccess}
@@ -1244,7 +1252,7 @@ export default function App() {
       />
 
       <JournalLoginModal
-        open={journalLoginOpen && !journalAccess}
+        open={journalLoginOpen && (!journalAccess || journalLoginTarget === 'poems')}
         unlock={journal.unlock}
         accessStatus={journal.accessStatus}
         onSuccess={completeJournalLogin}
