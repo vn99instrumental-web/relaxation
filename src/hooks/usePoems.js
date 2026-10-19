@@ -117,7 +117,7 @@ export function usePoems(config, username, detailsEnabled = false, accessAllowed
       .on('postgres_changes', { event: '*', schema: 'public', table: 'poem_interactions', filter: `room_id=eq.${room}` }, () => reload(pageRef.current))
       .subscribe()
     return () => { try { client.removeChannel(channel) } catch { /* ignore */ } }
-  }, [enabled, url, key, room, reload, showLocalPage, accessAllowed]
+  }, [enabled, url, key, room, reload, showLocalPage, accessAllowed])
 
   const goToPage = useCallback(async (requestedPage) => {
     const nextPage = clampPage(requestedPage, pageCountRef.current)
