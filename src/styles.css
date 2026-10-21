@@ -1835,33 +1835,80 @@ input[type='range']:disabled { opacity: 0.4; }
   .birthday-card.is-celebrating .birthday-card__flower--cluster { scale: 1.08; }
 }
 
-/* Mobile dock: one icon-only row that scales down safely on narrow phones. */
+/* Mobile dock: one evenly spaced icon row across both button groups.
+   The previous flex groups reserved two separate widths and pushed the final
+   four/five actions away from the first five music controls. */
 @media (max-width: 700px) {
   .dock--private-locked .dock__btn--poems { display: none; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 620px) {
   .dock {
-    --dock-icon-size: clamp(25px, 9vw, 36px);
-    --dock-main-size: clamp(29px, 10vw, 40px);
-    --dock-gap: clamp(1px, 1vw, 4px);
+    --dock-gap: clamp(1px, 0.65vw, 3px);
     bottom: max(8px, env(safe-area-inset-bottom));
-    display: flex;
-    flex-wrap: nowrap;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    align-items: center;
+    justify-items: center;
     gap: var(--dock-gap);
-    width: calc(100vw - 16px);
+    width: min(460px, calc(100vw - 16px));
     max-width: none;
-    padding: 6px;
+    padding: 7px 7px;
     border-radius: 14px;
   }
-  .dock__transport { flex: 0 0 auto; gap: var(--dock-gap); }
-  .repeat-controls { gap: var(--dock-gap); }
-  .dock__tabs { flex: 1 1 auto; justify-content: flex-end; gap: var(--dock-gap); padding-left: var(--dock-gap); }
+
+  /* When Hoai Niem is locked, there are nine visible actions instead of ten. */
+  .dock--private-locked { grid-template-columns: repeat(9, minmax(0, 1fr)); }
+
+  /* Flatten the two visual groups so every visible button occupies exactly one
+     equal-sized grid cell: five music buttons, followed by four/five actions. */
+  .dock__transport,
+  .dock__tabs,
+  .repeat-controls { display: contents; }
+
+  .dock__vol,
   .dock__sync { display: none; }
+
   .dock__transport .ctrl,
+  .dock__transport .ctrl--main,
   .repeat-controls .ctrl--repeat,
-  .dock__btn,
-  .dock__btn--icon { width: var(--dock-icon-size); min-width: var(--dock-icon-size); height: var(--dock-icon-size); min-height: var(--dock-icon-size); padding: 0; }
-  .dock__transport .ctrl--main { width: var(--dock-main-size); min-width: var(--dock-main-size); height: var(--dock-main-size); min-height: var(--dock-main-size); }
-  .dock__btn svg { width: clamp(13px, 4vw, 17px); height: clamp(13px, 4vw, 17px); }
+  .dock__tabs .dock__btn,
+  .dock__tabs .dock__btn--icon {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: center;
+    width: 100%;
+    max-width: 36px;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: 1;
+    margin: 0;
+    padding: 0;
+  }
+  .dock__transport .ctrl--main { max-width: 38px; }
+  .dock__tabs .dock__btn { border-radius: 9px; }
+  /* This selector must outrank the shared button display rule above. */
+  .dock--private-locked .dock__tabs .dock__btn--poems { display: none; }
+  .dock__transport .ctrl svg { width: min(17px, 65%); height: min(17px, 65%); }
+  .dock__tabs .dock__btn svg { width: min(16px, 65%); height: min(16px, 65%); }
+
+  /* Keep unread counters compact within their corresponding button cell. */
+  .dock__notif {
+    top: -8px;
+    right: -7px;
+    bottom: auto;
+    left: auto;
+    gap: 0;
+    padding: 2px 5px;
+    font-size: 0.59rem;
+    line-height: 1.1;
+    animation: none;
+  }
+  .dock__notif > svg,
+  .dock__notif::after { display: none; }
 }
