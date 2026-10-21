@@ -75,11 +75,13 @@ export default function Dock({
           </button>
         ) : <button className="dock__btn dock__btn--icon dock__btn--login" onClick={onLoginJournal}
           title="Đăng nhập để mở Nhật ký" aria-label="Đăng nhập Nhật ký"><IconLock /></button>}
-        <button className={`dock__btn dock__btn--journal dock__btn--poems ${poemsOpen ? 'is-active' : ''}`} onClick={onTogglePoems}
-          title="Góc Hoài Niệm — thơ, câu văn và hình ảnh gợi suy tư">
-          <IconPoem /><span>Hoài niệm</span>
-          {!poemsOpen && unreadPoems > 0 && <span className="dock__notif"><IconPoem /> {unreadPoems > 9 ? '9+' : unreadPoems}<span> mới</span></span>}
-        </button>
+        {privateAuthenticated && (
+          <button className={`dock__btn dock__btn--journal dock__btn--poems ${poemsOpen ? 'is-active' : ''}`} onClick={onTogglePoems}
+            title="Góc Hoài Niệm — thơ, câu văn và hình ảnh gợi suy tư">
+            <IconPoem /><span>Hoài niệm</span>
+            {!poemsOpen && unreadPoems > 0 && <span className="dock__notif"><IconPoem /> {unreadPoems > 9 ? '9+' : unreadPoems}<span> mới</span></span>}
+          </button>
+        )}
         <button className="dock__btn dock__btn--icon dock__btn--settings" onClick={onOpenSettings}
           title="Cài đặt giao diện, hiệu ứng và nhạc" aria-label="Mở cài đặt">
           <IconSettings />
