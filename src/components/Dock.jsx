@@ -74,7 +74,7 @@ export default function Dock({
             {!journalOpen && unread > 0 && <span className="dock__notif"><IconJournal /> {unread > 9 ? '9+' : unread}<span> mới</span></span>}
           </button>
         ) : <button className="dock__btn dock__btn--icon dock__btn--login" onClick={onLoginJournal}
-          title="Đăng nhập để mở Nhật ký" aria-label="Đăng nhập Nhật ký"><IconLock /><span>Đăng nhập</span></button>}
+          title="Đăng nhập để mở Nhật ký" aria-label="Đăng nhập Nhật ký"><IconLock /></button>}
         <button className={`dock__btn dock__btn--journal dock__btn--poems ${poemsOpen ? 'is-active' : ''}`} onClick={onTogglePoems}
           title="Góc Hoài Niệm — thơ, câu văn và hình ảnh gợi suy tư">
           <IconPoem /><span>Hoài niệm</span>

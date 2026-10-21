@@ -1835,39 +1835,33 @@ input[type='range']:disabled { opacity: 0.4; }
   .birthday-card.is-celebrating .birthday-card__flower--cluster { scale: 1.08; }
 }
 
-/* Mobile dock: retain every control without horizontal clipping. */
+/* Mobile dock: one icon-only row that scales down safely on narrow phones. */
 @media (max-width: 700px) {
   .dock--private-locked .dock__btn--poems { display: none; }
-  .dock--private-locked .dock__btn--login span { display: inline; }
 }
 
 @media (max-width: 480px) {
   .dock {
+    --dock-icon-size: clamp(25px, 9vw, 36px);
+    --dock-main-size: clamp(29px, 10vw, 40px);
+    --dock-gap: clamp(1px, 1vw, 4px);
     bottom: max(8px, env(safe-area-inset-bottom));
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 5px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--dock-gap);
     width: calc(100vw - 16px);
     max-width: none;
     padding: 6px;
     border-radius: 14px;
   }
-  .dock__transport { justify-content: center; gap: 3px; }
-  .repeat-controls { gap: 3px; }
-  .dock__tabs {
-    justify-content: center;
-    gap: 3px;
-    padding: 5px 0 0;
-    border-top: 1px solid var(--border);
-    border-left: 0;
-  }
+  .dock__transport { flex: 0 0 auto; gap: var(--dock-gap); }
+  .repeat-controls { gap: var(--dock-gap); }
+  .dock__tabs { flex: 1 1 auto; justify-content: flex-end; gap: var(--dock-gap); padding-left: var(--dock-gap); }
   .dock__sync { display: none; }
   .dock__transport .ctrl,
   .repeat-controls .ctrl--repeat,
   .dock__btn,
-  .dock__btn--icon { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
-  .dock__transport .ctrl--main { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
-  .dock--private-locked .dock__btn--login { width: auto; min-width: 96px; padding: 0 10px; }
-  .dock--private-locked .dock__btn--login span { display: inline; }
-  .drawer { bottom: 116px; }
+  .dock__btn--icon { width: var(--dock-icon-size); min-width: var(--dock-icon-size); height: var(--dock-icon-size); min-height: var(--dock-icon-size); padding: 0; }
+  .dock__transport .ctrl--main { width: var(--dock-main-size); min-width: var(--dock-main-size); height: var(--dock-main-size); min-height: var(--dock-main-size); }
+  .dock__btn svg { width: clamp(13px, 4vw, 17px); height: clamp(13px, 4vw, 17px); }
 }
