@@ -21,7 +21,7 @@ import { load, save } from './lib/storage'
 import { fetchVideoTitle } from './lib/youtube'
 import { DEFAULT_BACKGROUNDS, DEFAULT_BG_ID, BUILTIN_SCENES } from './lib/backgrounds'
 import { playlistNameForTrack } from './lib/trackPlaylist'
-import { pickTagline } from './lib/taglines'
+import { getTaglineContext, pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 import { applyVideoTitles, collectPlaylistVideoIds } from './lib/playlistTitleSync'
 import { queueIndexesBySort, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
@@ -173,14 +173,15 @@ export default function App() {
   const [journalLoginTarget, setJournalLoginTarget] = useState('journal')
   const [uiHidden, setUiHidden] = useState(false)
   const [recentPlayback, setRecentPlayback] = useState(true)
-  const [tagline, setTagline] = useState(() => pickTagline('dusk'))
+  const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // leaves|petals|rain
+  const [tagline, setTagline] = useState(() => pickTagline(fx))
+  const taglineContextRef = useRef(getTaglineContext(fx))
   const [featuredPoemId, setFeaturedPoemId] = useState(null)
   const [localAdmin, setLocalAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
   const [seenTs, setSeenTs] = useState(() => load('vibe.seenTs', Date.now())) // mốc tin đã xem (máy mới: tính từ lúc mở, tránh báo dồn tin cũ như seenPoemTs)
   const [seenPoemTs, setSeenPoemTs] = useState(() => load('vibe.seenPoemTs', Date.now())) // mốc thơ đã xem
   const [seenHeartTs, setSeenHeartTs] = useState(() => load('vibe.seenHeartTs', Date.now()))
-  const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // mảng: leaves|petals|rain
   const [fxSpeed, setFxSpeed] = useState(() => { const v = load('vibe.fxSpeed', 50); return typeof v === 'number' ? v : 50 }) // 0 chậm .. 100 nhanh
   const [fxDensity, setFxDensity] = useState(() => { const v = load('vibe.fxDensity', 50); return typeof v === 'number' ? v : 50 }) // 0 thưa .. 100 dày
   const [fxSize, setFxSize] = useState(() => { const v = load('vibe.fxSize', 50); return typeof v === 'number' ? v : 50 }) // 0 nhỏ .. 100 to
@@ -367,12 +368,28 @@ export default function App() {
   // Giữ màn hình sáng khi đang phát (để nhạc không bị ngắt khi máy tự khóa)
   useWakeLock(keepAwake && yt.playing)
 
-  // Tagline dưới tên: đổi theo theme (gợi ý thời tiết) + tự xoay vòng ngẫu nhiên
+  // Chỉ chọn câu mới khi chuyển khung giờ hoặc đổi hiệu ứng mưa/lá.
+  // Kiểm tra 30s/lần để không bỏ lỡ mốc giờ khi trang đang mở lâu.
   useEffect(() => {
-    setTagline(pickTagline(theme))
-    const id = setInterval(() => setTagline(pickTagline(theme)), 45000)
-    return () => clearInterval(id)
-  }, [theme])
+    const updateTaglineIfNeeded = () => {
+      const context = getTaglineContext(fx)
+      if (context === taglineContextRef.current) return
+      taglineContextRef.current = context
+      setTagline((previous) => pickTagline(fx, { previous }))
+    }
+    updateTaglineIfNeeded()
+    const timer = setInterval(updateTaglineIfNeeded, 30_000)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') updateTaglineIfNeeded()
+    }
+    window.addEventListener('focus', updateTaglineIfNeeded)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('focus', updateTaglineIfNeeded)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [fx])
 
   // Mỗi lần mở/reload trang chọn một đoạn từ Góc Hoài Niệm. Nếu có nhiều bài,
   // tránh lặp lại bài đã hiện ở lần truy cập ngay trước đó.
