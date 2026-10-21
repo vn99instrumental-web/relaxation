@@ -196,15 +196,15 @@ export default function App() {
   const admin = supa.enabled ? journalAccess : localAdmin
   const gallery = useSupabaseGallery(supaConfig)
   const roomSettings = useRoomSettings(supaConfig, admin)
-  const poemsApi = usePoems(supaConfig, username, poemsOpen && privatePoemAccess, privatePoemAccess)
+  const poemsApi = usePoems(supaConfig, username, poemsOpen && privatePoemAccess)
   const [roomHydrated, setRoomHydrated] = useState(false)
   const rawPlaylists = supa.enabled ? supa.playlists : localPlaylists
   // Chuẩn hoá addedAt để mọi playlist luôn xếp bài mới nhất lên đầu, ổn định.
   const playlists = useMemo(() => withStablePlaylistOrder(rawPlaylists), [rawPlaylists])
 
   const featuredPoem = useMemo(
-    () => (privatePoemAccess ? (poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null : null),
-    [poemsApi.poems, featuredPoemId, privatePoemAccess],
+    () => (poemsApi.poems || []).find((poem) => poem.id === featuredPoemId) || null,
+    [poemsApi.poems, featuredPoemId],
   )
 
   const completeJournalLogin = useCallback((displayName) => {
@@ -378,10 +378,6 @@ export default function App() {
   // tránh lặp lại bài đã hiện ở lần truy cập ngay trước đó.
   const featuredPoemPickedRef = useRef(false)
   useEffect(() => {
-    if (!privatePoemAccess) {
-      setFeaturedPoemId(null)
-      return
-    }
     const list = poemsApi.poems || []
     if (!list.length) { setFeaturedPoemId(null); return }
     if (featuredPoemPickedRef.current && list.some((poem) => poem.id === featuredPoemId)) return
@@ -391,7 +387,7 @@ export default function App() {
     featuredPoemPickedRef.current = true
     setFeaturedPoemId(next.id)
     save('vibe.featuredPoemId', next.id)
-  }, [poemsApi.poems, featuredPoemId, privatePoemAccess])
+  }, [poemsApi.poems, featuredPoemId])
 
   // Mở nhật ký -> đánh dấu đã xem hết; xin quyền thông báo (cần thao tác người dùng)
   useEffect(() => {
@@ -1243,7 +1239,7 @@ export default function App() {
         unread={unread} unreadPoems={unreadPoems + unreadHearts}
         repeatMode={repeatMode} onRepeatModeChange={setRepeatMode}
         leftTab={leftTab} onToggleLeft={toggleLeft}
-        journalAuthenticated={journalAccess}
+        journalAuthenticated={journalAccess} privateAuthenticated={privatePoemAccess}
         journalOpen={journalOpen} onToggleJournal={() => toggleRight('journal')}
         poemsOpen={rightTab === 'poems'} onTogglePoems={() => toggleRight('poems')}
         onLoginJournal={() => setJournalLoginOpen(true)}

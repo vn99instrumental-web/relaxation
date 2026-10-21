@@ -1834,3 +1834,40 @@ input[type='range']:disabled { opacity: 0.4; }
 @media (min-width: 1180px) and (min-height: 760px) {
   .birthday-card.is-celebrating .birthday-card__flower--cluster { scale: 1.08; }
 }
+
+/* Mobile dock: retain every control without horizontal clipping. */
+@media (max-width: 700px) {
+  .dock--private-locked .dock__btn--poems { display: none; }
+  .dock--private-locked .dock__btn--login span { display: inline; }
+}
+
+@media (max-width: 480px) {
+  .dock {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+    width: calc(100vw - 16px);
+    max-width: none;
+    padding: 6px;
+    border-radius: 14px;
+  }
+  .dock__transport { justify-content: center; gap: 3px; }
+  .repeat-controls { gap: 3px; }
+  .dock__tabs {
+    justify-content: center;
+    gap: 3px;
+    padding: 5px 0 0;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+  .dock__sync { display: none; }
+  .dock__transport .ctrl,
+  .repeat-controls .ctrl--repeat,
+  .dock__btn,
+  .dock__btn--icon { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
+  .dock__transport .ctrl--main { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
+  .dock--private-locked .dock__btn--login { width: auto; min-width: 96px; padding: 0 10px; }
+  .dock--private-locked .dock__btn--login span { display: inline; }
+  .drawer { bottom: 116px; }
+}
