@@ -1835,33 +1835,108 @@ input[type='range']:disabled { opacity: 0.4; }
   .birthday-card.is-celebrating .birthday-card__flower--cluster { scale: 1.08; }
 }
 
-/* Mobile dock: one icon-only row that scales down safely on narrow phones. */
+/* Mobile dock: balanced music controls and navigation; preserve 44px touch targets. */
 @media (max-width: 700px) {
   .dock--private-locked .dock__btn--poems { display: none; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 620px) {
   .dock {
-    --dock-icon-size: clamp(25px, 9vw, 36px);
-    --dock-main-size: clamp(29px, 10vw, 40px);
-    --dock-gap: clamp(1px, 1vw, 4px);
+    --dock-control-size: 44px;
+    --dock-control-gap: clamp(4px, 1.5vw, 8px);
     bottom: max(8px, env(safe-area-inset-bottom));
-    display: flex;
-    flex-wrap: nowrap;
-    gap: var(--dock-gap);
-    width: calc(100vw - 16px);
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    width: min(460px, calc(100vw - 20px));
     max-width: none;
-    padding: 6px;
-    border-radius: 14px;
+    padding: 9px 10px 8px;
+    border-radius: 16px;
   }
-  .dock__transport { flex: 0 0 auto; gap: var(--dock-gap); }
-  .repeat-controls { gap: var(--dock-gap); }
-  .dock__tabs { flex: 1 1 auto; justify-content: flex-end; gap: var(--dock-gap); padding-left: var(--dock-gap); }
-  .dock__sync { display: none; }
+
+  /* Five equally spaced controls: previous, play, next, repeat one, repeat all. */
+  .dock__transport {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    justify-items: center;
+    align-items: center;
+    gap: var(--dock-control-gap);
+    width: 100%;
+    min-width: 0;
+  }
+  .repeat-controls {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: center;
+    align-items: center;
+    gap: var(--dock-control-gap);
+    width: 100%;
+    min-width: 0;
+  }
   .dock__transport .ctrl,
-  .repeat-controls .ctrl--repeat,
-  .dock__btn,
-  .dock__btn--icon { width: var(--dock-icon-size); min-width: var(--dock-icon-size); height: var(--dock-icon-size); min-height: var(--dock-icon-size); padding: 0; }
-  .dock__transport .ctrl--main { width: var(--dock-main-size); min-width: var(--dock-main-size); height: var(--dock-main-size); min-height: var(--dock-main-size); }
-  .dock__btn svg { width: clamp(13px, 4vw, 17px); height: clamp(13px, 4vw, 17px); }
+  .repeat-controls .ctrl--repeat {
+    width: var(--dock-control-size);
+    min-width: var(--dock-control-size);
+    height: var(--dock-control-size);
+    min-height: var(--dock-control-size);
+    padding: 0;
+  }
+  .dock__transport .ctrl--main {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    min-height: 48px;
+  }
+
+  /* A distinct navigation row stays centered with either four or five actions. */
+  .dock__tabs {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: var(--dock-control-gap);
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 7px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+  .dock__sync { display: none; }
+  .dock__tabs .dock__btn {
+    flex: 0 0 var(--dock-control-size);
+    width: var(--dock-control-size);
+    min-width: var(--dock-control-size);
+    height: var(--dock-control-size);
+    min-height: var(--dock-control-size);
+    padding: 0;
+    border-radius: 12px;
+  }
+  .dock__tabs .dock__btn svg { width: 18px; height: 18px; }
+
+  /* Compact unread counts do not float across the music-control row. */
+  .dock__notif {
+    top: -7px;
+    right: -7px;
+    bottom: auto;
+    left: auto;
+    padding: 2px 5px;
+    gap: 0;
+    font-size: 0.6rem;
+    line-height: 1.1;
+    animation: none;
+  }
+  .dock__notif > svg,
+  .dock__notif::after { display: none; }
+
+  /* Keep drawers and video clear of the taller dock, including iPhone safe areas. */
+  .drawer--left,
+  .drawer--right,
+  .app.is-left-open .drawer {
+    bottom: calc(140px + env(safe-area-inset-bottom));
+  }
+  .pip { bottom: calc(148px + env(safe-area-inset-bottom)); }
 }
