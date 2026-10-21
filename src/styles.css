@@ -1892,6 +1892,8 @@ input[type='range']:disabled { opacity: 0.4; }
   }
   .dock__transport .ctrl--main { max-width: 38px; }
   .dock__tabs .dock__btn { border-radius: 9px; }
+  /* This selector must outrank the shared button display rule above. */
+  .dock--private-locked .dock__tabs .dock__btn--poems { display: none; }
   .dock__transport .ctrl svg { width: min(17px, 65%); height: min(17px, 65%); }
   .dock__tabs .dock__btn svg { width: min(16px, 65%); height: min(16px, 65%); }
 
