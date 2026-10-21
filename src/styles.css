@@ -1835,112 +1835,78 @@ input[type='range']:disabled { opacity: 0.4; }
   .birthday-card.is-celebrating .birthday-card__flower--cluster { scale: 1.08; }
 }
 
-/* Mobile dock: balanced music controls and navigation; preserve 44px touch targets. */
+/* Mobile dock: one evenly spaced icon row across both button groups.
+   The previous flex groups reserved two separate widths and pushed the final
+   four/five actions away from the first five music controls. */
 @media (max-width: 700px) {
   .dock--private-locked .dock__btn--poems { display: none; }
 }
 
 @media (max-width: 620px) {
   .dock {
-    --dock-control-size: 44px;
-    --dock-control-gap: clamp(4px, 1.5vw, 8px);
+    --dock-gap: clamp(1px, 0.65vw, 3px);
     bottom: max(8px, env(safe-area-inset-bottom));
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(10, minmax(0, 1fr));
     align-items: center;
-    gap: 7px;
-    width: min(460px, calc(100vw - 20px));
+    justify-items: center;
+    gap: var(--dock-gap);
+    width: min(460px, calc(100vw - 16px));
     max-width: none;
-    padding: 9px 10px 8px;
-    border-radius: 16px;
+    padding: 7px 7px;
+    border-radius: 14px;
   }
 
-  /* Five equally spaced controls: previous, play, next, repeat one, repeat all. */
-  .dock__transport {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    justify-items: center;
-    align-items: center;
-    gap: var(--dock-control-gap);
-    width: 100%;
-    min-width: 0;
-  }
-  .repeat-controls {
-    grid-column: span 2;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: center;
-    align-items: center;
-    gap: var(--dock-control-gap);
-    width: 100%;
-    min-width: 0;
-  }
-  .dock__transport .ctrl,
-  .repeat-controls .ctrl--repeat {
-    width: var(--dock-control-size);
-    min-width: var(--dock-control-size);
-    height: var(--dock-control-size);
-    min-height: var(--dock-control-size);
-    padding: 0;
-  }
-  .dock__transport .ctrl--main {
-    width: 48px;
-    min-width: 48px;
-    height: 48px;
-    min-height: 48px;
-  }
+  /* When Hoai Niem is locked, there are nine visible actions instead of ten. */
+  .dock--private-locked { grid-template-columns: repeat(9, minmax(0, 1fr)); }
 
-  /* Equal-width columns align navigation icons, rather than distributing
-     leftover space around flex items (especially in the locked 4-icon state). */
-  .dock__tabs {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    justify-items: center;
-    align-items: center;
-    gap: var(--dock-control-gap);
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-    padding: 7px 0 0;
-    border-left: 0;
-    border-top: 1px solid var(--border);
-  }
-  .dock--private-locked .dock__tabs {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+  /* Flatten the two visual groups so every visible button occupies exactly one
+     equal-sized grid cell: five music buttons, followed by four/five actions. */
+  .dock__transport,
+  .dock__tabs,
+  .repeat-controls { display: contents; }
+
+  .dock__vol,
   .dock__sync { display: none; }
-  .dock__tabs .dock__btn {
-    flex: none;
-    width: var(--dock-control-size);
-    min-width: var(--dock-control-size);
-    height: var(--dock-control-size);
-    min-height: var(--dock-control-size);
-    padding: 0;
-    border-radius: 12px;
-  }
-  .dock__tabs .dock__btn svg { width: 18px; height: 18px; }
 
-  /* Compact unread counts do not float across the music-control row. */
+  .dock__transport .ctrl,
+  .dock__transport .ctrl--main,
+  .repeat-controls .ctrl--repeat,
+  .dock__tabs .dock__btn,
+  .dock__tabs .dock__btn--icon {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: center;
+    width: 100%;
+    max-width: 36px;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: 1;
+    margin: 0;
+    padding: 0;
+  }
+  .dock__transport .ctrl--main { max-width: 38px; }
+  .dock__tabs .dock__btn { border-radius: 9px; }
+  .dock__transport .ctrl svg { width: min(17px, 65%); height: min(17px, 65%); }
+  .dock__tabs .dock__btn svg { width: min(16px, 65%); height: min(16px, 65%); }
+
+  /* Keep unread counters compact within their corresponding button cell. */
   .dock__notif {
-    top: -7px;
+    top: -8px;
     right: -7px;
     bottom: auto;
     left: auto;
-    padding: 2px 5px;
     gap: 0;
-    font-size: 0.6rem;
+    padding: 2px 5px;
+    font-size: 0.59rem;
     line-height: 1.1;
     animation: none;
   }
   .dock__notif > svg,
   .dock__notif::after { display: none; }
-
-  /* Keep drawers and video clear of the taller dock, including iPhone safe areas. */
-  .drawer--left,
-  .drawer--right,
-  .app.is-left-open .drawer {
-    bottom: calc(140px + env(safe-area-inset-bottom));
-  }
-  .pip { bottom: calc(148px + env(safe-area-inset-bottom)); }
 }
