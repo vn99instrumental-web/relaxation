@@ -1891,12 +1891,13 @@ input[type='range']:disabled { opacity: 0.4; }
     min-height: 48px;
   }
 
-  /* A distinct navigation row stays centered with either four or five actions. */
+  /* Equal-width columns align navigation icons, rather than distributing
+     leftover space around flex items (especially in the locked 4-icon state). */
   .dock__tabs {
-    display: flex;
-    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    justify-items: center;
     align-items: center;
-    justify-content: space-evenly;
     gap: var(--dock-control-gap);
     width: 100%;
     min-width: 0;
@@ -1905,9 +1906,12 @@ input[type='range']:disabled { opacity: 0.4; }
     border-left: 0;
     border-top: 1px solid var(--border);
   }
+  .dock--private-locked .dock__tabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
   .dock__sync { display: none; }
   .dock__tabs .dock__btn {
-    flex: 0 0 var(--dock-control-size);
+    flex: none;
     width: var(--dock-control-size);
     min-width: var(--dock-control-size);
     height: var(--dock-control-size);
