@@ -305,7 +305,7 @@ export default function Player({
           {playlists?.length > 0 && (
             <div className={`pl-saved ${!showPlaylists ? 'is-collapsed' : ''}`}>
               <div className="queue__head">
-                <button className="pl-collapse" onClick={() => setShowPlaylists((v) => !v)} title="Ẩn/hiện playlist">
+                <button className="pl-collapse" onClick={() => setShowPlaylists((v) => !v)} title={showPlaylists ? 'Thu gọn playlist' : 'Mở rộng playlist'} aria-expanded={showPlaylists}>
                   <span className="pl-collapse__caret">{showPlaylists ? '▾' : '▸'}</span> Playlist · {playlists.length}
                 </button>
               </div>
@@ -315,7 +315,8 @@ export default function Player({
                     <li key={p.id} className="pl-group">
                       <div className="pl-item">
                         <button className="pl-expand" onClick={() => setExpanded((e) => (e === p.id ? null : p.id))}
-                          title="Xem các bài trong playlist">{expanded === p.id ? '▾' : '▸'}</button>
+                          title={expanded === p.id ? 'Thu gọn playlist' : 'Mở rộng playlist'}
+                          aria-label={`${expanded === p.id ? 'Thu gọn' : 'Mở rộng'} playlist ${p.name}`} aria-expanded={expanded === p.id}>{expanded === p.id ? '▾' : '▸'}</button>
                         {editPlId === p.id ? (
                           <form className="pl-rename" onSubmit={(e) => { e.preventDefault(); saveRename() }}>
                             <input autoFocus value={plRename} onChange={(e) => setPlRename(e.target.value)}
@@ -338,9 +339,13 @@ export default function Player({
                       {expanded === p.id && (
                         <ul className="pl-tracks">
                           {p.tracks.length === 0 && <li className="pl-track pl-track--empty">Playlist trống.</li>}
-                          {sortedPlaylistTracks(p.tracks).map(({ track: t, sourceIndex: i }) => (
+                          {sortedPlaylistTracks(p.tracks).map(({ track: t, sourceIndex: i }, displayIndex) => (
                             <li key={t.recordId || `${t.videoId || t.playlistId}-${i}`} className="pl-track">
-                              <span className="pl-track__name">{t.kind === 'playlist' ? '≡ ' : ''}{trackName(t, titles) || 'Video'}</span>
+                              <span className="recent__rank pl-track__rank">{String(displayIndex + 1).padStart(2, '0')}</span>
+                              {t.kind === 'playlist'
+                                ? <span className="queue__thumb queue__thumb--list pl-track__thumb">≡</span>
+                                : <img className="queue__thumb pl-track__thumb" src={videoThumb(t.videoId, 'default')} alt="" loading="lazy" />}
+                              <span className="pl-track__name">{trackName(t, titles) || (t.kind === 'playlist' ? 'Playlist' : 'Video')}</span>
                               {admin && <button className={`queue__default ${sameTrack(t, defaultTrack) ? 'is-on' : ''}`}
                                 onClick={() => sameTrack(t, defaultTrack) ? onClearDefaultTrack() : onSetDefaultTrack(t)}
                                 title={sameTrack(t, defaultTrack) ? 'Bỏ bài hát mặc định khi mở trang' : 'Đặt làm bài hát mặc định khi mở trang'}
