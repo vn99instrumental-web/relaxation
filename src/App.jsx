@@ -963,17 +963,34 @@ export default function App() {
       })
     }
     register()
-    // Một số trình duyệt/iframe chiếm lại Media Session khi đổi bài hoặc khi
-    // trang chuyển nền. Đăng ký lại ở các mốc này để nút màn hình khóa luôn
-    // gọi đúng state mới nhất của React.
-    document.addEventListener('visibilitychange', register)
-    window.addEventListener('pageshow', register)
-    return () => {
-      document.removeEventListener('visibilitychange', register)
-      window.removeEventListener('pageshow', register)
-      clearLockScreenActions(navigator.mediaSession)
+    // Một số trình duyệt/iframe (đặc biệt Android khi khóa màn hình) có thể
+    // ghi đè action sau visibilitychange. Giữ đăng ký next/previous qua một
+    // khoảng ngắn sau khi chuyển nền để nút vẫn gọi đúng callback của app.
+    let hiddenInterval = null
+    let delayedTimers = []
+    const registerAfterVisibility = () => {
+      register()
+      delayedTimers.forEach((timer) => clearTimeout(timer))
+      delayedTimers = [100, 500, 1200].map((delay) => setTimeout(register, delay))
+      if (document.visibilityState === 'hidden') {
+        if (hiddenInterval) clearInterval(hiddenInterval)
+        hiddenInterval = setInterval(register, 2000)
+      } else if (hiddenInterval) {
+        clearInterval(hiddenInterval)
+        hiddenInterval = null
+      }
     }
-  }, [yt.current, yt.playing, yt.nowTitle])
+    document.addEventListener('visibilitychange', registerAfterVisibility)
+    window.addEventListener('pageshow', registerAfterVisibility)
+    window.addEventListener('pagehide', registerAfterVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', registerAfterVisibility)
+      window.removeEventListener('pageshow', registerAfterVisibility)
+      window.removeEventListener('pagehide', registerAfterVisibility)
+      delayedTimers.forEach((timer) => clearTimeout(timer))
+      if (hiddenInterval) clearInterval(hiddenInterval)
+      clearLockScreenActions(navigator.mediaSession)
+    }  }, [yt.current, yt.playing, yt.nowTitle])
 
   // ---- Mặc định chung của phòng: admin lưu, mọi người nhận khi vào + realtime ----
   const sharedSettingsRef = useRef({ visualSig: '', musicSig: '' })
