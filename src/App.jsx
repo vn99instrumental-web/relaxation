@@ -24,7 +24,7 @@ import { playlistNameForTrack } from './lib/trackPlaylist'
 import { getTaglineContext, pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 import { applyVideoTitles, collectPlaylistVideoIds } from './lib/playlistTitleSync'
-import { adjacentQueueIndex, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
+import { adjacentQueueIndex, queueIndexesBySort, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
 import { clearLockScreenActions, registerLockScreenActions } from './lib/mediaSession'
 
 // Tải LeafEngine (Three.js) theo yêu cầu — không nằm trong gói khởi động, nên
