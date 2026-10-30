@@ -22,6 +22,15 @@ export function queueIndexesBySort(tracks, mode = 'latest', randomSeed = 0) {
     }).map(({ queueIndex }) => queueIndex)
 }
 
+export function adjacentQueueIndex(tracks, currentIndex, direction, mode = 'latest', randomSeed = 0) {
+  const visibleOrder = queueIndexesBySort(tracks, mode, randomSeed)
+  if (!visibleOrder.length) return -1
+  const currentPosition = visibleOrder.indexOf(currentIndex)
+  const step = direction === 'previous' ? -1 : 1
+  const startPosition = currentPosition < 0 ? (step < 0 ? 0 : -1) : currentPosition
+  return visibleOrder[(startPosition + step + visibleOrder.length) % visibleOrder.length]
+}
+
 function seededTrackRank({ track, queueIndex }, seed) {
   const identity = `${seed}:${track?.key || track?.recordId || track?.videoId || track?.playlistId || track?.title || ''}:${queueIndex}`
   let hash = 2166136261

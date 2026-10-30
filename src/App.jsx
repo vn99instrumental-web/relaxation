@@ -24,7 +24,7 @@ import { playlistNameForTrack } from './lib/trackPlaylist'
 import { getTaglineContext, pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 import { applyVideoTitles, collectPlaylistVideoIds } from './lib/playlistTitleSync'
-import { queueIndexesBySort, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
+import { adjacentQueueIndex, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
 import { clearLockScreenActions, registerLockScreenActions } from './lib/mediaSession'
 
 // Tải LeafEngine (Three.js) theo yêu cầu — không nằm trong gói khởi động, nên
@@ -777,16 +777,13 @@ export default function App() {
   }, [yt])
 
   const onNext = useCallback(() => {
-    setQueue((q) => {
-      if (!q.length) return q
-      const visibleOrder = queueIndexesBySort(q, queueSort, queueRandomSeed)
-      const position = visibleOrder.indexOf(index)
-      const ni = visibleOrder[((position < 0 ? -1 : position) + 1) % visibleOrder.length]
-      indexRef.current = ni
-      setIndex(ni); yt.playTrack(q[ni]); return q
-    })
-  }, [index, yt, queueSort, queueRandomSeed])
-
+    const currentQueue = queueRef.current
+    const nextIndex = adjacentQueueIndex(currentQueue, indexRef.current, 'next', queueSort, queueRandomSeed)
+    if (nextIndex < 0 || !currentQueue[nextIndex]) return
+    indexRef.current = nextIndex
+    setIndex(nextIndex)
+    yt.playTrack(currentQueue[nextIndex])
+  }, [yt, queueSort, queueRandomSeed])
   const changeQueueSort = useCallback((mode) => {
     const nextMode = ['latest', 'name', 'random'].includes(mode) ? mode : 'latest'
     setQueueSort(nextMode)
@@ -799,16 +796,13 @@ export default function App() {
     setQueueRandomSeed((seed) => (Number(seed) || Date.now()) + 1)
   }, [])
   const onPrev = useCallback(() => {
-    setQueue((q) => {
-      if (!q.length) return q
-      const visibleOrder = queueIndexesBySort(q, queueSort, queueRandomSeed)
-      const position = visibleOrder.indexOf(index)
-      const pi = visibleOrder[(position <= 0 ? visibleOrder.length : position) - 1]
-      indexRef.current = pi
-      setIndex(pi); yt.playTrack(q[pi]); return q
-    })
-  }, [index, yt, queueSort, queueRandomSeed])
-
+    const currentQueue = queueRef.current
+    const previousIndex = adjacentQueueIndex(currentQueue, indexRef.current, 'previous', queueSort, queueRandomSeed)
+    if (previousIndex < 0 || !currentQueue[previousIndex]) return
+    indexRef.current = previousIndex
+    setIndex(previousIndex)
+    yt.playTrack(currentQueue[previousIndex])
+  }, [yt, queueSort, queueRandomSeed])
   const currentQueueTrack = queue[index]
   const activePlaylistName = useMemo(
     () => playlistNameForTrack(currentQueueTrack, playlists),
