@@ -25,6 +25,7 @@ import { getTaglineContext, pickTagline } from './lib/taglines'
 import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 import { applyVideoTitles, collectPlaylistVideoIds } from './lib/playlistTitleSync'
 import { queueIndexesBySort, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
+import { clearLockScreenActions, registerLockScreenActions } from './lib/mediaSession'
 
 // Tải LeafEngine (Three.js) theo yêu cầu — không nằm trong gói khởi động, nên
 // không ảnh hưởng tốc độ mở trang hay trình phát nhạc.
@@ -956,21 +957,16 @@ export default function App() {
   }, [currentQueueTrack, activePlaylistName, yt.nowTitle, yt.playing, yt])
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
-    const set = (a, fn) => { try { navigator.mediaSession.setActionHandler(a, fn) } catch { /* ignore */ } }
     const register = () => {
-      set('play', () => ytLiveRef.current.play())
-      set('pause', () => ytLiveRef.current.pause())
-      set('previoustrack', () => mediaControlsRef.current.onPrev())
-      set('nexttrack', () => mediaControlsRef.current.onNext())
-      set('seekbackward', (details) => {
-        const player = ytLiveRef.current
-        player.seekTo(Math.max(0, player.getProgress().currentTime - (details.seekOffset || 10)))
+      registerLockScreenActions(navigator.mediaSession, {
+        play: () => ytLiveRef.current.play(),
+        pause: () => ytLiveRef.current.pause(),
+        previoustrack: () => mediaControlsRef.current.onPrev(),
+        nexttrack: () => mediaControlsRef.current.onNext(),
+        seekto: (details) => {
+          if (Number.isFinite(details.seekTime)) ytLiveRef.current.seekTo(details.seekTime)
+        },
       })
-      set('seekforward', (details) => {
-        const player = ytLiveRef.current
-        player.seekTo(Math.min(player.getProgress().duration || Infinity, player.getProgress().currentTime + (details.seekOffset || 10)))
-      })
-      set('seekto', (details) => { if (Number.isFinite(details.seekTime)) ytLiveRef.current.seekTo(details.seekTime) })
     }
     register()
     // Một số trình duyệt/iframe chiếm lại Media Session khi đổi bài hoặc khi
@@ -981,8 +977,7 @@ export default function App() {
     return () => {
       document.removeEventListener('visibilitychange', register)
       window.removeEventListener('pageshow', register)
-      set('play', null); set('pause', null); set('previoustrack', null); set('nexttrack', null)
-      set('seekbackward', null); set('seekforward', null); set('seekto', null)
+      clearLockScreenActions(navigator.mediaSession)
     }
   }, [yt.current, yt.playing, yt.nowTitle])
 
