@@ -26,6 +26,7 @@ import { SUPABASE_DEFAULTS } from './lib/supabaseDefaults'
 import { applyVideoTitles, collectPlaylistVideoIds } from './lib/playlistTitleSync'
 import { adjacentQueueIndex, queueIndexesBySort, sortTracksNewest, trackAddedTime } from './lib/playlistSort'
 import { clearLockScreenActions, registerLockScreenActions } from './lib/mediaSession'
+import { isPhoneLikeDevice } from './lib/device'
 
 // Tải LeafEngine (Three.js) theo yêu cầu — không nằm trong gói khởi động, nên
 // không ảnh hưởng tốc độ mở trang hay trình phát nhạc.
@@ -174,9 +175,22 @@ export default function App() {
   const [journalLoginTarget, setJournalLoginTarget] = useState('journal')
   const [uiHidden, setUiHidden] = useState(false)
   const [recentPlayback, setRecentPlayback] = useState(true)
+  const phoneLikeDevice = useMemo(() => isPhoneLikeDevice(), [])
+  const [mobileFxEnabled, setMobileFxEnabled] = useState(() => (
+    phoneLikeDevice ? load('vibe.mobileFxEnabled', false) === true : true
+  ))
   const [fx, setFx] = useState(() => normalizeFx(load('vibe.fx', ['leaves']))) // leaves|petals|rain
-  const [tagline, setTagline] = useState(() => pickTagline(fx))
-  const taglineContextRef = useRef(getTaglineContext(fx))
+  const activeFx = useMemo(
+    () => (phoneLikeDevice && !mobileFxEnabled ? [] : fx),
+    [phoneLikeDevice, mobileFxEnabled, fx],
+  )
+  const [tagline, setTagline] = useState(() => pickTagline(activeFx))
+  const taglineContextRef = useRef(getTaglineContext(activeFx))
+  const setFxFromSettings = useCallback((nextFx) => {
+    const normalized = normalizeFx(nextFx)
+    if (phoneLikeDevice) setMobileFxEnabled(normalized.length > 0)
+    setFx(normalized)
+  }, [phoneLikeDevice])
   const [featuredPoemId, setFeaturedPoemId] = useState(null)
   const [localAdmin, setLocalAdmin] = useState(() => load('vibe.admin', false))
   const [keepAwake, setKeepAwake] = useState(() => load('vibe.keepAwake', true))
@@ -359,6 +373,9 @@ export default function App() {
   useEffect(() => save('vibe.seenPoemTs', seenPoemTs), [seenPoemTs])
   useEffect(() => save('vibe.seenHeartTs', seenHeartTs), [seenHeartTs])
   useEffect(() => save('vibe.fx', fx), [fx])
+  useEffect(() => {
+    if (phoneLikeDevice) save('vibe.mobileFxEnabled', mobileFxEnabled)
+  }, [phoneLikeDevice, mobileFxEnabled])
   useEffect(() => save('vibe.fxSpeed', fxSpeed), [fxSpeed])
   useEffect(() => save('vibe.fxDensity', fxDensity), [fxDensity])
   useEffect(() => save('vibe.fxSize', fxSize), [fxSize])
@@ -373,10 +390,10 @@ export default function App() {
   // Kiểm tra 30s/lần để không bỏ lỡ mốc giờ khi trang đang mở lâu.
   useEffect(() => {
     const updateTaglineIfNeeded = () => {
-      const context = getTaglineContext(fx)
+      const context = getTaglineContext(activeFx)
       if (context === taglineContextRef.current) return
       taglineContextRef.current = context
-      setTagline((previous) => pickTagline(fx, { previous }))
+      setTagline((previous) => pickTagline(activeFx, { previous }))
     }
     updateTaglineIfNeeded()
     const timer = setInterval(updateTaglineIfNeeded, 30_000)
@@ -390,7 +407,7 @@ export default function App() {
       window.removeEventListener('focus', updateTaglineIfNeeded)
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [fx])
+  }, [activeFx])
 
   // Mỗi lần mở/reload trang chọn một đoạn từ Góc Hoài Niệm. Nếu có nhiều bài,
   // tránh lặp lại bài đã hiện ở lần truy cập ngay trước đó.
@@ -1160,7 +1177,7 @@ export default function App() {
   const webglOK = useMemo(() => hasWebGL(), [])
   const [fxEngineReady, setFxEngineReady] = useState(false)
   useEffect(() => {
-    if (!webglOK || !fx.length || fxEngineReady) return undefined
+    if (!webglOK || !activeFx.length || fxEngineReady) return undefined
     const ready = () => setFxEngineReady(true)
     if ('requestIdleCallback' in window) {
       const id = window.requestIdleCallback(ready, { timeout: 1800 })
@@ -1168,16 +1185,16 @@ export default function App() {
     }
     const id = window.setTimeout(ready, 900)
     return () => window.clearTimeout(id)
-  }, [webglOK, fx.length, fxEngineReady])
+  }, [webglOK, activeFx.length, fxEngineReady])
   return (
     <div className={`app ${uiHidden ? 'is-immersive' : ''} ${leftTab ? 'is-left-open' : ''} ${rightTab ? 'is-right-open' : ''} ${musicView === 'now' ? 'is-music-now' : ''}`} data-theme={theme}>
       <Scene scene={scene} photo={currentBg?.url || ''} />
-      {webglOK && fx.length > 0 && fxEngineReady ? (
-        <Suspense fallback={<FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />}>
-          <LeafEngine modes={fx} speed={fxSpeed} density={fxDensity} sizeLevel={fxSize} preset={fxPreset} windDir={fxWindDir} swirl={fxSwirl} paused={Boolean(leftTab || rightTab)} />
+      {webglOK && activeFx.length > 0 && fxEngineReady ? (
+        <Suspense fallback={<FallingFx modes={activeFx} speed={fxSpeed} density={fxDensity} size={fxSize} />}>
+          <LeafEngine modes={activeFx} speed={fxSpeed} density={fxDensity} sizeLevel={fxSize} preset={fxPreset} windDir={fxWindDir} swirl={fxSwirl} paused={Boolean(leftTab || rightTab)} />
         </Suspense>
       ) : (
-        <FallingFx modes={fx} speed={fxSpeed} density={fxDensity} size={fxSize} />
+        <FallingFx modes={activeFx} speed={fxSpeed} density={fxDensity} size={fxSize} />
       )}
 
 
@@ -1297,7 +1314,7 @@ export default function App() {
         theme={theme} setTheme={setTheme} themes={THEMES}
         keepAwake={keepAwake} setKeepAwake={setKeepAwake}
         autoplay={autoplay} setAutoplay={setAutoplay}
-        fx={fx} setFx={setFx} fxSpeed={fxSpeed} setFxSpeed={setFxSpeed}
+        fx={activeFx} setFx={setFxFromSettings} fxSpeed={fxSpeed} setFxSpeed={setFxSpeed}
         fxDensity={fxDensity} setFxDensity={setFxDensity}
         fxSize={fxSize} setFxSize={setFxSize}
         fxPreset={fxPreset} setFxPreset={setFxPreset}
