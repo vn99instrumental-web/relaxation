@@ -41,9 +41,7 @@ function PlaylistTargetSelect({ value, playlists = [], onChange }) {
       if (!rect) return
       const gap = 8
       const below = Math.max(0, window.innerHeight - rect.bottom - gap)
-      const above = Math.max(0, rect.top - gap)
-      const openUp = below < 180 && above > below
-      setMenuLayout({ maxHeight: Math.floor(openUp ? above : below), openUp })
+      setMenuLayout({ maxHeight: Math.floor(below) })
     }
     measure()
     window.addEventListener('resize', measure)
@@ -66,7 +64,7 @@ function PlaylistTargetSelect({ value, playlists = [], onChange }) {
         <span>{selected.label}</span><span className="playlist-target__caret" aria-hidden="true">⌄</span>
       </button>
       {open && (
-        <div className={`playlist-target__menu ${menuLayout?.openUp ? 'is-up' : ''}`} role="listbox" aria-label="Chọn playlist" style={menuLayout ? { maxHeight: `${menuLayout.maxHeight}px` } : undefined}>
+        <div className="playlist-target__menu" role="listbox" aria-label="Chọn playlist" style={menuLayout ? { maxHeight: `${menuLayout.maxHeight}px` } : undefined}>
           {options.map((option) => (
             <button key={option.value} type="button" role="option" aria-selected={option.value === selected.value}
               className={`playlist-target__option ${option.value === selected.value ? 'is-selected' : ''}`}
