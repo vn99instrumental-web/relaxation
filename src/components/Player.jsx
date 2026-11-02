@@ -26,6 +26,7 @@ function PlayerProgress({ yt }) {
 function PlaylistTargetSelect({ value, playlists = [], onChange }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
+  const [menuLayout, setMenuLayout] = useState(null)
   useEffect(() => {
     const close = (event) => {
       if (!rootRef.current?.contains(event.target)) setOpen(false)
@@ -33,6 +34,25 @@ function PlaylistTargetSelect({ value, playlists = [], onChange }) {
     document.addEventListener('pointerdown', close)
     return () => document.removeEventListener('pointerdown', close)
   }, [])
+  useEffect(() => {
+    if (!open) return undefined
+    const measure = () => {
+      const rect = rootRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const gap = 8
+      const below = Math.max(0, window.innerHeight - rect.bottom - gap)
+      const above = Math.max(0, rect.top - gap)
+      const openUp = below < 180 && above > below
+      setMenuLayout({ maxHeight: Math.floor(openUp ? above : below), openUp })
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    window.addEventListener('scroll', measure, true)
+    return () => {
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('scroll', measure, true)
+    }
+  }, [open])
   const options = [
     { value: '__queue__', label: '▶ Playlist Mới đăng' },
     ...playlists.map((playlist) => ({ value: playlist.id, label: `♫ ${playlist.name}` })),
@@ -46,7 +66,7 @@ function PlaylistTargetSelect({ value, playlists = [], onChange }) {
         <span>{selected.label}</span><span className="playlist-target__caret" aria-hidden="true">⌄</span>
       </button>
       {open && (
-        <div className="playlist-target__menu" role="listbox" aria-label="Chọn playlist">
+        <div className={`playlist-target__menu ${menuLayout?.openUp ? 'is-up' : ''}`} role="listbox" aria-label="Chọn playlist" style={menuLayout ? { maxHeight: `${menuLayout.maxHeight}px` } : undefined}>
           {options.map((option) => (
             <button key={option.value} type="button" role="option" aria-selected={option.value === selected.value}
               className={`playlist-target__option ${option.value === selected.value ? 'is-selected' : ''}`}
