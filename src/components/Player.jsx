@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { parseYouTube, videoThumb, trackName } from '../lib/youtube'
 import { IconCheck, IconClose, IconEdit, IconPrev, IconNext, IconPlay, IconPause, IconRefresh, IconTrash, IconVideo, IconRepeat, IconRepeatOne } from './icons'
 import { useActions } from './ActionProvider'
@@ -23,6 +23,40 @@ function PlayerProgress({ yt }) {
   )
 }
 
+function PlaylistTargetSelect({ value, playlists = [], onChange }) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef(null)
+  useEffect(() => {
+    const close = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [])
+  const options = [
+    { value: '__queue__', label: '▶ Playlist Mới đăng' },
+    ...playlists.map((playlist) => ({ value: playlist.id, label: `♫ ${playlist.name}` })),
+    { value: '__new__', label: '＋ Playlist mới…' },
+  ]
+  const selected = options.find((option) => option.value === value) || options[0]
+  return (
+    <div className="playlist-target" ref={rootRef}>
+      <button type="button" className="playlist-target__button" aria-haspopup="listbox" aria-expanded={open}
+        onClick={() => setOpen((current) => !current)} title="Thêm vào đâu">
+        <span>{selected.label}</span><span className="playlist-target__caret" aria-hidden="true">⌄</span>
+      </button>
+      {open && (
+        <div className="playlist-target__menu" role="listbox" aria-label="Chọn playlist">
+          {options.map((option) => (
+            <button key={option.value} type="button" role="option" aria-selected={option.value === selected.value}
+              className={`playlist-target__option ${option.value === selected.value ? 'is-selected' : ''}`}
+              onClick={() => { onChange(option.value); setOpen(false) }}>{option.label}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 const addedTime = (track, fallback) => {
   const numeric = Number(track?.addedAt)
   if (Number.isFinite(numeric) && numeric > 0) return numeric
@@ -279,12 +313,7 @@ export default function Player({
               onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(e) }}
             />
             <div className="player__addbar">
-              <select className="player__target" value={targetValid ? target : '__queue__'}
-                onChange={(e) => setTarget(e.target.value)} title="Thêm vào đâu">
-                <option value="__queue__">▶ Playlist Mới đăng</option>
-                {playlists.map((p) => <option key={p.id} value={p.id}>♫ {p.name}</option>)}
-                <option value="__new__">＋ Playlist mới…</option>
-              </select>
+              <PlaylistTargetSelect value={targetValid ? target : '__queue__'} playlists={playlists} onChange={setTarget} />
               <button type="submit" title="Thêm (Ctrl/⌘+Enter)">Thêm</button>
             </div>
             {target === '__new__' && (
